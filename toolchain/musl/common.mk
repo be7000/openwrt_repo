@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=musl
-PKG_VERSION:=$(call qstrip,$(CONFIG_MUSL_VERSION))
+PKG_VERSION:=1.1.16
 PKG_RELEASE=1
 
 PKG_MD5SUM:=14e8c5ac74f887d53256b3dcaf9b4aaa
