@@ -176,6 +176,9 @@ proto_map_setup() {
 			    json_add_string target MARK
 			    json_close_object
 		    done
+		    echo $(eval "echo \$RULE_${k}_PSID") > /sys/module/nf_nat_ftp/parameters/psid
+		    echo $(eval "echo \$RULE_${k}_PSIDLEN") > /sys/module/nf_nat_ftp/parameters/psid_len
+		    echo $(eval "echo \$RULE_${k}_OFFSET") > /sys/module/nf_nat_ftp/parameters/offset
 		    ip rule add to $(eval "echo \$RULE_${k}_IPV4ADDR") iif $ifname fwmark 0x100/0x100 table local
 		    ip rule add to $(eval "echo \$RULE_${k}_IPV4ADDR") iif $ifname table main
 	    fi
@@ -241,6 +244,11 @@ proto_map_teardown() {
 	[ -z "$maptype" ] && maptype="map-e"
 
 	case "$maptype" in
+		"map-e") {
+			echo 0 > /sys/module/nf_nat_ftp/parameters/psid
+			echo 0 > /sys/module/nf_nat_ftp/parameters/psid_len
+			echo 0 > /sys/module/nf_nat_ftp/parameters/offset
+		};;
 		"map-t") [ -f "/proc/net/nat46/control" ] && echo del $link > /proc/net/nat46/control ;;
 	esac
 
