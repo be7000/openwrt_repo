@@ -7,9 +7,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hostapd
-PKG_VERSION:=2015-09-27
+PKG_VERSION:=2019-06-25
 PKG_RELEASE:=1
-PKG_REV:=cac800c4d16189326b97bd53a169d0f9a7adfb85
+PKG_REV:=6749c67564776fe47ac092ce58cf68b995cd61a0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://w1.fi/hostap.git
@@ -56,6 +56,7 @@ endif
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
+TARGET_LDFLAGS_C:=$(TARGET_LDFLAGS)
 
 STAMP_CONFIGURED:=$(STAMP_CONFIGURED)_$(CONFIG_WPA_MSG_MIN_PRIORITY)
 
@@ -334,6 +335,7 @@ define Build/Compile/wpad
 		CFLAGS="$$$$(cat $(PKG_BUILD_DIR)/.cflags)" \
 		MULTICALL=1 \
 		wpa_cli wpa_supplicant_multi.a \
+		libwpa_client.so \
 	)
 	$(TARGET_CC) -o $(PKG_BUILD_DIR)/wpad \
 		$(TARGET_CFLAGS) \
@@ -402,9 +404,15 @@ endif
 define Package/wpad/install
 	$(call Install/hostapd,$(1))
 	$(call Install/supplicant,$(1))
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(INSTALL_DIR) $(1)/usr/include
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wpad $(1)/usr/sbin/
 	$(LN) wpad $(1)/usr/sbin/hostapd
 	$(LN) wpad $(1)/usr/sbin/wpa_supplicant
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wpa_supplicant/libwpa_client.so $(1)/usr/lib/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/common/wpa_ctrl.h $(1)/usr/include/
+	$(CP) $(PKG_BUILD_DIR)/wpa_supplicant/libwpa_client.so $(STAGING_DIR)/usr/lib
+	$(CP) $(PKG_BUILD_DIR)/src/common/wpa_ctrl.h $(STAGING_DIR)/usr/include
 endef
 Package/wpad-mini/install = $(Package/wpad/install)
 Package/wpad-mesh/install = $(Package/wpad/install)
