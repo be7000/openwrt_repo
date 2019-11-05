@@ -245,8 +245,8 @@ hostapd_set_bss_options() {
 	config_get phy "$device" phy
 	config_get enable_tkip "$vif" enable_tkip 0
 
-	[ -f /var/run/hostapd-$phy/$ifname ] && rm /var/run/hostapd-$phy/$ifname
-	ctrl_interface=/var/run/hostapd-$phy
+	[ -f /var/run/hostapd/$ifname ] && rm /var/run/hostapd/$ifname
+	ctrl_interface=/var/run/hostapd
 
 	append "$var" "ctrl_interface=$ctrl_interface" "$N"
 
