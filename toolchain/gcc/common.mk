@@ -62,6 +62,10 @@ else
   ifeq ($(PKG_VERSION),5.2.0)
     PKG_MD5SUM:=a51bcfeb3da7dd4c623e27207ed43467
   endif
+  ifeq ($(PKG_VERSION),7.5.0)
+    PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+    PKG_HASH:=b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661
+  endif
 endif
 
 PATCH_DIR=../patches/$(GCC_VERSION)
