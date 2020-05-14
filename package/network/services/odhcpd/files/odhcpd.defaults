@@ -50,3 +50,8 @@ add_list dhcp.lan.ra_flags=managed-config
 add_list dhcp.lan.ra_flags=other-config
 commit dhcp
 EOF
+
+/etc/init.d/odhcpd enabled && {
+	/etc/init.d/odhcpd stop
+	/etc/init.d/odhcpd disable
+}
