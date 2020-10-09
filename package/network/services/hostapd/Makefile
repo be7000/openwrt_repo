@@ -379,6 +379,8 @@ endef
 define Package/hostapd-common/install
 	$(INSTALL_DIR) $(1)/lib/netifd
 	$(INSTALL_DATA) ./files/netifd.sh $(1)/lib/netifd/hostapd.sh
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/wpad.init $(1)/etc/init.d/wpad
 endef
 
 define Package/hostapd-common-old/install
