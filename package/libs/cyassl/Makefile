@@ -35,7 +35,8 @@ CyaSSL is an SSL library optimized for small footprint, both on disk and for
 memory use.
 endef
 
-TARGET_CFLAGS += $(FPIC)
+TARGET_CFLAGS += $(FPIC) -flto
+TARGET_LDFLAGS += -flto
 
 CONFIGURE_ARGS += \
 	--without-zlib \
