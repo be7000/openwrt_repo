@@ -143,7 +143,7 @@ COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald-10.4 qca-qmi-framework 
 
 FAILSAFE:= kmod-bootconfig
 
-NETWORKING:=mcproxy -dnsmasq dnsmasq-dhcpv6 bridge ip-full \
+NETWORKING:=mcproxy -dnsmasq dnsmasq-dhcpv6 bridge ip-full ip-bridge \
 	rp-pppoe-relay iptables-mod-extra iputils-tracepath iputils-tracepath6 \
 	kmod-nf-nathelper-extra kmod-ipt-nathelper-rtsp \
 	luci-app-upnp luci-app-ddns luci-proto-ipv6 \
