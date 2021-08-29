@@ -37,8 +37,8 @@ ap160|\
 ap161)
 	ucidef_set_interfaces_lan_wan "eth1 eth2" "eth0"
 	ucidef_add_switch "switch0" "1" "1" "1"
-	ucidef_add_switch_vlan "switch0" "1" "6 4"
-	ucidef_add_switch_vlan "switch0" "2" "0 1 2 3"
+	ucidef_add_switch_vlan "switch0" "1" "0 1 2 3"
+	ucidef_add_switch_vlan "switch0" "2" "6 4"
 	;;
 ap160_2xx)
 	ucidef_set_interface_bond "bond0" "2" "eth1 eth2 eth3" "2"
