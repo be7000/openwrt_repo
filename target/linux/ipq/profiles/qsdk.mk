@@ -212,6 +212,8 @@ CHAR_DIAG:=kmod-diag-char qca-diag
 
 CNSS_DIAG:=cnssdiag
 
+CTRL_APP_DUT:=ctrl_app_dut
+
 FTM:=ftm
 
 QMSCT_CLIENT:=qmsct_client
@@ -259,7 +261,7 @@ define Profile/QSDK_Premium
 		$(AUDIO) $(VIDEO) $(IGMPSNOOING_RSTP) $(IPSEC) $(QOS) $(QCA_ECM_PREMIUM) \
 		$(NSS_MACSEC) $(TEST_TOOLS) $(NSS_CRYPTO) $(NSS_CLIENTS_STANDARD) $(COREBSP_UTILS) \
 		$(MAP_PKGS) $(HYFI) $(QCA_MAD) $(QCA_EZMESH) $(AQ_PHY) $(FAILSAFE) kmod-art2 -lacpd $(USB_DIAG) \
-		$(QCA_LITHIUM) $(NSS_EIP197_FW) $(CNSS_DIAG) $(FTM) $(QMSCT_CLIENT) \
+		$(QCA_LITHIUM) $(NSS_EIP197_FW) $(CNSS_DIAG) $(CTRL_APP_DUT) $(FTM) $(QMSCT_CLIENT) \
 		$(MHI_QRTR) $(KPI) $(QRTR) $(NSS_USERSPACE) \
 		$(NSS_RMNET) $(MINIDUMP) $(EMESH_SP) kmod-macvlan
 endef
@@ -274,7 +276,7 @@ $(eval $(call Profile,QSDK_Premium))
 define Profile/QSDK_Standard
 	NAME:=Qualcomm-Atheros SDK Standard Profile
 	PACKAGES:=$(OPENWRT_STANDARD) $(NSS_COMMON) $(QCA_EDMA) $(NSS_STANDARD) $(SWITCH_SSDK_PKGS) \
-		$(WIFI_PKGS) $(STORAGE) $(SHORTCUT_FE) $(HW_CRYPTO) $(QCA_RFS) \
+		$(WIFI_PKGS) $(CTRL_APP_DUT) $(STORAGE) $(SHORTCUT_FE) $(HW_CRYPTO) $(QCA_RFS) \
 		$(IGMPSNOOING_RSTP) $(NETWORKING) $(QOS) $(UTILS) ethtool $(COREBSP_UTILS) \
 		qca-wifi-fw-hw5-10.4-asic $(KPI)
 endef
@@ -293,7 +295,7 @@ define Profile/QSDK_QBuilder
 		kmod-scsi-core kmod-usb-storage kmod-usb-uas kmod-nls-cp437 kmod-nls-iso8859-1 kmod-fs-msdos \
 		kmod-fs-vfat kmod-fs-ntfs ntfs-3g e2fsprogs kmod-shortcut-fe kmod-shortcut-fe-cm kmod-shortcut-fe-drv \
 		rstp qca-mcs-apps kmod-qca-wifi-unified-profile qca-hostap qca-hostapd-cli qca-wpa-supplicant qca-wpa-cli \
-		qca-spectral qca-wpc sigma-dut qcmbr-10.4 qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui qca-lowi qca-iface-mgr-10.4 \
+		qca-spectral qca-wpc sigma-dut ctrl_app_dut qcmbr-10.4 qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui qca-lowi qca-iface-mgr-10.4 \
 		qca-icm qca-cfg80211 athdiag qca-cnss-daemon athtestcmd-lith qca-wifi-fw-hw2-10.4-asic qca-wifi-fw-hw4-10.4-asic \
 		qca-wifi-fw-hw3-10.4-asic qca-wifi-fw-hw6-10.4-asic qca-wifi-fw-hw5-10.4-asic qca-wifi-fw-hw11-10.4-asic \
 		qca-wifi-hk-fw-hw1-10.4-asic qca-wifi-cyp-fw-hw1-11.0-asic kmod-aq_phy kmod-qca_85xx_sw aq-fw-download mcproxy \
@@ -315,7 +317,7 @@ $(eval $(call Profile,QSDK_QBuilder))
 define Profile/QSDK_Enterprise
 	NAME:=Qualcomm-Atheros SDK Enterprise Profile
 	PACKAGES:=$(OPENWRT_STANDARD) $(NSS_COMMON) $(QCA_EDMA) $(NSS_ENTERPRISE) $(SWITCH_SSDK_NOHNAT_PKGS) \
-		$(WIFI_PKGS) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(HW_CRYPTO) $(QCA_RFS) \
+		$(WIFI_PKGS) $(CTRL_APP_DUT) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(HW_CRYPTO) $(QCA_RFS) \
 		$(IGMPSNOOING_RSTP) $(NETWORKING) $(QOS) $(UTILS) $(TEST_TOOLS) $(COREBSP_UTILS) \
 		$(QCA_ECM_ENTERPRISE) $(NSS_CLIENTS_ENTERPRISE) $(NSS_MACSEC) $(NSS_CRYPTO) \
 		$(IPSEC) $(NSS_EIP197_FW) $(CD_ROUTER) $(AQ_PHY) $(CNSS_DIAG) $(FTM) $(QMSCT_CLIENT) -lacpd \
@@ -332,7 +334,7 @@ $(eval $(call Profile,QSDK_Enterprise))
 define Profile/QSDK_MinEnt
 	NAME:=Qualcomm-Atheros SDK MinEnt Profile
 	PACKAGES:=$(OPENWRT_STANDARD) $(NSS_COMMON) $(QCA_EDMA) $(NSS_ENTERPRISE) $(SWITCH_SSDK_NOHNAT_PKGS) \
-		$(WIFI_PKGS_MINENT) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(HW_CRYPTO) $(QCA_RFS) \
+		$(WIFI_PKGS_MINENT) $(CTRL_APP_DUT) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(HW_CRYPTO) $(QCA_RFS) \
 		$(NETWORKING) $(QOS) $(UTILS) $(TEST_TOOLS) $(COREBSP_UTILS) \
 		$(QCA_ECM_ENTERPRISE) $(NSS_CLIENTS_ENTERPRISE) $(NSS_MACSEC) $(NSS_CRYPTO) \
 		$(IPSEC) $(NSS_EIP197_FW) $(CD_ROUTER) $(AQ_PHY) $(CNSS_DIAG) $(FTM) $(QMSCT_CLIENT) -lacpd \
@@ -349,7 +351,7 @@ $(eval $(call Profile,QSDK_MinEnt))
 define Profile/QSDK_Deluxe
 	NAME:=Qualcomm-Atheros SDK Deluxe Profile
 	PACKAGES:=$(OPENWRT_STANDARD) $(NSS_COMMON) $(QCA_EDMA) $(NSS_STANDARD) $(SWITCH_SSDK_PKGS) \
-		$(WIFI_PKGS) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(CD_ROUTER) \
+		$(WIFI_PKGS) $(CTRL_APP_DUT) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(CD_ROUTER) \
 		$(NETWORKING) $(UTILS) $(SHORTCUT_FE) $(HW_CRYPTO) $(QCA_RFS) \
 		$(AUDIO) $(VIDEO) $(IGMPSNOOING_RSTP) $(IPSEC) $(QOS) $(QCA_ECM_PREMIUM) \
 		$(NSS_MACSEC) $(TEST_TOOLS) $(NSS_CRYPTO) $(NSS_CLIENTS_STANDARD) $(COREBSP_UTILS) \
@@ -368,7 +370,7 @@ $(eval $(call Profile,QSDK_Deluxe))
 define Profile/QSDK_256
 	NAME:=Qualcomm-Atheros SDK 256MB Profile
 	PACKAGES:=$(OPENWRT_256MB) $(NSS_COMMON) $(QCA_EDMA) $(NSS_STANDARD) $(SWITCH_SSDK_PKGS) \
-		$(WIFI_PKGS_256MB) qca-wifi-hk-fw-hw1-10.4-asic $(CD_ROUTER_256MB) $(NETWORKING_256MB) \
+		$(WIFI_PKGS_256MB) $(CTRL_APP_DUT) qca-wifi-hk-fw-hw1-10.4-asic $(CD_ROUTER_256MB) $(NETWORKING_256MB) \
 		iperf-mt rng-tools $(QCA_RFS) $(IGMPSNOOING_RSTP) $(CHAR_DIAG) \
 		$(QCA_ECM_STANDARD) $(NSS_MACSEC) \
 		$(NSS_CLIENTS_256MB) $(HYFI) $(QCA_EZMESH) $(FAILSAFE) -lacpd \
@@ -386,7 +388,7 @@ $(eval $(call Profile,QSDK_256))
 define Profile/QSDK_512
 	NAME:=Qualcomm-Atheros SDK 512MB Profile
 	PACKAGES:=$(OPENWRT_STANDARD) $(NSS_COMMON) $(QCA_EDMA) $(NSS_STANDARD) $(SWITCH_SSDK_PKGS) \
-		$(WIFI_PKGS) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(CD_ROUTER) \
+		$(WIFI_PKGS) $(CTRL_APP_DUT) $(WIFI_10_4_FW_PKGS) $(STORAGE) $(CD_ROUTER) \
 		$(NETWORKING) $(OPENVPN) $(UTILS) $(SHORTCUT_FE) $(HW_CRYPTO) $(QCA_RFS) \
 		$(AUDIO) $(VIDEO) $(IGMPSNOOING_RSTP) $(IPSEC) $(QOS) $(QCA_ECM_PREMIUM) \
 		$(NSS_MACSEC) $(TEST_TOOLS) $(NSS_CRYPTO) $(NSS_CLIENTS_STANDARD) $(COREBSP_UTILS) \
