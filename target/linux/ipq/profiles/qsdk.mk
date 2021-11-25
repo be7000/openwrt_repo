@@ -76,7 +76,7 @@ WIFI_OPEN_PKGS:= kmod-ath9k kmod-ath10k kmod-ath11k wpad-mesh hostapd-utils \
 		 athtestcmd-lith-nl ath10k-firmware-qca988x ath10k-firmware-qca9887 \
 		 ath10k-firmware-qca9888 ath10k-firmware-qca9984 \
 		 ath10k-firmware-qca4019 \
-		 -qca-whc-lbd -qca-whc-init -libhyficommon -qca-thermald-10.4
+		 -qca-whc-lbd -qca-whc-init -libhyficommon -qca-thermald
 
 WIFI_OPEN_PKGS_8M:= kmod-ath11k wpad-mesh hostapd-utils \
 		wpa-cli -qca-whc-lbd -qca-whc-init -libhyficommon \
@@ -123,7 +123,7 @@ WIL6210_PKGS:=kmod-wil6210 wigig-firmware iwinfo qca-fst-manager
 OPENWRT_STANDARD:= \
 	luci openssl-util
 
-OPENWRT_256MB:=luci pm-utils wififw_mount_script qca-thermald-10.4 qca-wlanfw-upgrade -file \
+OPENWRT_256MB:=luci pm-utils wififw_mount_script qca-thermald qca-wlanfw-upgrade -file \
 		-kmod-ata-core -kmod-ata-ahci -kmod-ata-ahci-platform \
 		-kmod-usb2 -kmod-usb3 -kmod-usb-dwc3-qcom \
 		-kmod-usb-phy-qcom-dwc3 -kmod-usb-dwc3-of-simple \
@@ -138,7 +138,7 @@ TEST_TOOLS:=ethtool i2c-tools tcpdump
 
 UTILS:=file luci-app-samba rng-tools profilerd
 
-COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald-10.4 qca-qmi-framework qca-time-services \
+COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald qca-qmi-framework qca-time-services \
 	qca-wlanfw-upgrade dashboard
 
 FAILSAFE:= kmod-bootconfig
@@ -303,7 +303,7 @@ define Profile/QSDK_QBuilder
 		kmod-nf-nathelper-extra kmod-ipt-nathelper-rtsp luci-app-upnp luci-app-ddns luci-proto-ipv6 luci-app-multiwan tc kmod-sched \
 		kmod-sched-core kmod-sched-connmark kmod-ifb iptables iptables-mod-filter iptables-mod-ipopt iptables-mod-conntrack-extra \
 		qca-nss-fw-eip-hk qca-nss-fw-eip-cp file luci-app-samba rng-tools profilerd ethtool i2c-tools tcpdump pm-utils \
-		wififw_mount_script qca-thermald-10.4 qca-qmi-framework qca-time-services qca-wlanfw-upgrade dashboard qca-wifi-fw-hw5-10.4-asic \
+		wififw_mount_script qca-thermald qca-qmi-framework qca-time-services qca-wlanfw-upgrade dashboard qca-wifi-fw-hw5-10.4-asic \
 		iperf-mt sysstat nlcfg kmod-bootconfig qca-cfg80211tool
 endef
 
