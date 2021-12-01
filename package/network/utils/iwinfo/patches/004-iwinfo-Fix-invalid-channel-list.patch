@@ -1,0 +1,66 @@
+From 444c7760fd16e1c003656af674b14869f90fc4d2 Mon Sep 17 00:00:00 2001
+From: Shwetha G K <quic_kshwetha@quicinc.com>
+Date: Fri, 19 Nov 2021 09:35:02 +0530
+Subject: [PATCH] iwinfo: Fix invalid channel list
+
+Fix Invalid channel list populated in UI
+
+Signed-off-by: Shwetha G K <quic_kshwetha@quicinc.com>
+---
+ iwinfo_qcawifi.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/iwinfo_qcawifi.c b/iwinfo_qcawifi.c
+index 1ee8284..c6d783a 100644
+--- a/iwinfo_qcawifi.c
++++ b/iwinfo_qcawifi.c
+@@ -370,7 +370,7 @@ int qcawifi_get_channel(const char *ifname, int *buf)
+ 	int i;
+ 	uint16_t freq;
+ 	struct iwreq wrq;
+-	struct ieee80211req_chaninfo chans;
++	struct ieee80211req_channel_list chans;
+ 
+ 	if( qcawifi_wrq(&wrq, ifname, SIOCGIWFREQ, NULL, 0) >= 0 )
+ 	{
+@@ -381,11 +381,11 @@ int qcawifi_get_channel(const char *ifname, int *buf)
+ 		{
+ 			*buf = 0;
+ 
+-			for( i = 0; i < chans.ic_nchans; i++ )
++			for( i = 0; i < chans.nchans; i++ )
+ 			{
+-				if( freq == chans.ic_chans[i].ic_freq )
++				if( freq == chans.chans[i].freq )
+ 				{
+-					*buf = chans.ic_chans[i].ic_ieee;
++					*buf = chans.chans[i].ieee;
+ 					break;
+ 				}
+ 			}
+@@ -893,7 +893,7 @@ int qcawifi_get_freqlist(const char *ifname, char *buf, int *len)
+ 	int i, bl;
+ 	int rc = -1;
+ 	char *res;
+-	struct ieee80211req_chaninfo chans;
++	struct ieee80211req_channel_list chans;
+ 	struct iwinfo_freqlist_entry entry;
+ 
+ 	/* A wifiX device? */
+@@ -921,10 +921,10 @@ int qcawifi_get_freqlist(const char *ifname, char *buf, int *len)
+ 	{
+ 		bl = 0;
+ 
+-		for( i = 0; i < chans.ic_nchans; i++ )
++		for( i = 0; i < chans.nchans; i++ )
+ 		{
+-			entry.mhz        = chans.ic_chans[i].ic_freq;
+-			entry.channel    = chans.ic_chans[i].ic_ieee;
++			entry.mhz        = chans.chans[i].freq;
++			entry.channel    = chans.chans[i].ieee;
+ 			entry.restricted = 0;
+ 
+ 			memcpy(&buf[bl], &entry, sizeof(struct iwinfo_freqlist_entry));
+-- 
+2.29.0
+
