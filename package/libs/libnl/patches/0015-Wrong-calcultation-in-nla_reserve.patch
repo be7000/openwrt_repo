@@ -1,0 +1,29 @@
+From 979ea335b0141eb62682056be42ccb4b01e6e2a2 Mon Sep 17 00:00:00 2001
+From: Emmanuel Thierry <emmanuel.thierry@telecom-bretagne.eu>
+Date: Wed, 24 Apr 2013 18:39:19 +0200
+Subject: [PATCH] Wrong calcultation in nla_reserve
+
+There seams to be an error in the calculation of needed space for the message in nla_reserve. The current size of the message is counted twice: Once in NLMSG_ALIGN, once in the condition below.
+This causes nla_put_* calls to be rejected if the allocation size of the message has been strictly calculated by the caller.
+
+Signed-off-by: Thomas Graf <tgraf@suug.ch>
+---
+ lib/attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/attr.c b/lib/attr.c
+index 6fc6af5..535f10c 100644
+--- a/lib/attr.c
++++ b/lib/attr.c
+@@ -464,7 +464,7 @@ struct nlattr *nla_reserve(struct nl_msg *msg, int attrtype, int attrlen)
+ 	
+ 	tlen = NLMSG_ALIGN(msg->nm_nlh->nlmsg_len) + nla_total_size(attrlen);
+ 
+-	if ((tlen + msg->nm_nlh->nlmsg_len) > msg->nm_size)
++	if (tlen > msg->nm_size)
+ 		return NULL;
+ 
+ 	nla = (struct nlattr *) nlmsg_tail(msg->nm_nlh);
+-- 
+2.32.0
+
