@@ -86,13 +86,13 @@ WIFI_10_4_PKGS:=kmod-qca-wifi-10.4-unified-profile \
     qca-hostap-10.4 qca-hostapd-cli-10.4 qca-wpa-supplicant-10.4 \
     qca-wpa-cli-10.4 qca-spectral-10.4 qca-wpc-10.4 sigma-dut-10.4 \
     qcmbr qca-wrapd-10.4 qca-wapid qca-acfg-10.4 whc whc-ui \
-    qca-lowi qca-iface-mgr-10.4 athdiag
+    qca-lowi qca-iface-mgr athdiag
 
 WIFI_PKGS:=kmod-qca-wifi-unified-profile \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-spectral qca-wpc sigma-dut \
 	qcmbr qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui \
-	qca-lowi qca-iface-mgr-10.4 qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
+	qca-lowi qca-iface-mgr qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
 	athtestcmd-lith qca-cfg80211tool
 
 WIFI_PKGS_MINENT:=kmod-qca-wifi-custc-profile \
@@ -106,7 +106,7 @@ WIFI_PKGS_256MB:=kmod-qca-wifi-lowmem-profile \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-wpc sigma-dut \
 	qcmbr qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui \
-	qca-iface-mgr-10.4 qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
+	qca-iface-mgr qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
 	athtestcmd-lith qca-cfg80211tool
 
 WIFI_PKGS_16M:=kmod-qca-wifi-flash_16mb-profile \
@@ -295,7 +295,7 @@ define Profile/QSDK_QBuilder
 		kmod-scsi-core kmod-usb-storage kmod-usb-uas kmod-nls-cp437 kmod-nls-iso8859-1 kmod-fs-msdos \
 		kmod-fs-vfat kmod-fs-ntfs ntfs-3g e2fsprogs kmod-shortcut-fe kmod-shortcut-fe-cm kmod-shortcut-fe-drv \
 		rstp qca-mcs-apps kmod-qca-wifi-unified-profile qca-hostap qca-hostapd-cli qca-wpa-supplicant qca-wpa-cli \
-		qca-spectral qca-wpc sigma-dut ctrl_app_dut qcmbr qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui qca-lowi qca-iface-mgr-10.4 \
+		qca-spectral qca-wpc sigma-dut ctrl_app_dut qcmbr qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui qca-lowi qca-iface-mgr \
 		qca-icm qca-cfg80211 athdiag qca-cnss-daemon athtestcmd-lith qca-wifi-fw-hw2-10.4-asic qca-wifi-fw-hw4-10.4-asic \
 		qca-wifi-fw-hw3-10.4-asic qca-wifi-fw-hw6-10.4-asic qca-wifi-fw-hw5-10.4-asic qca-wifi-fw-hw11-10.4-asic \
 		qca-wifi-hk-fw-hw1-10.4-asic qca-wifi-cyp-fw-hw1-11.0-asic kmod-aq_phy kmod-qca_85xx_sw aq-fw-download mcproxy \
