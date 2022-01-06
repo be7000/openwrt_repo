@@ -1274,6 +1274,9 @@ Image/Build/dLANLzma/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(4))
 define Image/Build/IoENAND
 	$(CP) $(KDIR)/root.$(1) $(KDIR_TMP)/root.squashfs
 	echo -ne '\xde\xad\xc0\xde' > $(KDIR_TMP)/jffs2.eof
+	if [ -e "$(TOPDIR)/tools/anti-rollback/anti-rollback-version.txt" ]; then \
+		cat $(TOPDIR)/tools/anti-rollback/anti-rollback-version.txt >> $(KDIR_TMP)/vmlinux-$(2).uImage; \
+	fi
 	if [ -e "$(TOPDIR)/tools/rsa/host/rsa_priv.txt" ]; then \
 		$(TOPDIR)/tools/rsa/host/rsa_sign $(KDIR_TMP)/vmlinux-$(2).uImage $(TOPDIR)/tools/rsa/host/rsa_priv.txt; \
 		$(TOPDIR)/tools/rsa/host/rsa_sign $(KDIR)/root.$(1) $(TOPDIR)/tools/rsa/host/rsa_priv.txt; \
@@ -1300,6 +1303,9 @@ define Image/Build/Ath
 	$(eval rootsize=$(call mtdpartsize,rootfs,$(4)))
 	$(eval kernsize=$(call mtdpartsize,kernel,$(4)))
 	$(eval rootsize=$(if $(7),$(7),$(rootsize)))
+	if [ -e "$(TOPDIR)/tools/anti-rollback/anti-rollback-version.txt" ]; then \
+		cat $(TOPDIR)/tools/anti-rollback/anti-rollback-version.txt >> $(KDIR_TMP)/vmlinux-$(2).uImage; \
+	fi
 	if [ -e "$(TOPDIR)/tools/rsa/host/rsa_priv.txt" ]; then \
 		$(TOPDIR)/tools/rsa/host/rsa_sign $(KDIR_TMP)/vmlinux-$(2).uImage $(TOPDIR)/tools/rsa/host/rsa_priv.txt; \
 		$(TOPDIR)/tools/rsa/host/rsa_sign $(KDIR)/root.$(1) $(TOPDIR)/tools/rsa/host/rsa_priv.txt; \
