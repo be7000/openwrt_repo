@@ -71,11 +71,9 @@ SWITCH_OPEN_PKGS:= kmod-switch-ar8216 swconfig
 
 MACSEC_OPEN_PKGS:= wpa-supplicant-macsec hostapd-macsec
 
-WIFI_OPEN_PKGS:= kmod-ath9k kmod-ath10k kmod-ath11k wpad-mesh hostapd-utils \
+WIFI_OPEN_PKGS:= kmod-ath11k wpad-mesh hostapd-utils \
 		 kmod-art2-netlink sigma-dut-open wpa-cli qcmbr-netlink \
-		 athtestcmd-lith-nl ath10k-firmware-qca988x ath10k-firmware-qca9887 \
-		 ath10k-firmware-qca9888 ath10k-firmware-qca9984 \
-		 ath10k-firmware-qca4019 \
+		 athtestcmd-lith-nl \
 		 -qca-whc-lbd -qca-whc-init -libhyficommon -qca-thermald
 
 WIFI_OPEN_PKGS_8M:= kmod-ath11k wpad-mesh hostapd-utils \
