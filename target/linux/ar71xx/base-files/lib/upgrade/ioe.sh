@@ -73,6 +73,20 @@ get_mtdpart_offset() {
 	eval "${varname}=${offset}"
 }
 
+cus531_get_image_data_size() {
+	dd if="$1" bs=8 count=1 skip=12 iflag=skip_bytes 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"'
+}
+
+cus531_get_ar_magic() {
+	dd if="$1" bs=8 count=1 skip="$2" iflag=skip_bytes 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"'
+}
+
+cus531_get_version() {
+	dd if="$1" bs=8 count=1 skip="$2" iflag=skip_bytes 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"'
+}
+
+current_version=`fw_printenv | grep 'ar_version' | awk -F '=' '{print $2}'`
+
 platform_check_image_ioe() {
 	local image_size=$( get_filesize "$1" )
 	local firmware_size=$( platform_get_firmware_size )
@@ -82,6 +96,35 @@ platform_check_image_ioe() {
 		echo "upgrade image is too big (${image_size}b > ${firmware_size}b)"
 		return 1
 	}
+
+	if [ -n "$current_version" ]; then
+		local image_data_size="$(cus531_get_image_data_size "$1")"
+		local image_data_length="$(printf %d 0x$image_data_size)"
+		local anti_rollback_magic_offset=$(expr $image_data_length + 64)
+		local anti_rollback_version_offset=$(expr $image_data_length + 68)
+		local ar_magic="$(cus531_get_ar_magic "$1" "$anti_rollback_magic_offset")"
+		local new=$(cus531_get_version "$1" "$anti_rollback_version_offset")
+		local new_version="$(printf %d 0x$new)"
+
+		if [ $current_version -gt 0 ]; then
+			if [ "$ar_magic" != "1ef1e916" ]; then
+				echo "Anti-Rollback magic number is incorrect!"
+				return 1
+			elif [ $new_version -lt $current_version ]; then
+				echo "Upgrade image is too old, please upgrade the latest image!"
+				return 1
+			fi
+		fi
+
+		if [ $current_version == "0" ]; then
+			if [ "$ar_magic" == "1ef1e916" ]; then
+			{
+				echo "Warning: Anti-rollback is not supported! Please upgrade the image that does not contain version number!"
+				return 0
+			}
+			fi
+		fi
+	fi
 
 	return 0
 }
