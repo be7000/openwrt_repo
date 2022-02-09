@@ -414,6 +414,9 @@ platform_check_image() {
 		}
 	done
 
+	echo 1711 > /proc/sys/vm/min_free_kbytes
+	echo 3 > /proc/sys/vm/drop_caches
+
 	image_demux $1 || {\
 		echo "Error: \"$1\" couldn't be extracted. Abort..."
 		return 1
@@ -473,6 +476,7 @@ platform_do_upgrade() {
 	qcom,ipq5018-ap-mp03.5-c2 |\
 	qcom,ipq5018-ap-mp03.6-c1 |\
 	qcom,ipq5018-ap-mp03.6-c2 |\
+	qcom,ipq5018-ap-mp05.1 |\
 	qcom,ipq5018-db-mp02.1 |\
 	qcom,ipq5018-db-mp03.1 |\
 	qcom,ipq5018-db-mp03.1-c2 |\
@@ -524,7 +528,7 @@ platform_copy_config() {
 	local emmcblock="$(find_mmc_part "rootfs")"
 	mkdir -p /tmp/overlay
 
-	if [ -e "$nand_part" ]; then
+	if [ -e "${nand_part%% *}" ]; then
 		local mtdname=rootfs
 		local mtdpart
 
