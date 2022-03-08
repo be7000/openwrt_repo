@@ -78,33 +78,42 @@ image_is_FIT() {
 }
 
 switch_layout() {
-	local layout=$1
-	local boot_layout=`find / -name boot_layout`
-
-	# Layout switching is only required as the  boot images (up to u-boot)
-	# use 512 user data bytes per code word, whereas Linux uses 516 bytes.
-	# It's only applicable for NAND flash. So let's return if we don't have
-	# one.
-
-	[ -n "$boot_layout" ] || return
-
-	case "${layout}" in
-		boot|1) echo 1 > $boot_layout;;
-		linux|0) echo 0 > $boot_layout;;
-		*) echo "Unknown layout \"${layout}\"";;
-	esac
+	# Layout switching not require for this platform.
+	return 0
 }
 
 do_flash_mtd() {
 	local bin=$1
 	local mtdname=$2
 	local append=""
+	local mtdname_rootfs="rootfs"
+	local boot_layout=`find / -name boot_layout`
+	local flash_type=`fw_printenv | grep flash_type=11`
+	local pgsz
 
 	local mtdpart=$(grep "\"${mtdname}\"" /proc/mtd | awk -F: '{print $1}')
-	local pgsz=$(cat /sys/class/mtd/${mtdpart}/writesize)
-	[ -f "$UPGRADE_BACKUP" -a "$2" == "rootfs" ] && append="-j $UPGRADE_BACKUP"
+	if [ ! -n "$mtdpart" ]; then
+		echo "$mtdname is not available" && return
+	fi
 
-	dd if=/tmp/${bin}.bin bs=${pgsz} conv=sync | mtd $append -e "/dev/${mtdpart}" write - "/dev/${mtdpart}"
+	local mtdpart_rootfs=$(grep "\"${mtdname_rootfs}\"" /proc/mtd | awk -F: '{print $1}')
+
+	# This switch is required only for QSPI NAND boot with 4K page size
+	# since PBL doesn't have 4K page support.
+	if [ "$mtdname" == "0:SBL1" -a -n "$boot_layout" -a -n "$flash_type" ]; then
+		mtd erase "/dev/${mtdpart}"
+		ubidetach -f -p /dev/${mtdpart_rootfs}
+		# Switch to 2K layout for flashing (writing) SBL partition
+		echo 1 > $boot_layout
+		pgsz=$(cat /sys/class/mtd/${mtdpart}/writesize)
+		dd if=/tmp/${bin}.bin bs=${pgsz} conv=sync | mtd write - "/dev/${mtdpart}"
+		# Switch back to 4K layout for flashing (writing) all other partitions
+		echo 0 > $boot_layout
+	else
+		pgsz=$(cat /sys/class/mtd/${mtdpart}/writesize)
+		[ -f "$UPGRADE_BACKUP" -a "$2" == "rootfs" ] && append="-j $UPGRADE_BACKUP"
+		dd if=/tmp/${bin}.bin bs=${pgsz} conv=sync | mtd $append -e "/dev/${mtdpart}" write - "/dev/${mtdpart}"
+	fi
 }
 
 do_flash_emmc() {
@@ -414,6 +423,9 @@ platform_check_image() {
 		}
 	done
 
+	echo 1711 > /proc/sys/vm/min_free_kbytes
+	echo 3 > /proc/sys/vm/drop_caches
+
 	image_demux $1 || {\
 		echo "Error: \"$1\" couldn't be extracted. Abort..."
 		return 1
@@ -473,6 +485,7 @@ platform_do_upgrade() {
 	qcom,ipq5018-ap-mp03.5-c2 |\
 	qcom,ipq5018-ap-mp03.6-c1 |\
 	qcom,ipq5018-ap-mp03.6-c2 |\
+	qcom,ipq5018-ap-mp05.1 |\
 	qcom,ipq5018-db-mp02.1 |\
 	qcom,ipq5018-db-mp03.1 |\
 	qcom,ipq5018-db-mp03.1-c2 |\
@@ -524,7 +537,7 @@ platform_copy_config() {
 	local emmcblock="$(find_mmc_part "rootfs")"
 	mkdir -p /tmp/overlay
 
-	if [ -e "$nand_part" ]; then
+	if [ -e "${nand_part%% *}" ]; then
 		local mtdname=rootfs
 		local mtdpart
 
