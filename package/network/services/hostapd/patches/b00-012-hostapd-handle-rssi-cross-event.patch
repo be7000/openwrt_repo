@@ -1,6 +1,6 @@
 --- a/src/drivers/driver_nl80211_event.c
 +++ b/src/drivers/driver_nl80211_event.c
-@@ -1217,12 +1217,14 @@ static void nl80211_cqm_event(struct wpa
+@@ -1410,11 +1410,13 @@ static void nl80211_cqm_event(struct wpa_driver_nl80211_data *drv,
  		[NL80211_ATTR_CQM_TXE_PKTS] = { .type = NLA_U32 },
  		[NL80211_ATTR_CQM_TXE_INTVL] = { .type = NLA_U32 },
  		[NL80211_ATTR_CQM_BEACON_LOSS_EVENT] = { .type = NLA_FLAG },
@@ -9,14 +9,13 @@
  	struct nlattr *cqm[NL80211_ATTR_CQM_MAX + 1];
  	enum nl80211_cqm_rssi_threshold_event event;
  	union wpa_event_data ed;
- 	struct wpa_signal_info sig;
 -	int res;
 +	int res, rssi_level;
 +	u8 *addr;
  
  	if (tb[NL80211_ATTR_CQM] == NULL ||
  	    nla_parse_nested(cqm, NL80211_ATTR_CQM_MAX, tb[NL80211_ATTR_CQM],
-@@ -1273,11 +1275,28 @@ static void nl80211_cqm_event(struct wpa
+@@ -1465,11 +1467,28 @@ static void nl80211_cqm_event(struct wpa_driver_nl80211_data *drv,
  	}
  	event = nla_get_u32(cqm[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT]);
  

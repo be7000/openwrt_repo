@@ -1,23 +1,27 @@
 --- a/src/ap/wps_hostapd.c
 +++ b/src/ap/wps_hostapd.c
-@@ -1108,14 +1108,11 @@ int hostapd_init_wps(struct hostapd_data
+@@ -1180,8 +1180,7 @@ int hostapd_init_wps(struct hostapd_data *hapd,
  					  WPA_CIPHER_GCMP_256)) {
  			wps->encr_types |= WPS_ENCR_AES;
  			wps->encr_types_rsn |= WPS_ENCR_AES;
 -		}
 -		if (conf->rsn_pairwise & WPA_CIPHER_TKIP) {
 +		} else if (conf->rsn_pairwise & WPA_CIPHER_TKIP) {
- 			wps->encr_types |= WPS_ENCR_TKIP;
+ #ifdef CONFIG_NO_TKIP
+ 			wpa_printf(MSG_INFO, "WPS: TKIP not supported");
+ 			goto fail;
+@@ -1190,9 +1189,7 @@ int hostapd_init_wps(struct hostapd_data *hapd,
  			wps->encr_types_rsn |= WPS_ENCR_TKIP;
+ #endif /* CONFIG_NO_TKIP */
  		}
 -	}
 -
 -	if (conf->wpa & WPA_PROTO_WPA) {
 +	} else if (conf->wpa & WPA_PROTO_WPA) {
- 		if (conf->wpa_key_mgmt & WPA_KEY_MGMT_PSK)
- 			wps->auth_types |= WPS_AUTH_WPAPSK;
- 		if (conf->wpa_key_mgmt & WPA_KEY_MGMT_IEEE8021X)
-@@ -1124,8 +1121,7 @@ int hostapd_init_wps(struct hostapd_data
+ #ifdef CONFIG_NO_TKIP
+ 		if (!(conf->wpa & WPA_PROTO_RSN)) {
+ 			wpa_printf(MSG_INFO, "WPS: WPA(v1) not supported");
+@@ -1208,8 +1205,7 @@ int hostapd_init_wps(struct hostapd_data *hapd,
  		if (conf->wpa_pairwise & WPA_CIPHER_CCMP) {
  			wps->encr_types |= WPS_ENCR_AES;
  			wps->encr_types_wpa |= WPS_ENCR_AES;

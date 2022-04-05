@@ -5,13 +5,9 @@ Subject: [PATCHv2 601/602] wpa_supplicant: add new config params to be used
  with the ibss join command
 
 Signed-hostap: Antonio Quartulli <ordex@autistici.org>
----
- src/drivers/driver.h            |    6 +++
- wpa_supplicant/config.c         |   96 +++++++++++++++++++++++++++++++++++++++
- wpa_supplicant/config_ssid.h    |    6 +++
- wpa_supplicant/wpa_supplicant.c |   23 +++++++---
- 4 files changed, 124 insertions(+), 7 deletions(-)
 
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index c0cb65e..702050e 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
 @@ -19,6 +19,7 @@
@@ -22,7 +18,7 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
  #include "common/defs.h"
  #include "common/ieee802_11_defs.h"
  #include "common/wpa_common.h"
-@@ -819,6 +820,9 @@ struct wpa_driver_associate_params {
+@@ -857,6 +858,9 @@ struct wpa_driver_associate_params {
  	 * responsible for selecting with which BSS to associate. */
  	const u8 *bssid;
  
@@ -32,9 +28,11 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
  	/**
  	 * bssid_hint - BSSID of a proposed AP
  	 *
+diff --git a/wpa_supplicant/config.c b/wpa_supplicant/config.c
+index bf062b0..e241e59 100644
 --- a/wpa_supplicant/config.c
 +++ b/wpa_supplicant/config.c
-@@ -16,6 +16,7 @@
+@@ -17,6 +17,7 @@
  #include "rsn_supp/wpa.h"
  #include "eap_peer/eap.h"
  #include "p2p/p2p.h"
@@ -42,9 +40,9 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
  #include "fst/fst.h"
  #include "config.h"
  
-@@ -1772,6 +1773,96 @@ static int wpa_config_parse_wep_key1(con
- 					value, 1);
- }
+@@ -1907,6 +1908,98 @@ static char * wpa_config_write_machine_password(const struct parse_data *data,
+ #endif /* NO_CONFIG_WRITE */
+ #endif /* IEEE8021X_EAPOL */
  
 +static int wpa_config_parse_mcast_rate(const struct parse_data *data,
 +					struct wpa_ssid *ssid, int line,
@@ -76,6 +74,7 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
 +	return value;
 +}
 +#endif /* NO_CONFIG_WRITE */
++
 +
 +static int wpa_config_parse_rates(const struct parse_data *data,
 +				struct wpa_ssid *ssid, int line,
@@ -136,10 +135,19 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
 +	return value;
 +}
 +#endif /* NO_CONFIG_WRITE */
++
  
+ #ifdef CONFIG_WEP
+ 
+@@ -1962,6 +2055,7 @@ static int wpa_config_parse_wep_key1(const struct parse_data *data,
+ }
+ 
+ 
++
  static int wpa_config_parse_wep_key2(const struct parse_data *data,
  				     struct wpa_ssid *ssid, int line,
-@@ -2380,6 +2471,9 @@ static const struct parse_data ssid_fiel
+ 				     const char *value)
+@@ -2605,6 +2699,9 @@ static const struct parse_data ssid_fields[] = {
  	{ INT(ap_max_inactivity) },
  	{ INT(dtim_period) },
  	{ INT(beacon_int) },
@@ -149,6 +157,8 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
  #ifdef CONFIG_MACSEC
  	{ INT_RANGE(macsec_policy, 0, 1) },
  	{ INT_RANGE(macsec_integ_only, 0, 1) },
+diff --git a/wpa_supplicant/config_ssid.h b/wpa_supplicant/config_ssid.h
+index 724534d..1dca24f 100644
 --- a/wpa_supplicant/config_ssid.h
 +++ b/wpa_supplicant/config_ssid.h
 @@ -12,7 +12,7 @@
@@ -160,7 +170,7 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
  
  #define DEFAULT_EAP_WORKAROUND ((unsigned int) -1)
  #define DEFAULT_EAPOL_FLAGS (EAPOL_FLAG_REQUIRE_KEY_UNICAST | \
-@@ -783,6 +783,9 @@ struct wpa_ssid {
+@@ -846,6 +846,9 @@ struct wpa_ssid {
  	 */
  	void *parent_cred;
  
@@ -170,14 +180,16 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
  #ifdef CONFIG_MACSEC
  	/**
  	 * macsec_policy - Determines the policy for MACsec secure session
+diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
+index dc3a2b6..87e4967 100644
 --- a/wpa_supplicant/wpa_supplicant.c
 +++ b/wpa_supplicant/wpa_supplicant.c
-@@ -3200,6 +3200,13 @@ static void wpas_start_assoc_cb(struct w
+@@ -3799,6 +3799,13 @@ static void wpas_start_assoc_cb(struct wpa_radio_work *work, int deinit)
  			params.beacon_int = ssid->beacon_int;
  		else
  			params.beacon_int = wpa_s->conf->beacon_int;
 +		params.fixed_freq = ssid->fixed_freq;
-+		i = 0;
++		int i = 0;
 +		while (i < NL80211_MAX_SUPP_RATES) {
 +			params.rates[i] = ssid->rates[i];
 +			i++;
@@ -185,4 +197,4 @@ Signed-hostap: Antonio Quartulli <ordex@autistici.org>
 +		params.mcast_rate = ssid->mcast_rate;
  	}
  
- 	params.pairwise_suite = cipher_pairwise;
+ 	if (bss && ssid->enable_edmg)

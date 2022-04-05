@@ -1,7 +1,7 @@
 --- a/hostapd/ctrl_iface.c
 +++ b/hostapd/ctrl_iface.c
-@@ -2803,6 +2803,26 @@ static int hostapd_ctrl_iface_remove_nei
- 	return hostapd_neighbor_remove(hapd, bssid, &ssid);
+@@ -3322,6 +3322,26 @@ static int hostapd_ctrl_iface_remove_neighbor(struct hostapd_data *hapd,
+ 	return hostapd_neighbor_remove(hapd, bssid, ssidp);
  }
  
 +static int hostapd_ctrl_iface_signal_monitor(struct hostapd_data *hapd,
@@ -27,7 +27,7 @@
  
  static int hostapd_ctrl_driver_flags(struct hostapd_iface *iface, char *buf,
  				     size_t buflen)
-@@ -3372,6 +3392,9 @@ static int hostapd_ctrl_iface_receive_pr
+@@ -4006,6 +4026,9 @@ static int hostapd_ctrl_iface_receive_process(struct hostapd_data *hapd,
  		if (radius_server_dac_request(hapd->radius_srv, buf + 12) < 0)
  			reply_len = -1;
  #endif /* RADIUS_SERVER */
@@ -39,7 +39,7 @@
  			hapd, buf + 15, reply, reply_size);
 --- a/hostapd/hostapd_cli.c
 +++ b/hostapd/hostapd_cli.c
-@@ -1484,6 +1484,11 @@ static int hostapd_cli_cmd_deny_macacl(s
+@@ -1517,6 +1517,11 @@ static int hostapd_cli_cmd_deny_macacl(struct wpa_ctrl *ctrl, int argc,
  	return hostapd_cli_cmd(ctrl, "DENY_ACL", 1, argc, argv);
  }
  
@@ -51,7 +51,7 @@
  
  static int hostapd_cli_cmd_poll_sta(struct wpa_ctrl *ctrl, int argc,
  				    char *argv[])
-@@ -1679,6 +1684,8 @@ static const struct hostapd_cli_cmd host
+@@ -1732,6 +1737,8 @@ static const struct hostapd_cli_cmd hostapd_cli_commands[] = {
  	  "=Add/Delete/Show/Clear deny MAC ACL" },
  	{ "poll_sta", hostapd_cli_cmd_poll_sta, hostapd_complete_stations,
  	  "<addr> = poll a STA to check connectivity with a QoS null frame" },

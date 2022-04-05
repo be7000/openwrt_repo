@@ -6,14 +6,12 @@ Subject: [PATCH] hostapd: add HE cross check
 Cross check between firmware and hostapd config capabilities.
 
 Signed-off-by: Miles Hu <milehu@codeaurora.org>
----
- src/ap/hw_features.c         | 53 ++++++++++++++++++++++++++++++++++++++++++++
- src/common/ieee802_11_defs.h | 12 +++++++++-
- 2 files changed, 64 insertions(+), 1 deletion(-)
 
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index 46237ec..de01cf1 100644
 --- a/src/ap/hw_features.c
 +++ b/src/ap/hw_features.c
-@@ -657,8 +657,60 @@ static int ieee80211ac_supported_vht_cap
+@@ -677,8 +677,60 @@ static int ieee80211ac_supported_vht_capab(struct hostapd_iface *iface)
  
  
  #ifdef CONFIG_IEEE80211AX
@@ -74,29 +72,21 @@ Signed-off-by: Miles Hu <milehu@codeaurora.org>
  	return 1;
  }
  #endif /* CONFIG_IEEE80211AX */
-@@ -670,6 +722,7 @@ int hostapd_check_ht_capab(struct hostap
- {
- #ifdef CONFIG_IEEE80211N
- 	int ret;
-+
- 	if (!iface->conf->ieee80211n)
- 		return 0;
- 
+diff --git a/src/common/ieee802_11_defs.h b/src/common/ieee802_11_defs.h
+index 928b535..1e62d62 100644
 --- a/src/common/ieee802_11_defs.h
 +++ b/src/common/ieee802_11_defs.h
-@@ -2139,7 +2139,10 @@ struct ieee80211_spatial_reuse {
+@@ -2258,6 +2258,9 @@ struct ieee80211_spatial_reuse {
  
  /* HE Capabilities Information defines */
  
--#define HE_MACCAP_TWT_RESPONDER			((u8) BIT(3))
-+#define HE_MACCAP_TWT_REQUESTER_IDX	0
-+#define HE_MACCAP_TWT_REQUESTER		((u8) BIT(1))
-+#define HE_MACCAP_TWT_RESPONDER_IDX	0
-+#define HE_MACCAP_TWT_RESPONDER		((u8) BIT(2))
++#define HE_MACCAP_TWT_REQUESTER_IDX    0
++#define HE_MACCAP_TWT_REQUESTER                ((u8) BIT(1))
++#define HE_MACCAP_TWT_RESPONDER_IDX    0
+ #define HE_MACCAP_TWT_RESPONDER			((u8) BIT(2))
  
  #define HE_PHYCAP_CHANNEL_WIDTH_SET_IDX		0
- #define HE_PHYCAP_CHANNEL_WIDTH_MASK		((u8) (BIT(1) | BIT(2) | \
-@@ -2156,6 +2159,13 @@ struct ieee80211_spatial_reuse {
+@@ -2275,6 +2278,13 @@ struct ieee80211_spatial_reuse {
  #define HE_PHYCAP_MU_BEAMFORMER_CAPAB_IDX	4
  #define HE_PHYCAP_MU_BEAMFORMER_CAPAB		((u8) BIT(1))
  

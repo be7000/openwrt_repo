@@ -1,15 +1,17 @@
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 9c4e64f..e471775 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
-@@ -1658,6 +1658,7 @@ struct wpa_driver_capa {
- /** Driver support 4-way handshake offload for WPA-Personal */
- #define WPA_DRIVER_FLAGS_4WAY_HANDSHAKE_PSK	0x0200000000000000ULL
+@@ -2011,6 +2011,7 @@ struct wpa_driver_capa {
+ /** Driver supports Extended Key ID */
+ #define WPA_DRIVER_FLAGS_EXTENDED_KEY_ID	0x8000000000000000ULL
  	u64 flags;
 +#define WPA_DRIVER_FLAGS_TDLS_INACTIVITY_TIMER	0x0000040000000000ULL
  
- #define FULL_AP_CLIENT_STATE_SUPP(drv_flags) \
- 	(drv_flags & WPA_DRIVER_FLAGS_FULL_AP_CLIENT_STATE)
-@@ -4199,6 +4200,16 @@ struct wpa_driver_ops {
- 				   const u8 *bssid);
+ /** Driver supports a separate control port RX for EAPOL frames */
+ #define WPA_DRIVER_FLAGS2_CONTROL_PORT_RX	0x0000000000000001ULL
+@@ -4510,6 +4511,16 @@ struct wpa_driver_ops {
+ 				      const u8 *bssid);
  
  	/**
 +	 * get_peer_inactive_time - Get peer inactive time
@@ -25,19 +27,23 @@
  	 * update_connect_params - Update the connection parameters
  	 * @priv: Private driver interface data
  	 * @params: Association parameters
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index cd56384..4ae4fdc 100644
 --- a/src/drivers/driver_nl80211.c
 +++ b/src/drivers/driver_nl80211.c
-@@ -11179,6 +11179,7 @@ const struct wpa_driver_ops wpa_driver_n
- #endif /* CONFIG_DRIVER_NL80211_QCA */
+@@ -12290,6 +12290,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.do_acs = nl80211_do_acs,
  	.configure_data_frame_filters = nl80211_configure_data_frame_filters,
  	.get_ext_capab = nl80211_get_ext_capab,
 +	.get_peer_inactive_time = i802_get_inact_sec,
  	.update_connect_params = nl80211_update_connection_params,
  	.send_external_auth_status = nl80211_send_external_auth_status,
  	.set_4addr_mode = nl80211_set_4addr_mode,
+diff --git a/src/rsn_supp/tdls.c b/src/rsn_supp/tdls.c
+index c26a63d..2c21aa7 100644
 --- a/src/rsn_supp/tdls.c
 +++ b/src/rsn_supp/tdls.c
-@@ -722,12 +722,12 @@ static void wpa_tdls_peer_clear(struct w
+@@ -730,12 +730,12 @@ static void wpa_tdls_peer_clear(struct wpa_sm *sm, struct wpa_tdls_peer *peer)
  
  static void wpa_tdls_peer_free(struct wpa_sm *sm, struct wpa_tdls_peer *peer)
  {
@@ -51,7 +57,7 @@
  static void wpa_tdls_linkid(struct wpa_sm *sm, struct wpa_tdls_peer *peer,
  			    struct wpa_tdls_lnkid *lnkid)
  {
-@@ -1781,7 +1781,6 @@ static int tdls_nonce_set(const u8 *nonc
+@@ -1844,7 +1844,6 @@ static int tdls_nonce_set(const u8 *nonce)
  	return 0;
  }
  
@@ -59,7 +65,7 @@
  static int wpa_tdls_process_tpk_m1(struct wpa_sm *sm, const u8 *src_addr,
  				   const u8 *buf, size_t len)
  {
-@@ -2142,9 +2141,68 @@ error:
+@@ -2211,9 +2210,68 @@ error:
  	return -1;
  }
  
@@ -128,7 +134,7 @@
  	peer->tpk_success = 1;
  	peer->tpk_in_progress = 0;
  	eloop_cancel_timeout(wpa_tdls_tpk_timeout, sm, peer);
-@@ -2174,7 +2232,23 @@ static int wpa_tdls_enable_link(struct w
+@@ -2243,7 +2301,23 @@ static int wpa_tdls_enable_link(struct wpa_sm *sm, struct wpa_tdls_peer *peer)
  	}
  	peer->reconfig_key = 0;
  
@@ -153,7 +159,7 @@
  }
  
  
-@@ -2823,9 +2897,12 @@ int wpa_tdls_init(struct wpa_sm *sm)
+@@ -2903,9 +2977,12 @@ int wpa_tdls_init(struct wpa_sm *sm)
  	 */
  	if (wpa_sm_tdls_get_capa(sm, &sm->tdls_supported,
  				 &sm->tdls_external_setup,
@@ -167,7 +173,7 @@
  	}
  
  	wpa_printf(MSG_DEBUG, "TDLS: TDLS operation%s supported by "
-@@ -2834,6 +2911,8 @@ int wpa_tdls_init(struct wpa_sm *sm)
+@@ -2914,6 +2991,8 @@ int wpa_tdls_init(struct wpa_sm *sm)
  		   sm->tdls_external_setup ? "external" : "internal");
  	wpa_printf(MSG_DEBUG, "TDLS: Driver %s TDLS channel switching",
  		   sm->tdls_chan_switch ? "supports" : "does not support");
@@ -176,9 +182,11 @@
  
  	return 0;
  }
+diff --git a/src/rsn_supp/wpa.h b/src/rsn_supp/wpa.h
+index 41daaae..69e213b 100644
 --- a/src/rsn_supp/wpa.h
 +++ b/src/rsn_supp/wpa.h
-@@ -56,7 +56,8 @@ struct wpa_sm_ctx {
+@@ -58,7 +58,8 @@ struct wpa_sm_ctx {
  	int (*mark_authenticated)(void *ctx, const u8 *target_ap);
  #ifdef CONFIG_TDLS
  	int (*tdls_get_capa)(void *ctx, int *tdls_supported,
@@ -188,7 +196,7 @@
  	int (*send_tdls_mgmt)(void *ctx, const u8 *dst,
  			      u8 action_code, u8 dialog_token,
  			      u16 status_code, u32 peer_capab,
-@@ -76,6 +77,7 @@ struct wpa_sm_ctx {
+@@ -81,6 +82,7 @@ struct wpa_sm_ctx {
  		void *ctx, const u8 *addr, u8 oper_class,
  		const struct hostapd_freq_params *params);
  	int (*tdls_disable_channel_switch)(void *ctx, const u8 *addr);
@@ -196,7 +204,7 @@
  #endif /* CONFIG_TDLS */
  	void (*set_rekey_offload)(void *ctx, const u8 *kek, size_t kek_len,
  				  const u8 *kck, size_t kck_len,
-@@ -439,6 +441,7 @@ int wpa_tdls_enable_chan_switch(struct w
+@@ -530,6 +532,7 @@ int wpa_tdls_enable_chan_switch(struct wpa_sm *sm, const u8 *addr,
  				u8 oper_class,
  				struct hostapd_freq_params *freq_params);
  int wpa_tdls_disable_chan_switch(struct wpa_sm *sm, const u8 *addr);
@@ -204,9 +212,11 @@
  #ifdef CONFIG_TDLS_TESTING
  extern unsigned int tdls_testing;
  #endif /* CONFIG_TDLS_TESTING */
+diff --git a/src/rsn_supp/wpa_i.h b/src/rsn_supp/wpa_i.h
+index 6cdce32..419b8d5 100644
 --- a/src/rsn_supp/wpa_i.h
 +++ b/src/rsn_supp/wpa_i.h
-@@ -110,6 +110,12 @@ struct wpa_sm {
+@@ -136,6 +136,12 @@ struct wpa_sm {
  
  	/* The driver supports TDLS channel switching */
  	int tdls_chan_switch;
@@ -219,7 +229,7 @@
  #endif /* CONFIG_TDLS */
  
  #ifdef CONFIG_IEEE80211R
-@@ -310,11 +316,15 @@ static inline void wpa_sm_set_rekey_offl
+@@ -362,11 +368,15 @@ static inline void wpa_sm_set_rekey_offload(struct wpa_sm *sm)
  static inline int wpa_sm_tdls_get_capa(struct wpa_sm *sm,
  				       int *tdls_supported,
  				       int *tdls_ext_setup,
@@ -237,7 +247,7 @@
  	return -1;
  }
  
-@@ -383,6 +393,14 @@ wpa_sm_tdls_disable_channel_switch(struc
+@@ -440,6 +450,14 @@ wpa_sm_tdls_disable_channel_switch(struct wpa_sm *sm, const u8 *addr)
  		return sm->ctx->tdls_disable_channel_switch(sm->ctx->ctx, addr);
  	return -1;
  }
@@ -252,9 +262,11 @@
  #endif /* CONFIG_TDLS */
  
  static inline int wpa_sm_key_mgmt_set_pmk(struct wpa_sm *sm,
+diff --git a/wpa_supplicant/config.c b/wpa_supplicant/config.c
+index 4a83763..2ebd007 100644
 --- a/wpa_supplicant/config.c
 +++ b/wpa_supplicant/config.c
-@@ -4288,6 +4288,8 @@ struct wpa_config * wpa_config_alloc_emp
+@@ -4590,6 +4590,8 @@ struct wpa_config * wpa_config_alloc_empty(const char *ctrl_interface,
  		config->driver_param = os_strdup(driver_param);
  	config->gas_rand_addr_lifetime = DEFAULT_RAND_ADDR_LIFETIME;
  
@@ -263,25 +275,27 @@
  	return config;
  }
  
-@@ -5029,6 +5031,7 @@ static const struct global_parse_data gl
- 	{ INT_RANGE(gas_rand_mac_addr, 0, 2), 0 },
- 	{ INT_RANGE(dpp_config_processing, 0, 2), 0 },
+@@ -5413,6 +5415,7 @@ static const struct global_parse_data global_fields[] = {
+ 	{ STR(dpp_mud_url), 0 },
+ #endif /* CONFIG_DPP */
  	{ INT_RANGE(coloc_intf_reporting, 0, 1), 0 },
 +	{ INT(tdls_peer_max_inactivity), 0 },
  #ifdef CONFIG_WNM
  	{ INT_RANGE(disable_btm, 0, 1), CFG_CHANGED_DISABLE_BTM },
- #endif /* CONFIG_WNM */
+ 	{ INT_RANGE(extended_key_id, 0, 1), 0 },
+diff --git a/wpa_supplicant/config.h b/wpa_supplicant/config.h
+index d22ef05..94eb38c 100644
 --- a/wpa_supplicant/config.h
 +++ b/wpa_supplicant/config.h
-@@ -44,6 +44,7 @@
+@@ -45,6 +45,7 @@
  #define DEFAULT_MBO_CELL_CAPA MBO_CELL_CAPA_NOT_SUPPORTED
  #define DEFAULT_DISASSOC_IMMINENT_RSSI_THRESHOLD -75
  #define DEFAULT_OCE_SUPPORT OCE_STA
 +#define DEFAULT_TDLS_PEER_MAX_INACTIVITY 300
+ #define DEFAULT_EXTENDED_KEY_ID 0
+ #define DEFAULT_SCAN_RES_VALID_FOR_CONNECT 5
  
- #include "config_ssid.h"
- #include "wps/wps.h"
-@@ -1501,6 +1502,15 @@ struct wpa_config {
+@@ -1607,6 +1608,15 @@ struct wpa_config {
  	int coloc_intf_reporting;
  
  	/**
@@ -296,10 +310,12 @@
 +	/**
  	 * p2p_device_random_mac_addr - P2P Device MAC address policy default
  	 *
- 	 * 0 = use permanent MAC address
+ 	 * 0 = use permanent MAC address (the one set by default by the device
+diff --git a/wpa_supplicant/config_file.c b/wpa_supplicant/config_file.c
+index 6db5010..4cb678b 100644
 --- a/wpa_supplicant/config_file.c
 +++ b/wpa_supplicant/config_file.c
-@@ -1536,6 +1536,9 @@ static void wpa_config_write_global(FILE
+@@ -1541,6 +1541,9 @@ static void wpa_config_write_global(FILE *f, struct wpa_config *config)
  	if (config->coloc_intf_reporting)
  		fprintf(f, "coloc_intf_reporting=%d\n",
  			config->coloc_intf_reporting);
@@ -309,10 +325,12 @@
  	if (config->p2p_device_random_mac_addr)
  		fprintf(f, "p2p_device_random_mac_addr=%d\n",
  			config->p2p_device_random_mac_addr);
+diff --git a/wpa_supplicant/driver_i.h b/wpa_supplicant/driver_i.h
+index 237f4e0..e97af75 100644
 --- a/wpa_supplicant/driver_i.h
 +++ b/wpa_supplicant/driver_i.h
-@@ -1080,4 +1080,12 @@ static inline int wpa_drv_set_4addr_mode
- 					     wpa_s->bridge_ifname, val);
+@@ -1117,4 +1117,12 @@ static inline int wpa_drv_dpp_listen(struct wpa_supplicant *wpa_s, bool enable)
+ 	return wpa_s->driver->dpp_listen(wpa_s->drv_priv, enable);
  }
  
 +static inline int wpa_drv_get_inactive_time(struct wpa_supplicant *wpa_s,
@@ -324,11 +342,13 @@
 +}
 +
  #endif /* DRIVER_I_H */
+diff --git a/wpa_supplicant/wpa_supplicant.conf b/wpa_supplicant/wpa_supplicant.conf
+index 6619d6b..d764a32 100644
 --- a/wpa_supplicant/wpa_supplicant.conf
 +++ b/wpa_supplicant/wpa_supplicant.conf
-@@ -1522,6 +1522,18 @@ fast_reauth=1
- # Set to 1 to disable BSS transition management
- #disable_btm=0
+@@ -1673,6 +1673,18 @@ fast_reauth=1
+ # In STA mode it defines the EDMG channel for connection (if supported by AP).
+ #edmg_channel=9
  
 +# Inactivity limit for TDLS peers
 +#
@@ -345,9 +365,11 @@
  # Example blocks:
  
  # Simple case: WPA-PSK, PSK as an ASCII passphrase, allow all valid ciphers
+diff --git a/wpa_supplicant/wpas_glue.c b/wpa_supplicant/wpas_glue.c
+index 17fc05b..dbb9955 100644
 --- a/wpa_supplicant/wpas_glue.c
 +++ b/wpa_supplicant/wpas_glue.c
-@@ -680,13 +680,17 @@ static int wpa_supplicant_mark_authentic
+@@ -729,13 +729,17 @@ static int wpa_supplicant_mark_authenticated(void *ctx, const u8 *target_ap)
  
  static int wpa_supplicant_tdls_get_capa(void *ctx, int *tdls_supported,
  					int *tdls_ext_setup,
@@ -366,7 +388,7 @@
  
  	if (!wpa_s->drv_capa_known)
  		return -1;
-@@ -700,6 +704,11 @@ static int wpa_supplicant_tdls_get_capa(
+@@ -749,6 +753,11 @@ static int wpa_supplicant_tdls_get_capa(void *ctx, int *tdls_supported,
  	if (wpa_s->drv_flags & WPA_DRIVER_FLAGS_TDLS_CHANNEL_SWITCH)
  		*tdls_chan_switch = 1;
  
@@ -378,7 +400,7 @@
  	return 0;
  }
  
-@@ -786,6 +795,13 @@ static int wpa_supplicant_tdls_disable_c
+@@ -841,6 +850,13 @@ static int wpa_supplicant_tdls_disable_channel_switch(void *ctx, const u8 *addr)
  	return wpa_drv_tdls_disable_channel_switch(wpa_s, addr);
  }
  
@@ -392,7 +414,7 @@
  #endif /* CONFIG_TDLS */
  
  #endif /* CONFIG_NO_WPA */
-@@ -1235,6 +1251,7 @@ int wpa_supplicant_init_wpa(struct wpa_s
+@@ -1415,6 +1431,7 @@ int wpa_supplicant_init_wpa(struct wpa_supplicant *wpa_s)
  		wpa_supplicant_tdls_enable_channel_switch;
  	ctx->tdls_disable_channel_switch =
  		wpa_supplicant_tdls_disable_channel_switch;
