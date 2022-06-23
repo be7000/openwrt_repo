@@ -203,6 +203,29 @@ do_flash_ubi() {
 	ubiformat /dev/${mtdpart} -y -f /tmp/${bin}.bin
 }
 
+do_flash_failsafe_ubi_volume() {
+	local bin=$1
+	local mtdname=$2
+	local vol_name=$3
+	local tmpfile="${bin}.bin"
+	local mtdpart
+
+	[ -f /proc/boot_info/$mtdname/upgradepartition ] && {
+		mtdname=$(cat /proc/boot_info/$mtdname/upgradepartition)
+	}
+	mtdpart=$(grep "\"${mtdname}\"" /proc/mtd | awk -F: '{print $1}')
+
+	ubiattach -p /dev/${mtdpart}
+
+	volumes=$(ls /sys/class/ubi/ubi0/ | grep ubi._.*)
+
+	for vol in ${volumes}
+	do
+		[ -f /sys/class/ubi/${vol}/name ] && name=$(cat /sys/class/ubi/${vol}/name)
+		[ ${name} == ${vol_name} ] && ubiupdatevol /dev/${vol} /tmp/${tmpfile} && break
+	done
+}
+
 do_flash_tz() {
 	local sec=$1
 	local mtdpart=$(grep "\"0:QSEE\"" /proc/mtd | awk -F: '{print $1}')
@@ -244,6 +267,42 @@ image_is_nand()
 	[ -e "$nand_part" ] || return 1
 
 }
+
+get_fw_name() {
+	cat /proc/device-tree/model | grep -q 9574 && img="ipq9574"
+
+	wifi_ipq="ignored"
+	machineid=$(fw_printenv -l /tmp/. machid | cut -d '=' -f 2)
+
+	case "${machineid}" in
+		"8050301"|\
+		"8050601"|\
+		"8050701")
+			wifi_ipq="qcn9224"
+			;;
+		"8050501"|\
+		"8050b01")
+			wifi_ipq=$img"_qcn9224"
+			;;
+		"8050102"|\
+		"8050002"|\
+		"8050801")
+			wifi_ipq="qcn9224_dualmac"
+			;;
+		"8050d01")
+			wifi_ipq=$img"_qcn9224_dualmac"
+			;;
+		"8050c01")
+			wifi_ipq=$img"_qcn9000_qcn9224"
+			;;
+		"8050a01")
+			wifi_ipq=$img"_qcn9000_qcn9224_dualmac"
+			;;
+	esac
+
+	echo $wifi_ipq
+}
+
 flash_section() {
 	local sec=$1
 	local board=$(board_name)
@@ -263,6 +322,7 @@ flash_section() {
 	case "${sec}" in
 		hlos*) switch_layout linux; image_is_nand && return || do_flash_failsafe_partition ${sec} "0:HLOS";;
 		rootfs*) switch_layout linux; image_is_nand && return || do_flash_failsafe_partition ${sec} "rootfs";;
+		wifi_fw_$(get_fw_name)-*) switch_layout linux; do_flash_failsafe_partition ${sec} "0:WIFIFW"; do_flash_failsafe_ubi_volume ${sec} "rootfs" "wifi_fw" ;;
 		wififw-*) switch_layout linux; do_flash_failsafe_partition ${sec} "0:WIFIFW";;
 		wififw_ubi-*) switch_layout linux; do_flash_ubi ${sec} "0:WIFIFW";;
 		wififw_v${version}-*) switch_layout linux; do_flash_failsafe_partition ${sec} "0:WIFIFW";;
@@ -421,6 +481,8 @@ platform_do_upgrade() {
 	qcom,ipq9574-ap-al02-c10 |\
 	qcom,ipq9574-ap-al02-c11 |\
 	qcom,ipq9574-ap-al02-c12 |\
+	qcom,ipq9574-ap-al02-c13 |\
+	qcom,ipq9574-ap-al02-c14 |\
 	qcom,ipq9574-db-al01-c1 |\
 	qcom,ipq9574-db-al01-c2 |\
 	qcom,ipq9574-db-al01-c3 |\
@@ -471,7 +533,7 @@ platform_copy_config() {
 	local emmcblock="$(find_mmc_part "rootfs")"
 	mkdir -p /tmp/overlay
 
-	if [ -e "$nand_part" ]; then
+	if [ -e "${nand_part%% *}" ]; then
 		local mtdname=rootfs
 		local mtdpart
 
