@@ -31,6 +31,7 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
 
 TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
+TARGET_CFLAGS += -Werror=format-truncation=0
 CMAKE_OPTIONS += $(if $(CONFIG_FSTOOLS_UBIFS_EXTROOT),-DCMAKE_UBIFS_EXTROOT=y)
 
 define Package/fstools
