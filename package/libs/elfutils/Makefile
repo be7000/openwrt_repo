@@ -68,6 +68,8 @@ CONFIGURE_ARGS += \
 	--disable-werror \
 	--without-lzma
 
+TARGET_CFLAGS += -Wno-error=misleading-indentation -Wno-error=nonnull-compare -Wno-implicit-fallthrough
+
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/* $(1)/usr/include/
