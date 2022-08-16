@@ -40,7 +40,7 @@ define Package/firewall/conffiles
 /etc/firewall.user
 endef
 
-TARGET_CFLAGS += -ffunction-sections -fdata-sections
+TARGET_CFLAGS += -ffunction-sections -fdata-sections -Werror=format-truncation=0 -Werror=format-overflow=0
 TARGET_LDFLAGS += -Wl,--gc-sections
 CMAKE_OPTIONS += $(if $(CONFIG_IPV6),,-DDISABLE_IPV6=1)
 
