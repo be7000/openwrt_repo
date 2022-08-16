@@ -67,7 +67,8 @@ define Package/binutils/description
   The Binutils package contains a linker, an assembler, and other tools for handling object files
 endef
 
-TARGET_CFLAGS += $(FPIC) -Wno-unused-value
+TARGET_CFLAGS += $(FPIC) -Wno-unused-value -Wno-implicit-fallthrough -Wno-pointer-compare \
+			-Wunused-const-variable=0 -Wno-shift-negative-value -Wformat-overflow=0
 
 CONFIGURE_ARGS += \
 	--host=$(REAL_GNU_TARGET_NAME) \
