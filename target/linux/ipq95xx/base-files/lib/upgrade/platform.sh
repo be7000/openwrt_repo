@@ -21,7 +21,7 @@ RAMFS_COPY_DATA="/etc/fw_env.config /var/lock/fw_printenv.lock"
 RAMFS_COPY_BIN="/usr/bin/dumpimage /bin/mktemp /usr/sbin/mkfs.ubifs
 	/usr/sbin/ubiattach /usr/sbin/ubidetach /usr/sbin/ubiformat /usr/sbin/ubimkvol
 	/usr/sbin/ubiupdatevol /usr/bin/basename /bin/rm /usr/bin/find
-	/usr/sbin/mkfs.ext4 /usr/sbin/fw_printenv"
+	/usr/sbin/mkfs.ext4 /usr/sbin/fw_printenv /sbin/lsmod"
 
 get_full_section_name() {
 	local img=$1
@@ -276,31 +276,27 @@ get_fw_name() {
 	cat /proc/device-tree/model | grep -q 9574 && img="ipq9574"
 
 	wifi_ipq="ignored"
+	image_suffix="qcn9000_qcn9224_v2_dualmac"
+	if lsmod | grep ath1 > /dev/null 2>&1 ; then
+		image_suffix="qcn9224_v2"
+	fi
 	machineid=$(fw_printenv -l /tmp/. machid | cut -d '=' -f 2)
 
 	case "${machineid}" in
 		"8050301"|\
 		"8050601"|\
-		"8050701")
-			wifi_ipq="qcn9224"
-			;;
+		"8050701"|\
 		"8050501"|\
-		"8050b01")
-			wifi_ipq=$img"_qcn9224"
-			;;
+		"8050b01"|\
 		"8050102"|\
 		"8050002"|\
-		"8050801")
-			wifi_ipq="qcn9224_dualmac"
-			;;
-		"8050d01")
-			wifi_ipq=$img"_qcn9224_dualmac"
-			;;
-		"8050c01")
-			wifi_ipq=$img"_qcn9000_qcn9224"
-			;;
+		"8050801"|\
+		"8050d01"|\
+		"8051001"|\
+		"8051101"|\
+		"8050c01"|\
 		"8050a01")
-			wifi_ipq=$img"_qcn9000_qcn9224_dualmac"
+			wifi_ipq="$img"_"$image_suffix"
 			;;
 		*)
 			wifi_ipq=$img"_qcn9000"
@@ -494,6 +490,8 @@ platform_do_upgrade() {
 	qcom,ipq9574-ap-al02-c14 |\
 	qcom,ipq9574-ap-al02-c15 |\
 	qcom,ipq9574-ap-al02-c16 |\
+	qcom,ipq9574-ap-al02-c17 |\
+	qcom,ipq9574-ap-al02-c18 |\
 	qcom,ipq9574-db-al01-c1 |\
 	qcom,ipq9574-db-al01-c2 |\
 	qcom,ipq9574-db-al01-c3 |\
