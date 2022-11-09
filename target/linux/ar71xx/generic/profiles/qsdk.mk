@@ -30,6 +30,8 @@ BLUETOPIA:=kmod-bluetopia-usb-driver bluetopia
 
 BLUETOOTH:=$(BLUETOPIA)
 
+MATTER:=connectedhomeip
+
 WIFI_10_4:=kmod-qca-wifi-10.4-unified-perf kmod-art2 \
         qca-hostap-10.4 qca-hostapd-cli-10.4 qca-wpa-supplicant-10.4 \
         qca-wpa-cli-10.4 qca-wapid qca-wpc-10.4 \
@@ -40,7 +42,7 @@ WIFI_10_4:=kmod-qca-wifi-10.4-unified-perf kmod-art2 \
 
 define Profile/QSDK_IOE_SB
 	NAME:=Qualcomm-Atheros SDK IoE Single Band Profile
-	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_OPEN) \
+	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_OPEN) $(MATTER)\
 		  qca-legacy-uboot-ap143-16M qca-legacy-uboot-ap143-32M \
 		  qca-legacy-uboot-cus531-16M qca-legacy-uboot-cus531-dual \
 		  qca-legacy-uboot-cus531-32M qca-legacy-uboot-cus531-nand \
@@ -54,7 +56,7 @@ endef
 
 define Profile/QSDK_IOE_DBPAN
 	NAME:=Qualcomm-Atheros SDK IoE Dual Band and Personal Area Network Profile
-	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_OPEN) \
+	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_OPEN) $(MATTER) \
 		  qca-legacy-uboot-cus531mp3-16M qca-legacy-uboot-cus531mp3-32M \
 		  qca-legacy-uboot-cus531mp3-dual qca-legacy-uboot-cus531mp3-nand \
 		  qca-legacy-uboot-ap147ioe-16M qca-legacy-uboot-ap147ioe-nand \
@@ -70,7 +72,7 @@ endef
 
 define Profile/QSDK_IOE_PREMIUM
 	NAME:=Qualcomm-Atheros SDK IoE Dual Band and Personal Area Network Profile
-	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_10_4) $(BLUETOOTH) \
+	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_10_4) $(BLUETOOTH) $(MATTER) \
 		  qca-legacy-uboot-cus531mp3-16M qca-legacy-uboot-cus531mp3-32M \
 		  qca-legacy-uboot-cus531mp3-dual qca-legacy-uboot-cus531mp3-nand \
 		  kmod-usb-serial kmod-usb-serial-pl2303
@@ -83,7 +85,7 @@ endef
 
 define Profile/QSDK_IOE_TEST
 	NAME:=Qualcomm-Atheros SDK IoE test Profile
-	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_OPEN) kmod-bluetooth  \
+	PACKAGES:=$(IOE_BASE) $(TEST_TOOLS) $(WIFI_OPEN) $(MATTER) kmod-bluetooth  \
 		  kmod-usb-serial kmod-usb-serial-pl2303 kmod-art2  \
                   btdiag qcmbr-10.4
 endef
