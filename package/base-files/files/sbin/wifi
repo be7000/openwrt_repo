@@ -137,6 +137,7 @@ _wifi_updown() {
 }
 
 wifi_updown() {
+	lock_wifi
 	cmd=down
 	[ enable = "$1" ] && {
 		_wifi_updown disable "$2" "$3"
@@ -146,6 +147,7 @@ wifi_updown() {
 	}
 	ubus_wifi_cmd "$cmd" "$2"
 	_wifi_updown "$@"
+	unlock_wifi
 }
 
 wifi_recover() {
@@ -154,9 +156,16 @@ wifi_recover() {
 }
 
 wifi_reload_legacy() {
+	skip_network_restart
+	if [ $skip_network = "1" ]; then
+		echo Skip network restart cmd > /dev/ksmg
+		return
+	fi
+	lock_wifi
 	_wifi_updown "disable" "$1" "$2" "$3" "$4"
 	scan_wifi
 	_wifi_updown "enable" "$1" "$2" "$3" "$4"
+	unlock_wifi
 }
 
 wifi_reload() {
@@ -183,6 +192,19 @@ wifi_config() {
 }
 
 wifi_unload() {
+	lock_wifi
+	_wifi_updown "disable" "$1"
+	for driver in ${1:-$DRIVERS}; do (
+		if eval "type unload_$driver" 2>/dev/null >/dev/null; then
+			eval "unload_$driver" || echo "$driver: unload failed" >&2
+		else
+			echo "$driver: wifi unload not supported" >&2
+		fi
+	); done
+	unlock_wifi
+}
+
+_wifi_unload() {
 	_wifi_updown "disable" "$1"
 	for driver in ${1:-$DRIVERS}; do (
 		if eval "type unload_$driver" 2>/dev/null >/dev/null; then
@@ -194,7 +216,8 @@ wifi_unload() {
 }
 
 wifi_load() {
-	wifi_unload
+	lock_wifi
+	_wifi_unload
 	for driver in ${1:-$DRIVERS}; do (
 		if eval "type load_$driver" 2>/dev/null >/dev/null; then
 			eval "load_$driver" "$2" || echo "$driver: load failed" >&2
@@ -203,6 +226,7 @@ wifi_load() {
 		fi
 	); done
 	_wifi_updown "enable" "$1" "$2"
+	unlock_wifi
 }
 
 start_net() {(
