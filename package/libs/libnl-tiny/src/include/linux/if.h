@@ -106,6 +106,7 @@ enum {
 	IF_LINK_MODE_DORMANT,	/* limit upward transition to dormant */
 };
 
+#if 0
 /*
  *	Device mapping structure. I'd just gone off and designed a 
  *	beautiful scheme using only loadable modules with arguments
@@ -126,6 +127,7 @@ struct ifmap
 	unsigned char port;
 	/* 3 bytes spare */
 };
+#endif
 
 
 #endif /* _LINUX_IF_H */
