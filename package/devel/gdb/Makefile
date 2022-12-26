@@ -60,10 +60,13 @@ CONFIGURE_ARGS+= \
 CONFIGURE_VARS+= \
 	ac_cv_search_tgetent="$(TARGET_LDFLAGS) -lncurses -lreadline"
 
+TARGET_CFLAGS+= -std=gnu89
+
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
 		DESTDIR="$(PKG_INSTALL_DIR)" \
 		CPPFLAGS="$(TARGET_CPPFLAGS)" \
+		CFLAGS="$(TARGET_CFLAGS)" \
 		all
 endef
 
