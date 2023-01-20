@@ -211,11 +211,24 @@ do_flash_failsafe_partition() {
 	bootname=$(get_bootconfig_name)
 	[ -f /proc/boot_info/$bootname/$mtdname/upgradepartition ] && {
 		default_mtd=$mtdname
-		mtdname=$(cat /proc/boot_info/$bootname/$mtdname/upgradepartition)
+		if [ -e /proc/upgrade_info/trybit ]; then
+			#Trymode
+			if [ $age0 -le $age1 ]; then
+				mtdname=$(cat /proc/boot_info/bootconfig1/$mtdname/upgradepartition)
+			else
+				mtdname=$(cat /proc/boot_info/bootconfig0/$mtdname/upgradepartition)
+			fi
+		else
+			#Ordinary mode
+			mtdname=$(cat /proc/boot_info/$bootname/$mtdname/upgradepartition)
+		fi
+
 		if [ "$bootname" = "bootconfig0" ]; then
 			primaryboot=$(cat /proc/boot_info/bootconfig1/$default_mtd/primaryboot)
+			bootname="bootconfig1"
 		else
 			primaryboot=$(cat /proc/boot_info/bootconfig0/$default_mtd/primaryboot)
+			bootname="bootconfig0"
 		fi
 		# Try mode
         	if [ -e /proc/upgrade_info/trybit ]; then
@@ -262,8 +275,10 @@ do_flash_ubi() {
 	[ -f /proc/boot_info/$btname/$mtdname/upgradepartition ] && {
 		if [ "$btname" = "bootconfig0" ]; then
 			primaryboot=$(cat /proc/boot_info/bootconfig1/$mtdname/primaryboot)
+			btname="bootconfig1"
 		else
 			primaryboot=$(cat /proc/boot_info/bootconfig0/$mtdname/primaryboot)
+			btname="bootconfig0"
 		fi
 
 		#Try mode
@@ -371,7 +386,7 @@ get_fw_name() {
 	wifi_ipq="ignored"
 	image_suffix="qcn9000_qcn9224_v2_dualmac"
 	if lsmod | grep ath1 > /dev/null 2>&1 ; then
-		image_suffix="qcn9224_v2"
+		image_suffix="qcn9000_qcn9224_v2_dualmac"
 	fi
 	machineid=$(fw_printenv -l /tmp/. machid | cut -d '=' -f 2)
 
@@ -585,6 +600,7 @@ platform_do_upgrade() {
 	qcom,ipq9574-ap-al02-c16 |\
 	qcom,ipq9574-ap-al02-c17 |\
 	qcom,ipq9574-ap-al02-c18 |\
+	qcom,ipq9574-ap-al02-c19 |\
 	qcom,ipq9574-db-al01-c1 |\
 	qcom,ipq9574-db-al01-c2 |\
 	qcom,ipq9574-db-al01-c3 |\
@@ -601,9 +617,11 @@ platform_do_upgrade() {
 		#Try mode
 		if [ -e /proc/upgrade_info/trybit ]; then
 			if age_check ; then
-				do_flash_bootconfig bootconfig0 "0:BOOTCONFIG"
+				echo $(cat /proc/boot_info/bootconfig0/age) > /proc/boot_info/bootconfig1/age
+				do_flash_bootconfig bootconfig1 "0:BOOTCONFIG"
 			else
-				do_flash_bootconfig bootconfig1 "0:BOOTCONFIG1"
+				echo $(cat /proc/boot_info/bootconfig1/age) > /proc/boot_info/bootconfig0/age
+				do_flash_bootconfig bootconfig0 "0:BOOTCONFIG1"
 			fi
 		else
 			do_flash_bootconfig bootconfig0 "0:BOOTCONFIG"
