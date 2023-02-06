@@ -34,7 +34,7 @@ endef
 MAKE_OPTS:= \
 	ARCH="$(LINUX_KARCH)" \
 	CROSS_COMPILE="$(TARGET_CROSS)" \
-	SUBDIRS="$(PKG_BUILD_DIR)"
+	M="$(PKG_BUILD_DIR)"
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
