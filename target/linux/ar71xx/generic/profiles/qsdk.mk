@@ -6,7 +6,7 @@ IOE_BASE:=luci uhttpd luci-app-upnp mcproxy rp-pppoe-relay \
 	  -dnsmasq dnsmasq-dhcpv6 radvd wide-dhcpv6-client bridge \
 	  swconfig luci-app-ddns ddns-scripts luci-app-qos \
 	  kmod-nf-nathelper-extra kmod-ipt-nathelper-rtsp kmod-ipv6 \
-	  kmod-usb2 kmod-i2c-gpio-custom kmod-button-hotplug
+	  kmod-usb2 kmod-button-hotplug
 
 STORAGE:=kmod-scsi-core kmod-usb-storage \
 	 kmod-fs-msdos kmod-fs-ntfs kmod-fs-vfat \
