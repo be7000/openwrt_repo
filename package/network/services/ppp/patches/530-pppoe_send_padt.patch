@@ -9,3 +9,33 @@
      if (conn->discoverySocket >= 0)
  	close(conn->discoverySocket);
  }
+--- a/pppd/plugins/rp-pppoe/pppoe.h
++++ b/pppd/plugins/rp-pppoe/pppoe.h
+@@ -88,6 +88,27 @@ typedef unsigned long UINT32_t;
+ 
+ #include <netinet/in.h>
+ 
++#define __UAPI_DEF_IF_IFCONF 0
++#define __UAPI_DEF_IF_IFMAP 0
++#define __UAPI_DEF_IF_IFNAMSIZ 0
++#define __UAPI_DEF_IF_IFREQ 0
++#define __UAPI_DEF_IF_NET_DEVICE_FLAGS 0
++#define __UAPI_DEF_IN_ADDR      0
++#define __UAPI_DEF_IN_IPPROTO       0
++#define __UAPI_DEF_IN_PKTINFO       0
++#define __UAPI_DEF_IP_MREQ      0
++#define __UAPI_DEF_SOCKADDR_IN      0
++#define __UAPI_DEF_IN_CLASS     0
++#define __UAPI_DEF_IN6_ADDR     0
++
++#define __UAPI_DEF_IN6_ADDR_ALT     0
++#define __UAPI_DEF_SOCKADDR_IN6     0
++#define __UAPI_DEF_IPV6_MREQ        0
++#define __UAPI_DEF_IPPROTO_V6       0
++#define __UAPI_DEF_IPV6_OPTIONS     0
++#define __UAPI_DEF_IN6_PKTINFO      0
++#define __UAPI_DEF_IP6_MTUINFO      0
++
+ 
+ 
+ /* Ethernet frame types according to RFC 2516 */

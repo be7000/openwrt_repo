@@ -18,8 +18,6 @@ PKG_MD5SUM:=78818f40e6d33a1d1de68a1551f6595a
 PKG_MAINTAINER:=Felix Fietkau <nbd@openwrt.org>
 PKG_LICENSE:=BSD-4-Clause
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
-
 PKG_BUILD_DEPENDS:=libpcap
 
 PKG_BUILD_PARALLEL:=1
@@ -157,6 +155,7 @@ $(call Build/Configure/Default,, \
 	mkdir -p $(PKG_BUILD_DIR)/pppd/plugins/pppoatm/linux
 	cp \
 		$(LINUX_DIR)/include/linux/compiler.h \
+		$(LINUX_DIR)/include/linux/compiler_types.h \
 		$(LINUX_DIR)/include/$(LINUX_UAPI_DIR)linux/atm*.h \
 		$(PKG_BUILD_DIR)/pppd/plugins/pppoatm/linux/
 endef
