@@ -23,6 +23,8 @@ $url_filename = shift @ARGV unless $ARGV[0] =~ /:\/\//;
 my $scriptdir = dirname($0);
 my @mirrors;
 my $ok;
+my $is_network_down = $ENV{'IS_NETWORK_DOWN'};
+my $nfs_server = $ENV{'NFS_MIRROR_SERVER'};
 
 my $check_certificate = $ENV{DOWNLOAD_CHECK_CERTIFICATE} eq "y";
 my $custom_tool = $ENV{DOWNLOAD_TOOL_CUSTOM};
@@ -160,7 +162,7 @@ sub download
 			system("mkdir", "-p", "$target/");
 		}
 
-		if (! open TMPDLS, "find $mirror -follow -name $filename 2>/dev/null |") {
+		if (! open TMPDLS, "find $mirror -not -path '*/[@.]*' -follow -name $filename 2>/dev/null |") {
 			print("Failed to search for $filename in $mirror\n");
 			return;
 		}
@@ -238,7 +240,9 @@ sub cleanup
 	unlink "$target/$filename.hash";
 }
 
-@mirrors = localmirrors();
+if (!$is_network_down) {
+	@mirrors = localmirrors();
+}
 
 foreach my $mirror (@ARGV) {
 	if ($mirror =~ /^\@SF\/(.+)$/) {
@@ -319,6 +323,32 @@ push @mirrors, 'https://sources.cdn.openwrt.org';
 push @mirrors, 'https://sources.openwrt.org';
 push @mirrors, 'https://mirror2.openwrt.org/sources';
 
+$download_tool = select_tool();
+
+my @clo_mirrors;
+if ($nfs_server) {
+	push @clo_mirrors, "file://${nfs_server}";
+} else {
+	push @clo_mirrors, 'file:///prj/qct/openwrt/caf_mirrored_tarballs';
+}
+
+if (!$is_network_down) {
+	push @clo_mirrors, 'https://codelinaro.jfrog.io/artifactory/codelinaro-qsdk/';
+}
+#first check in NFS and CLO server
+while (!$ok and !-f "$target/$filename") {
+	my $mirror = shift @clo_mirrors;
+	$mirror or last;
+
+	download($mirror);
+	-f "$target/$filename" and $ok = 1;
+}
+
+if(!-f "$target/$filename") {
+	print ("The $target/$filename is not present in clo\n");
+	#exit -1;
+}
+
 if (-f "$target/$filename") {
 	$hash_cmd and do {
 		if (system("cat '$target/$filename' | $hash_cmd > '$target/$filename.hash'")) {
@@ -336,8 +366,6 @@ if (-f "$target/$filename") {
 		unlink "$target/$filename";
 	};
 }
-
-$download_tool = select_tool();
 
 while (!-f "$target/$filename") {
 	my $mirror = shift @mirrors;
