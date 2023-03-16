@@ -138,9 +138,12 @@ menu "Global build settings"
 		  Useful for release builds, so that kernel issues can be debugged offline
 		  later.
 
+	source "openwrt-patches/config/Config-build.in"
+
 	menu "Kernel build options"
 
 	source "config/Config-kernel.in"
+	source "openwrt-patches/config/Config-kernel.in"
 
 	endmenu
 
