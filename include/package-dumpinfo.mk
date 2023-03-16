@@ -13,7 +13,10 @@ $(if $(PKG_BUILD_DEPENDS),Build-Depends: $(PKG_BUILD_DEPENDS)
 
 endef
 
+FindPackage ?=$(strip $(shell find $(TOPDIR)/openwrt-patches -name $(1) 2>/dev/null))
+
 define Dumpinfo/Package
+$(eval -include $(wildcard $(call FindPackage, $(1))/$(1).mk))
 $(info $(SOURCE_INFO)Package: $(1)
 $(if $(MENU),Menu: $(MENU)
 )$(if $(SUBMENU),Submenu: $(SUBMENU)
@@ -45,6 +48,7 @@ $(if $(URL),$(URL)
 )$(MAINTAINER)
 @@
 $(if $(Package/$(1)/config),Config:
+$(Package/$(1)/overrideconfig)
 $(Package/$(1)/config)
 @@
 ))
