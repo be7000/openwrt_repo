@@ -65,6 +65,13 @@ make install
 cd /tmp
 rm -rf coccinelle
 
+if [[ $(lsb_release -rs) == "20.04" || $(lsb_release -rs) == "22.04" ]]; then
+wget http://archive.ubuntu.com/ubuntu/pool/main/m/make-dfsg/make_4.1-9.1ubuntu1_amd64.deb
+sudo dpkg -i make_4.1-9.1ubuntu1_amd64.deb
+#After installation of make, remove the downloaded code
+rm make_4.1-9.1ubuntu1_amd64.deb
+fi
+
 dpkg --list > ${logdir}/pkgs_found_after.log 2>&1
 
 gzip -9 ${logdir}/*
