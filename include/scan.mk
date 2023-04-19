@@ -10,6 +10,7 @@ SCAN_DIR ?= package
 TARGET_STAMP:=$(TMP_DIR)/info/.files-$(SCAN_TARGET).stamp
 FILELIST:=$(TMP_DIR)/info/.files-$(SCAN_TARGET)-$(SCAN_COOKIE)
 OVERRIDELIST:=$(TMP_DIR)/info/.overrides-$(SCAN_TARGET)-$(SCAN_COOKIE)
+QSDK_PACKAGE_DIR:=$(TOPDIR)/target/linux/feeds
 
 export ORIG_PATH:=$(if $(ORIG_PATH),$(ORIG_PATH),$(PATH))
 export PATH:=$(STAGING_DIR_HOST)/bin:$(PATH)
@@ -19,7 +20,7 @@ $(if $(patsubst feeds/%,,$(1)),,$(word 2,$(subst /, ,$(1))))
 endef
 
 ifeq ($(SCAN_NAME),target)
-  SCAN_DEPS=image/Makefile profiles/*.mk $(TOPDIR)/include/kernel*.mk $(TOPDIR)/include/target.mk image/*.mk
+  SCAN_DEPS=image/Makefile profiles/*.mk $(QSDK_PACKAGE_DIR)/profiles/*.mk $(TOPDIR)/include/kernel*.mk $(TOPDIR)/include/target.mk image/*.mk
 else
   SCAN_DEPS=$(TOPDIR)/include/package*.mk
 ifneq ($(call feedname,$(SCAN_DIR)),)
