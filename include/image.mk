@@ -520,7 +520,7 @@ endef
 define Device/Check
   $(Device/Check/Common)
   KDIR_KERNEL_IMAGE := $(KDIR)/$(1)$$(KERNEL_SUFFIX)
-  _TARGET := $$(if $$(_PROFILE_SET),install-images,install-disabled)
+  _TARGET := install-images
   ifndef IB
     _COMPILE_TARGET := $$(if $(CONFIG_IB)$$(_PROFILE_SET),compile,compile-disabled)
   endif

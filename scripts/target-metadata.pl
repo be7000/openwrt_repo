@@ -265,7 +265,6 @@ EOF
 endchoice
 
 menu "Target Devices"
-	depends on TARGET_MULTI_PROFILE
 
 	config TARGET_ALL_PROFILES
 		bool "Enable all profiles by default"
