@@ -44,26 +44,27 @@ apt-get -y install ocaml-findlib ocaml-base-nox ocaml-base libfindlib-ocaml-dev 
 #for ubuntu-18, libssl1.0-dev needs to be installed
 apt-get -y install libssl1.0-dev
 
-#For open profile, coccienlle 1.0.7 needs to be installed from source code
-apt-get -y remove --purge libparmap-ocaml
-
-echo ""
-echo "Installing and setting up coccienlle 1.0.7 from source code"
-
-dpkg -r coccinelle
-cd /tmp
-rm -rf coccinelle
-git clone https://github.com/coccinelle/coccinelle.git
-cd /tmp/coccinelle
-git checkout ed1eb8e06f800739d3992158d36945c0c4c6f0c7
-./autogen
-./configure
-make
-make install
-
-#After installation of coccinelle, remove the downloaded code
-cd /tmp
-rm -rf coccinelle
+#For open profile, coccienlle 1.1.1 needs to be installed from source code
+if [[ $(lsb_release -rs) != "22.04" ]]; then
+	apt-get -y remove --purge libparmap-ocaml
+	echo ""
+	echo "Installing and setting up coccienlle 1.1.1 from source code"
+	dpkg -r coccinelle
+	cd /tmp
+	rm -rf coccinelle
+	git clone https://github.com/coccinelle/coccinelle.git
+	cd /tmp/coccinelle
+	git checkout 1.1.1
+	./autogen
+	./configure
+	make
+	make install
+	#After installation of coccinelle, remove the downloaded code
+	cd /tmp
+	rm -rf coccinelle
+else
+	apt-get -y install coccinelle
+fi
 
 if [[ $(lsb_release -rs) == "20.04" || $(lsb_release -rs) == "22.04" ]]; then
 wget http://archive.ubuntu.com/ubuntu/pool/main/m/make-dfsg/make_4.1-9.1ubuntu1_amd64.deb
