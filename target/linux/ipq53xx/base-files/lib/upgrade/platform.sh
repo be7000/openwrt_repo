@@ -374,23 +374,25 @@ get_fw_name() {
 	cat /proc/device-tree/model | grep -q 5332 && img="ipq5332"
 
 	wifi_ipq="ignored"
-	image_suffix="qcn9224_v2_single_dualmac"
+	image_suffix1="qcn9224_v2_single_dualmac"
+	image_suffix2="qcn6432"
 	machineid=$(fw_printenv -l /tmp/. machid | cut -d '=' -f 2)
 
 	case "${machineid}" in
 		"F060000"|\
 		"8060000"|\
 		"8060001"|\
-		"8060002"|\
 		"8060003"|\
-		"8060004"|\
 		"8060006"|\
 		"8060007"|\
 		"1060001"|\
 		"1060003"|\
 		"1060002")
-			wifi_ipq="$img"_"$image_suffix"
+			wifi_ipq="$img"_"$image_suffix1"
 			;;
+		"8060002"|\
+		"8060004")
+			wifi_ipq="$img"_"$image_suffix2"
 		*)
 			wifi_ipq=$img"_qcn9224_v2_single_dualmac_qcn9160"
 			;;
@@ -565,9 +567,11 @@ platform_do_upgrade() {
 	qcom,devsoc-ap-emulation |\
 	qcom,ipq5332-ap-mi01.2 |\
 	qcom,ipq5332-ap-mi01.2-qcn9160-c1 |\
+	qcom,ipq5332-ap-mi01.3 |\
 	qcom,ipq5332-ap-mi01.4 |\
 	qcom,ipq5332-ap-mi01.6 |\
 	qcom,ipq5332-ap-mi01.7 |\
+	qcom,ipq5332-ap-mi04.1 |\
 	qcom,ipq5332-db-mi01.1 |\
 	qcom,ipq5332-db-mi02.1)
 		for sec in $(print_sections $1); do
