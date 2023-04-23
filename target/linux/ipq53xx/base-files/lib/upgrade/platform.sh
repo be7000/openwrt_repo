@@ -393,6 +393,7 @@ get_fw_name() {
 		"8060002"|\
 		"8060004")
 			wifi_ipq="$img"_"$image_suffix2"
+			;;
 		*)
 			wifi_ipq=$img"_qcn9224_v2_single_dualmac_qcn9160"
 			;;
