@@ -567,7 +567,6 @@ platform_do_upgrade() {
 	qcom,ipq5332-ap-mi01.2-qcn9160-c1 |\
 	qcom,ipq5332-ap-mi01.4 |\
 	qcom,ipq5332-ap-mi01.6 |\
-	qcom,ipq5332-ap-mi01.6-qcn9160 |\
 	qcom,ipq5332-ap-mi01.7 |\
 	qcom,ipq5332-db-mi01.1 |\
 	qcom,ipq5332-db-mi02.1)
