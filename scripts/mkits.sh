@@ -190,9 +190,9 @@ Generate_Config() {
 	GEN_CONF_FUNC_USED=1
 
 	CONFIG_CONCATENATED_OUTPUT="$CONFIG_CONCATENATED_OUTPUT
-		config@$CONFIG_ID {
+		config${REFERENCE_CHAR}$CONFIG_ID {
 			description = \"OpenWrt\";
-			kernel = \"kernel@1\";
+			kernel = \"kernel${REFERENCE_CHAR}1\";
 			${FDT_PROP}
 			${LOADABLES:+loadables = ${LOADABLES};}
 			${COMPATIBLE_PROP}
@@ -201,20 +201,10 @@ Generate_Config() {
 "
 }
 
-check_forMultiDTB() {
-	var=0
-	for i in $@
-	do
-		var=$((var + 1))
-	done
-	return $var
-}
-
 # Conditionally create fdt information
 if [ -n "${DTB}" ]; then
 	CONFIG_ID=$DTB
-	check_forMultiDTB $DTB
-	multiDTB=$?
+	multiDTB=$(echo $DTB | wc -w)
 	for dtb in $DTB
 	do
 	if [ $multiDTB -gt 1 ]; then
