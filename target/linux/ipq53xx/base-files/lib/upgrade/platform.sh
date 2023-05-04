@@ -375,7 +375,7 @@ get_fw_name() {
 
 	wifi_ipq="ignored"
 	image_suffix1="qcn9224_v2_single_dualmac"
-	image_suffix2="qcn6432"
+	image_suffix2="qcn6432cs"
 	machineid=$(fw_printenv -l /tmp/. machid | cut -d '=' -f 2)
 
 	case "${machineid}" in
