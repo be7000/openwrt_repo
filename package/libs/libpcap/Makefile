@@ -90,11 +90,20 @@ define Build/Configure
 endef
 
 define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/pcap-config $(1)/usr/bin/
+
+	$(INSTALL_DIR) $(2)/bin
+	$(LN) $(STAGING_DIR)/usr/bin/pcap-config $(2)/bin
+
 	$(INSTALL_DIR) $(1)/usr/include
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/pcap* $(1)/usr/include/
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpcap.{a,so*} $(1)/usr/lib/
+
+	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libpcap.pc $(1)/usr/lib/pkgconfig/
 endef
 
 define Package/libpcap/install
