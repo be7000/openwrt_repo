@@ -17,9 +17,15 @@ alfa-network,awusfree1|\
 alfa-network,quad-e4g|\
 alfa-network,r36m-e4g|\
 alfa-network,tube-e4g|\
+engenius,epg600|\
 engenius,esr600h|\
-sitecom,wlr-4100-v1-002)
+linksys,re7000|\
+sitecom,wlr-4100-v1-002|\
+zyxel,keenetic-lite-iii-a)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x1000" "0x1000"
+	;;
+arcadyan,we420223-99)
+	ubootenv_add_uci_config "/dev/mtd2" "0x0" "0x1000" "0x1000"
 	;;
 allnet,all0256n-4m|\
 allnet,all0256n-8m|\
@@ -49,13 +55,16 @@ zbtlink,zbt-wg2626|\
 zte,mf283plus)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x1000" "0x10000"
 	;;
+asus,rt-ax53u|\
+asus,rt-ax54|\
 belkin,rt1800|\
 h3c,tx1800-plus|\
 h3c,tx1801-plus|\
 h3c,tx1806|\
 jcg,q20|\
 linksys,e7350|\
-netgear,wax202)
+netgear,wax202|\
+zyxel,wsm20)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x20000" "0x20000"
 	;;
 haier,har-20s2u1|\
@@ -79,10 +88,17 @@ linksys,ea8100-v2|\
 mts,wg430223)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x1000" "0x20000"
 	;;
+snr,snr-cpe-me1|\
+snr,snr-cpe-me2-sfp|\
 snr,cpe-w4n-mt)
 	idx="$(find_mtd_index uboot-env)"
 	[ -n "$idx" ] && \
 		ubootenv_add_uci_config "/dev/mtd$idx" "0x0" "0x1000" "0x1000"
+	;;
+tplink,ec330-g5u-v1)
+	idx="$(find_mtd_index u-boot-env)"
+	[ -n "$idx" ] && \
+		ubootenv_add_uci_config "/dev/mtd$idx" "0x0" "0x1000" "0x20000"
 	;;
 xiaomi,mi-router-3g-v2|\
 xiaomi,mi-router-4a-gigabit|\

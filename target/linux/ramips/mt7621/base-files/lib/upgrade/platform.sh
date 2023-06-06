@@ -52,13 +52,16 @@ platform_do_upgrade() {
 	case "$board" in
 	ampedwireless,ally-00x19k|\
 	ampedwireless,ally-r1900k|\
+	arcadyan,we420223-99|\
 	asus,rt-ac65p|\
 	asus,rt-ac85p|\
 	asus,rt-ax53u|\
+	asus,rt-ax54|\
 	beeline,smartbox-flash|\
 	beeline,smartbox-giga|\
 	beeline,smartbox-turbo|\
 	belkin,rt1800|\
+	dlink,dap-x1860-a1|\
 	dlink,dir-1960-a1|\
 	dlink,dir-2640-a1|\
 	dlink,dir-2660-a1|\
@@ -101,6 +104,7 @@ platform_do_upgrade() {
 	sercomm,na502|\
 	sercomm,na502s|\
 	sim,simax1800t|\
+	tplink,ec330-g5u-v1|\
 	xiaomi,mi-router-3g|\
 	xiaomi,mi-router-3-pro|\
 	xiaomi,mi-router-4|\
@@ -124,6 +128,12 @@ platform_do_upgrade() {
 		iodata_mstc_upgrade_prepare "0x1fe75"
 		nand_do_upgrade "$1"
 		;;
+	tplink,er605-v2)
+		echo "Upgrading tplink,er605-v2"
+		CI_UBIPART="firmware"
+		CI_KERNPART="kernel"
+		nand_do_upgrade "$1"
+		;;
 	ubnt,edgerouter-x|\
 	ubnt,edgerouter-x-sfp)
 		platform_upgrade_ubnt_erx "$1"
@@ -143,6 +153,10 @@ platform_do_upgrade() {
 		dd bs=4 count=1 seek=26 conv=notrunc if=/dev/zero of=$kernel2_mtd 2>/dev/null &&\
 		echo "Kernel2 sequence number was reset to 0"
 		CI_KERNPART="Kernel"
+		nand_do_upgrade "$1"
+		;;
+	zyxel,wsm20)
+		zyxel_mstc_upgrade_prepare
 		nand_do_upgrade "$1"
 		;;
 	*)

@@ -1,9 +1,9 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_VERSION:=2022.10
-PKG_HASH:=50b4482a505bc281ba8470c399a3c26e145e29b23500bc35c50debd7fa46bdf8
-PKG_BUILD_DEPENDS:=arm-trusted-firmware-tools/host
+PKG_VERSION:=2023.04
+PKG_HASH:=e31cac91545ff41b71cec5d8c22afd695645cd6e2a442ccdacacd60534069341
+PKG_BUILD_DEPENDS:=!(TARGET_ramips||TARGET_mediatek_mt7623):arm-trusted-firmware-tools/host
 
 include $(INCLUDE_DIR)/u-boot.mk
 include $(INCLUDE_DIR)/package.mk
@@ -34,6 +34,7 @@ endif
 define U-Boot/Default
   BUILD_TARGET:=mediatek
   UBOOT_IMAGE:=u-boot-mtk.bin
+  HIDDEN:=1
 endef
 
 define U-Boot/mt7620_rfb
@@ -175,6 +176,18 @@ define U-Boot/mt7629_rfb
   UBOOT_CONFIG:=mt7629_rfb
 endef
 
+define U-Boot/mt7981_qihoo_360t7
+  NAME:=Qihoo 360T7
+  BUILD_SUBTARGET:=filogic
+  BUILD_DEVICES:=qihoo_360t7
+  UBOOT_CONFIG:=mt7981_qihoo-360t7
+  UBOOT_IMAGE:=u-boot.fip
+  BL2_BOOTDEV:=spim-nand
+  BL2_SOC:=mt7981
+  BL2_DDRTYPE:=ddr3
+  DEPENDS:=+trusted-firmware-a-mt7981-spim-nand-ddr3
+endef
+
 define U-Boot/mt7986_rfb
   NAME:=MT7986 Reference Board
   BUILD_SUBTARGET:=filogic
@@ -236,6 +249,54 @@ define U-Boot/mt7986_bananapi_bpi-r3-nor
   FIP_COMPRESS:=1
 endef
 
+define U-Boot/mt7986_tplink_tl-xdr4288
+  NAME:=TP-LINK TL-XDR4288
+  BUILD_SUBTARGET:=filogic
+  BUILD_DEVICES:=tplink_tl-xdr4288
+  UBOOT_CONFIG:=mt7986_tplink_tl-xdr4288
+  UBOOT_IMAGE:=u-boot.fip
+  BL2_BOOTDEV:=spim-nand
+  BL2_SOC:=mt7986
+  BL2_DDRTYPE:=ddr3
+  DEPENDS:=+trusted-firmware-a-mt7986-spim-nand-ddr3
+endef
+
+define U-Boot/mt7986_tplink_tl-xdr6086
+  NAME:=TP-LINK TL-XDR6086
+  BUILD_SUBTARGET:=filogic
+  BUILD_DEVICES:=tplink_tl-xdr6086
+  UBOOT_CONFIG:=mt7986_tplink_tl-xdr6086
+  UBOOT_IMAGE:=u-boot.fip
+  BL2_BOOTDEV:=spim-nand
+  BL2_SOC:=mt7986
+  BL2_DDRTYPE:=ddr3
+  DEPENDS:=+trusted-firmware-a-mt7986-spim-nand-ddr3
+endef
+
+define U-Boot/mt7986_tplink_tl-xdr6088
+  NAME:=TP-LINK TL-XDR6088
+  BUILD_SUBTARGET:=filogic
+  BUILD_DEVICES:=tplink_tl-xdr6088
+  UBOOT_CONFIG:=mt7986_tplink_tl-xdr6088
+  UBOOT_IMAGE:=u-boot.fip
+  BL2_BOOTDEV:=spim-nand
+  BL2_SOC:=mt7986
+  BL2_DDRTYPE:=ddr3
+  DEPENDS:=+trusted-firmware-a-mt7986-spim-nand-ddr3
+endef
+
+define U-Boot/mt7986_xiaomi_redmi-router-ax6000
+  NAME:=Xiaomi Redmi AX6000
+  BUILD_SUBTARGET:=filogic
+  BUILD_DEVICES:=xiaomi_redmi-router-ax6000-ubootmod
+  UBOOT_CONFIG:=mt7986_xiaomi_redmi-ax6000
+  UBOOT_IMAGE:=u-boot.fip
+  BL2_BOOTDEV:=spim-nand
+  BL2_SOC:=mt7986
+  BL2_DDRTYPE:=ddr4
+  DEPENDS:=+trusted-firmware-a-mt7986-spim-nand-ddr4
+endef
+
 UBOOT_TARGETS := \
 	mt7620_mt7530_rfb \
 	mt7620_rfb \
@@ -252,10 +313,15 @@ UBOOT_TARGETS := \
 	mt7628_rfb \
 	ravpower_rp-wd009 \
 	mt7629_rfb \
+	mt7981_qihoo_360t7 \
 	mt7986_bananapi_bpi-r3-emmc \
 	mt7986_bananapi_bpi-r3-sdmmc \
 	mt7986_bananapi_bpi-r3-snand \
 	mt7986_bananapi_bpi-r3-nor \
+	mt7986_tplink_tl-xdr4288 \
+	mt7986_tplink_tl-xdr6086 \
+	mt7986_tplink_tl-xdr6088 \
+	mt7986_xiaomi_redmi-router-ax6000 \
 	mt7986_rfb
 
 ifdef CONFIG_TARGET_mediatek

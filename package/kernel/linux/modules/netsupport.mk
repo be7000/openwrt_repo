@@ -46,6 +46,7 @@ define KernelPackage/bonding
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Ethernet bonding driver
   KCONFIG:=CONFIG_BONDING
+  DEPENDS:=PACKAGE_kmod-tls:kmod-tls
   FILES:=$(LINUX_DIR)/drivers/net/bonding/bonding.ko
   AUTOLOAD:=$(call AutoLoad,40,bonding)
   MODPARAMS.bonding:=max_bonds=0
@@ -690,7 +691,7 @@ endef
 $(eval $(call KernelPackage,mppe))
 
 
-SCHED_MODULES_CORE = sch_ingress sch_hfsc sch_htb sch_tbf cls_basic cls_fw cls_route cls_flow cls_tcindex cls_u32 em_u32 act_gact act_mirred act_skbedit cls_matchall
+SCHED_MODULES_CORE = sch_ingress sch_hfsc sch_htb sch_tbf cls_basic cls_fw cls_route cls_flow cls_u32 em_u32 act_gact act_mirred act_skbedit cls_matchall
 SCHED_FILES_CORE = $(foreach mod,$(SCHED_MODULES_CORE),$(LINUX_DIR)/net/sched/$(mod).ko)
 
 define KernelPackage/sched-core
@@ -708,7 +709,6 @@ define KernelPackage/sched-core
 	CONFIG_NET_CLS_FLOW \
 	CONFIG_NET_CLS_FW \
 	CONFIG_NET_CLS_ROUTE4 \
-	CONFIG_NET_CLS_TCINDEX \
 	CONFIG_NET_CLS_U32 \
 	CONFIG_NET_ACT_GACT \
 	CONFIG_NET_ACT_MIRRED \
@@ -1043,6 +1043,24 @@ endef
 
 $(eval $(call KernelPackage,tcp-bbr))
 
+define KernelPackage/tls
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=In-kernel TLS Support with HW Offload
+  KCONFIG:=CONFIG_TLS \
+	CONFIG_TLS_DEVICE=y
+  FILES:=$(LINUX_DIR)/net/tls/tls.ko
+  AUTOLOAD:=$(call AutoProbe,tls)
+endef
+
+define KernelPackage/tls/description
+ Kernel module for in-kernel TLS protocol support and hw offload
+ (to supported interfaces).
+ This allows symmetric encryption handling of the TLS protocol to
+ be done in-kernel and it's HW offload when available.
+endef
+
+$(eval $(call KernelPackage,tls))
+
 
 define KernelPackage/tcp-hybla
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
@@ -1188,7 +1206,7 @@ define KernelPackage/sctp
   FILES:= $(LINUX_DIR)/net/sctp/sctp.ko
   AUTOLOAD:= $(call AutoLoad,32,sctp)
   DEPENDS:=+kmod-lib-crc32c +kmod-crypto-md5 +kmod-crypto-hmac \
-    +LINUX_5_15:kmod-udptunnel4 +LINUX_5_15:kmod-udptunnel6
+    +kmod-udptunnel4 +kmod-udptunnel6
 endef
 
 define KernelPackage/sctp/description
@@ -1444,11 +1462,9 @@ define KernelPackage/qrtr
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Qualcomm IPC Router support
   HIDDEN:=1
-  DEPENDS:=@!LINUX_5_10
   KCONFIG:=CONFIG_QRTR
   FILES:= \
-  $(LINUX_DIR)/net/qrtr/qrtr.ko \
-  $(LINUX_DIR)/net/qrtr/ns.ko
+  $(LINUX_DIR)/net/qrtr/qrtr.ko
   AUTOLOAD:=$(call AutoProbe,qrtr)
 endef
 
