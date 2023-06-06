@@ -331,14 +331,14 @@ define Download/default
   $(if $(PKG_HASH),HASH:=$(PKG_HASH))
 endef
 
-FindPackage?=$(strip $(shell find $(TOPDIR)/qsdk-package -name $(1) 2>/dev/null))
+FindPackage?=$(strip $(shell find $(TOPDIR)/openwrt-patches -name $(1) 2>/dev/null))
 
-define Download/qsdk-package
+define Download/openwrt-patches
   $(eval -include $(wildcard $(call FindPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk))
 endef
 
 define Download
-  $(Download/qsdk-package)
+  $(Download/openwrt-patches)
   $(eval $(Download/Defaults))
   $(eval $(Download/$(1)))
   $(foreach FIELD,URL FILE $(Validate/$(call dl_method,$(URL),$(PROTO))),
