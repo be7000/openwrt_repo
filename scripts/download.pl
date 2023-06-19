@@ -351,7 +351,10 @@ while (!$ok and !-f "$target/$filename") {
 	my $mirror = shift @clo_mirrors;
 	$mirror or last;
 
-	download($mirror);
+	download($mirror, $url_filename, @clo_mirrors);
+	if (!-f "$target/$filename" && $url_filename ne $filename) {
+		download($mirror, $filename, @clo_mirrors);
+	}
 	-f "$target/$filename" and $ok = 1;
 }
 
