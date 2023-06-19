@@ -376,6 +376,7 @@ get_fw_name() {
 	wifi_ipq="ignored"
 	image_suffix1="qcn9224_v2_single_dualmac"
 	image_suffix2="qcn6432cs"
+	image_suffix3="qcn6432"
 	machineid=$(fw_printenv -l /tmp/. machid | cut -d '=' -f 2)
 
 	case "${machineid}" in
@@ -393,6 +394,10 @@ get_fw_name() {
 		"8060002"|\
 		"8060004")
 			wifi_ipq="$img"_"$image_suffix2"
+			;;
+		"1060003"|\
+		"8060007")
+			wifi_ipq="$img"_"$image_suffix3"
 			;;
 		*)
 			wifi_ipq=$img"_qcn9224_v2_single_dualmac_qcn9160"
