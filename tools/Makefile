@@ -39,7 +39,7 @@ tools-$(BUILD_ISL) += isl
 tools-$(CONFIG_USE_SPARSE) += sparse
 tools-$(CONFIG_TARGET_apm821xx)$(CONFIG_TARGET_gemini) += genext2fs
 tools-$(CONFIG_TARGET_tegra) += cbootimage cbootimage-configs
-tools-$(CONFIG_BUILD_LLVM_BPF) += llvm-bpf
+tools-$(if $(CONFIG_BUILD_ALL_HOST_TOOLS)$(CONFIG_BUILD_LLVM_BPF),y) += llvm-bpf
 
 # builddir dependencies
 $(curdir)/bison/compile := $(curdir)/flex/compile
