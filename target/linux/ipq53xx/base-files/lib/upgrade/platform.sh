@@ -386,6 +386,7 @@ get_fw_name() {
 		"8060003"|\
 		"8060006"|\
 		"8060007"|\
+		"8060102"|\
 		"1060001"|\
 		"1060003"|\
 		"1060002")
@@ -574,6 +575,7 @@ platform_do_upgrade() {
 	qcom,ipq5332-ap-mi01.2 |\
 	qcom,ipq5332-ap-mi01.2-qcn9160-c1 |\
 	qcom,ipq5332-ap-mi01.3 |\
+	qcom,ipq5332-ap-mi01.3-c2 |\
 	qcom,ipq5332-ap-mi01.4 |\
 	qcom,ipq5332-ap-mi01.6 |\
 	qcom,ipq5332-ap-mi01.7 |\
