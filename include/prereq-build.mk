@@ -8,6 +8,13 @@ include $(INCLUDE_DIR)/prereq.mk
 SHELL:=sh
 PKG_NAME:=Build dependency
 
+$(eval $(call TestHostCommand,true, \
+	Please install GNU 'coreutils', \
+	$(TRUE)))
+
+$(eval $(call TestHostCommand,false, \
+	Please install GNU 'coreutils', \
+	$(FALSE); [ $$$$$$$$? = 1 ] && $(TRUE)))
 
 # Required for the toolchain
 $(eval $(call TestHostCommand,working-make, \
@@ -49,10 +56,9 @@ $(eval $(call TestHostCommand,working-g++, \
 		g++ -x c++ -o $(TMP_DIR)/a.out - -lstdc++ && \
 		$(TMP_DIR)/a.out))
 
-$(eval $(call TestHostCommand,ncurses, \
+$(eval $(call RequireCHeader,ncurses.h, \
 	Please install ncurses. (Missing libncurses.so or ncurses.h), \
-	echo 'int main(int argc, char **argv) { initscr(); return 0; }' | \
-		gcc -include ncurses.h -x c -o $(TMP_DIR)/a.out - -lncurses))
+	initscr(), -lncurses))
 
 $(eval $(call SetupHostCommand,git,Please install Git (git-core) >= 1.7.12.2, \
 	git --exec-path | xargs -I % -- grep -q -- --recursive %/git-submodule, \
@@ -169,8 +175,6 @@ $(eval $(call SetupHostCommand,install,Please install GNU 'install', \
 $(eval $(call SetupHostCommand,perl,Please install Perl 5.x, \
 	perl --version | grep "perl.*v5"))
 
-$(eval $(call CleanupPython2))
-
 $(eval $(call SetupHostCommand,python,Please install Python >= 3.6, \
 	python3.11 -V 2>&1 | grep 'Python 3', \
 	python3.10 -V 2>&1 | grep 'Python 3', \
@@ -204,6 +208,20 @@ $(eval $(call SetupHostCommand,which,Please install 'which', \
 	/usr/bin/which which, \
 	/bin/which which, \
 	which which))
+
+ifeq ($(HOST_OS),Linux)
+  $(eval $(call RequireCHeader,argp.h, \
+	Missing argp.h Please install the argp-standalone package if musl libc))
+
+  $(eval $(call RequireCHeader,fts.h, \
+	Missing fts.h Please install the musl-fts-dev package if musl libc))
+
+  $(eval $(call RequireCHeader,obstack.h, \
+	Missing obstack.h Please install the musl-obstack-dev package if musl libc))
+
+  $(eval $(call RequireCHeader,libintl.h, \
+	Missing libintl.h Please install the musl-libintl package if musl libc))
+endif
 
 $(STAGING_DIR_HOST)/bin/mkhash: $(SCRIPT_DIR)/mkhash.c
 	mkdir -p $(dir $@)

@@ -22,7 +22,7 @@ $(eval $(call KernelPackage,amazon-ena))
 define KernelPackage/amd-xgbe
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=AMD Ethernet on SoC support
-  DEPENDS:=@PCI_SUPPORT @TARGET_x86_64 +kmod-lib-crc32c +kmod-ptp +kmod-libphy +(LINUX_5_10||LINUX_5_15):kmod-mdio-devres
+  DEPENDS:=@PCI_SUPPORT @TARGET_x86_64 +kmod-lib-crc32c +kmod-ptp +kmod-libphy +kmod-mdio-devres
   KCONFIG:=CONFIG_AMD_XGBE
   FILES:=$(LINUX_DIR)/drivers/net/ethernet/amd/xgbe/amd-xgbe.ko
   AUTOLOAD:=$(call AutoLoad,35,amd-xgbe)
@@ -184,7 +184,7 @@ define KernelPackage/w83627hf-wdt
   DEPENDS:=@TARGET_x86
   KCONFIG:=\
 	CONFIG_W83627HF_WDT \
-	ONFIG_WATCHDOG_CORE=y
+	CONFIG_WATCHDOG_CORE=y
   FILES:=$(LINUX_DIR)/drivers/watchdog/w83627hf_wdt.ko
   AUTOLOAD:=$(call AutoLoad,50,w83627hf-wdt,1)
 endef

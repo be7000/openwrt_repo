@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=util-linux
-PKG_VERSION:=2.38
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=2.39
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=@KERNEL/linux/utils/$(PKG_NAME)/v2.38
-PKG_HASH:=6d111cbe4d55b336db2f1fbeffbc65b89908704c01136371d32aa9bec373eb64
+PKG_SOURCE_URL:=@KERNEL/linux/utils/$(PKG_NAME)/v2.39
+PKG_HASH:=32b30a336cda903182ed61feb3e9b908b762a5e66fe14e43efb88d37162075cb
 PKG_CPE_ID:=cpe:/a:kernel:util-linux
 
 PKG_LICENSE:=GPL-2.0-only
@@ -415,6 +415,17 @@ define Package/rename/description
  expression in their name by replacement
 endef
 
+define Package/rev
+$(call Package/util-linux/Default)
+  TITLE:=Reverse lines characterwise
+endef
+
+define Package/rev/description
+ rev utility copies the specified files to the standard output, reversing the
+ order of characters in every line. If no files are specified, the standard
+ input is read.
+endef
+
 define Package/partx-utils
 $(call Package/util-linux/Default)
   TITLE:=inform kernel about the presence and numbering of on-disk partitions
@@ -474,6 +485,7 @@ endef
 define Package/taskset
 $(call Package/util-linux/Default)
   TITLE:=set or retrieve a process's CPU affinity
+  ALTERNATIVES:=200:/usr/bin/taskset:/usr/bin/util-linux-taskset
 endef
 
 define Package/taskset/description
@@ -804,6 +816,11 @@ define Package/rename/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rename $(1)/usr/bin/
 endef
 
+define Package/rev/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rev $(1)/usr/bin/
+endef
+
 define Package/partx-utils/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/partx $(1)/usr/sbin/
@@ -835,7 +852,7 @@ endef
 
 define Package/taskset/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/taskset $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/taskset $(1)/usr/bin/util-linux-taskset
 endef
 
 define Package/unshare/install
@@ -904,6 +921,7 @@ $(eval $(call BuildPackage,namei))
 $(eval $(call BuildPackage,nsenter))
 $(eval $(call BuildPackage,prlimit))
 $(eval $(call BuildPackage,rename))
+$(eval $(call BuildPackage,rev))
 $(eval $(call BuildPackage,partx-utils))
 $(eval $(call BuildPackage,script-utils))
 $(eval $(call BuildPackage,setterm))

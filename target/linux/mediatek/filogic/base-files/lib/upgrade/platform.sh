@@ -42,22 +42,41 @@ platform_do_upgrade() {
 	local board=$(board_name)
 
 	case "$board" in
+	asus,tuf-ax4200)
+		CI_UBIPART="UBI_DEV"
+		CI_KERNPART="linux"
+		nand_do_upgrade "$1"
+		;;
 	bananapi,bpi-r3)
-		case "$(cmdline_get_var root)" in
-		/dev/mmc*)
+		local rootdev="$(cmdline_get_var root)"
+		rootdev="${rootdev##*/}"
+		rootdev="${rootdev%p[0-9]*}"
+		case "$rootdev" in
+		mmc*)
 			CI_ROOTDEV="$rootdev"
 			CI_KERNPART="production"
 			emmc_do_upgrade "$1"
 			;;
-		/dev/mtdblock*)
+		mtdblock*)
 			PART_NAME="fit"
 			default_do_upgrade "$1"
 			;;
-		/dev/ubiblock*)
+		ubiblock*)
 			CI_KERNPART="fit"
 			nand_do_upgrade "$1"
 			;;
 		esac
+		;;
+	cudy,wr3000-v1)
+		default_do_upgrade "$1"
+		;;
+	qihoo,360t7|\
+	tplink,tl-xdr4288|\
+	tplink,tl-xdr6086|\
+	tplink,tl-xdr6088|\
+	xiaomi,redmi-router-ax6000-ubootmod)
+		CI_KERNPART="fit"
+		nand_do_upgrade "$1"
 		;;
 	xiaomi,redmi-router-ax6000-stock)
 		CI_KERN_UBIPART=ubi_kernel
@@ -88,7 +107,7 @@ platform_check_image() {
 		;;
 	*)
 		nand_do_platform_check "$board" "$1"
-		return 0
+		return $?
 		;;
 	esac
 

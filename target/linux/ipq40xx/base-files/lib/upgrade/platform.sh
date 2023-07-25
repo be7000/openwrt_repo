@@ -25,6 +25,7 @@ Once this is done. Retry.
 EOF
 		return 1
 		;;
+	zte,mf18a |\
 	zte,mf286d |\
 	zte,mf289f)
 		CI_UBIPART="rootfs"
@@ -118,7 +119,8 @@ platform_do_upgrade() {
 	netgear,wac510 |\
 	p2w,r619ac-64m |\
 	p2w,r619ac-128m |\
-	qxwlan,e2600ac-c2)
+	qxwlan,e2600ac-c2 |\
+	wallys,dr40x9)
 		nand_do_upgrade "$1"
 		;;
 	glinet,gl-b2200)
@@ -164,7 +166,8 @@ platform_do_upgrade() {
 	linksys,ea6350v3 |\
 	linksys,ea8300 |\
 	linksys,mr8300 |\
-	linksys,whw01-v1)
+	linksys,whw01 |\
+	linksys,whw03v2)
 		platform_do_upgrade_linksys "$1"
 		;;
 	meraki,mr33 |\
@@ -203,6 +206,7 @@ platform_do_upgrade() {
 		sony_emmc_do_upgrade "$1"
 		;;
 	teltonika,rutx10 |\
+	zte,mf18a |\
 	zte,mf286d |\
 	zte,mf289f)
 		CI_UBIPART="rootfs"

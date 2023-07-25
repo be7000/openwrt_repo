@@ -243,6 +243,22 @@ endef
 $(eval $(call KernelPackage,gpio-f7188x))
 
 
+define KernelPackage/lkdtm
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:=Linux Kernel Dump Test Tool Module
+  KCONFIG:=CONFIG_LKDTM
+  FILES:=$(LINUX_DIR)/drivers/misc/lkdtm/lkdtm.ko
+  AUTOLOAD:=$(call AutoProbe,lkdtm)
+endef
+
+define KernelPackage/lkdtm/description
+ This module enables testing of the different dumping mechanisms by inducing
+ system failures at predefined crash points.
+endef
+
+$(eval $(call KernelPackage,lkdtm))
+
+
 define KernelPackage/pinctrl-mcp23s08
   SUBMENU:=$(OTHER_MENU)
   TITLE:=Microchip MCP23xxx I/O expander
@@ -522,6 +538,7 @@ define KernelPackage/ssb
 	CONFIG_SSB_DRIVER_MIPS=n \
 	CONFIG_SSB_DRIVER_PCICORE=y \
 	CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y \
+	CONFIG_SSB_FALLBACK_SPROM=y \
 	CONFIG_SSB_PCIHOST=y \
 	CONFIG_SSB_PCIHOST_POSSIBLE=y \
 	CONFIG_SSB_POSSIBLE=y \
@@ -546,6 +563,7 @@ define KernelPackage/bcma
 	CONFIG_BCMA \
 	CONFIG_BCMA_POSSIBLE=y \
 	CONFIG_BCMA_BLOCKIO=y \
+	CONFIG_BCMA_FALLBACK_SPROM=y \
 	CONFIG_BCMA_HOST_PCI_POSSIBLE=y \
 	CONFIG_BCMA_HOST_PCI=y \
 	CONFIG_BCMA_HOST_SOC=n \
@@ -818,7 +836,8 @@ define KernelPackage/ramoops
   SUBMENU:=$(OTHER_MENU)
   TITLE:=Ramoops (pstore-ram)
   DEFAULT:=m if ALL_KMODS
-  KCONFIG:=CONFIG_PSTORE_RAM
+  KCONFIG:=CONFIG_PSTORE_RAM \
+	CONFIG_PSTORE_CONSOLE=y
   DEPENDS:=+kmod-pstore +kmod-reed-solomon
   FILES:= $(LINUX_DIR)/fs/pstore/ramoops.ko
   AUTOLOAD:=$(call AutoLoad,30,ramoops,1)
@@ -882,7 +901,7 @@ define KernelPackage/serial-8250-exar
   KCONFIG:= CONFIG_SERIAL_8250_EXAR
   FILES:=$(LINUX_DIR)/drivers/tty/serial/8250/8250_exar.ko
   AUTOLOAD:=$(call AutoProbe,8250 8250_base 8250_exar)
-  DEPENDS:=+kmod-serial-8250
+  DEPENDS:=@PCI_SUPPORT +kmod-serial-8250
 endef
 
 define KernelPackage/serial-8250-exar/description
@@ -1232,8 +1251,8 @@ $(eval $(call KernelPackage,keys-trusted))
 define KernelPackage/tpm
   SUBMENU:=$(OTHER_MENU)
   TITLE:=TPM Hardware Support
-  DEPENDS:= +kmod-random-core +(LINUX_5_15):kmod-asn1-decoder \
-	  +(LINUX_5_15):kmod-asn1-encoder +(LINUX_5_15):kmod-oid-registry
+  DEPENDS:= +kmod-random-core +kmod-asn1-decoder \
+	  +kmod-asn1-encoder +kmod-oid-registry
   KCONFIG:= CONFIG_TCG_TPM
   FILES:= $(LINUX_DIR)/drivers/char/tpm/tpm.ko
   AUTOLOAD:=$(call AutoLoad,10,tpm,1)
@@ -1317,10 +1336,9 @@ $(eval $(call KernelPackage,i6300esb-wdt))
 define KernelPackage/mhi-bus
   SUBMENU:=$(OTHER_MENU)
   TITLE:=MHI bus
-  DEPENDS:=@LINUX_5_15
   KCONFIG:=CONFIG_MHI_BUS \
            CONFIG_MHI_BUS_DEBUG=y
-  FILES:=$(LINUX_DIR)/drivers/bus/mhi/core/mhi.ko
+  FILES:=$(LINUX_DIR)/drivers/bus/mhi/host/mhi.ko
   AUTOLOAD:=$(call AutoProbe,mhi)
 endef
 
@@ -1333,9 +1351,9 @@ $(eval $(call KernelPackage,mhi-bus))
 define KernelPackage/mhi-pci-generic
   SUBMENU:=$(OTHER_MENU)
   TITLE:=MHI PCI controller driver
-  DEPENDS:=@LINUX_5_15 +kmod-mhi-bus
+  DEPENDS:=@PCI_SUPPORT +kmod-mhi-bus
   KCONFIG:=CONFIG_MHI_BUS_PCI_GENERIC
-  FILES:=$(LINUX_DIR)/drivers/bus/mhi/mhi_pci_generic.ko
+  FILES:=$(LINUX_DIR)/drivers/bus/mhi/host/mhi_pci_generic.ko
   AUTOLOAD:=$(call AutoProbe,mhi_pci_generic)
 endef
 

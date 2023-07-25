@@ -50,11 +50,12 @@ endef
 TARGET_DEVICES += asus_rt-ac1200
 
 define Device/asus_rt-ac1200-v2
-  BLOCKSIZE := 64k
   IMAGE_SIZE := 16064k
   DEVICE_VENDOR := ASUS
   DEVICE_MODEL := RT-AC1200
   DEVICE_VARIANT := V2
+  DEVICE_ALT0_VENDOR := ASUS
+  DEVICE_ALT0_MODEL := RT-AC750L
   IMAGES += factory.bin
   IMAGE/factory.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | \
 	append-rootfs | pad-rootfs
@@ -67,6 +68,7 @@ define Device/asus_rt-n10p-v3
   DEVICE_VENDOR := ASUS
   DEVICE_MODEL := RT-N10P
   DEVICE_VARIANT := V3
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_rt-n10p-v3
 
@@ -81,6 +83,7 @@ define Device/asus_rt-n11p-b1
   DEVICE_ALT1_VENDOR := ASUS
   DEVICE_ALT1_MODEL := RT-N300
   DEVICE_ALT1_VARIANT := B1
+  DEFAULT := n
 endef
 TARGET_DEVICES += asus_rt-n11p-b1
 
@@ -320,6 +323,17 @@ define Device/jotale_js76x8-32m
 endef
 TARGET_DEVICES += jotale_js76x8-32m
 
+define Device/keenetic_kn-1613
+  IMAGE_SIZE := 31488k
+  DEVICE_VENDOR := Keenetic
+  DEVICE_MODEL := KN-1613
+  DEVICE_PACKAGES := kmod-mt7615e kmod-mt7663-firmware-ap
+  IMAGES += factory.bin
+  IMAGE/factory.bin := $$(sysupgrade_bin) | pad-to $$$$(BLOCKSIZE) | \
+	check-size | zyimage -d 0x801613 -v "KN-1613"
+endef
+TARGET_DEVICES += keenetic_kn-1613
+
 define Device/kroks_kndrt31r16
   IMAGE_SIZE := 16064k
   DEVICE_VENDOR := Kroks
@@ -367,7 +381,6 @@ endef
 TARGET_DEVICES += mediatek_linkit-smart-7688
 
 define Device/mediatek_mt7628an-eval-board
-  BLOCKSIZE := 64k
   IMAGE_SIZE := 7872k
   DEVICE_VENDOR := MediaTek
   DEVICE_MODEL := MT7628 EVB
@@ -459,6 +472,14 @@ define Device/onion_omega2p
   SUPPORTED_DEVICES += omega2p
 endef
 TARGET_DEVICES += onion_omega2p
+
+define Device/oraybox_x1
+  IMAGE_SIZE := 15360k
+  DEVICE_VENDOR := OrayBox
+  DEVICE_MODEL := X1
+  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci
+endef
+TARGET_DEVICES += oraybox_x1
 
 define Device/rakwireless_rak633
   IMAGE_SIZE := 7872k
@@ -999,6 +1020,16 @@ define Device/xiaomi_miwifi-nano
 endef
 TARGET_DEVICES += xiaomi_miwifi-nano
 
+define Device/xiaomi_mi-ra75
+  IMAGE_SIZE := 14976k
+  DEVICE_VENDOR := Xiaomi
+  DEVICE_MODEL := MiWiFi Range Extender AC1200 
+  DEVICE_VARIANT := RA75
+  DEVICE_PACKAGES := kmod-mt76x2
+  SUPPORTED_DEVICES += xiaomi,mira75
+endef
+TARGET_DEVICES += xiaomi_mi-ra75
+
 define Device/zbtlink_zbt-we1226
   IMAGE_SIZE := 7872k
   DEVICE_VENDOR := Zbtlink
@@ -1007,8 +1038,7 @@ endef
 TARGET_DEVICES += zbtlink_zbt-we1226
 
 define Device/zyxel_keenetic-extra-ii
-  IMAGE_SIZE := 14912k
-  BLOCKSIZE := 64k
+  IMAGE_SIZE := 29824k
   DEVICE_VENDOR := ZyXEL
   DEVICE_MODEL := Keenetic Extra II
   DEVICE_PACKAGES := kmod-mt76x2 kmod-usb2 kmod-usb-ohci \
