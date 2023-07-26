@@ -92,11 +92,6 @@ if [ -n "${COMPATIBLE}" ]; then
 	COMPATIBLE_PROP="compatible = \"${COMPATIBLE}\";"
 fi
 
-[ "$DTOVERLAY" ] && {
-	dtbsize=$(wc -c "$DTB" | awk '{print $1}')
-	DTADDR=$(printf "0x%08x" $(($LOAD_ADDR - $dtbsize)) )
-}
-
 [ "$FDTADDR" ] && {
 	DTADDR="$FDTADDR"
 }
@@ -153,7 +148,6 @@ OVCONFIGS=""
 	ovnode="fdt-$ovname"
 	ovsize=$(wc -c "$overlay_blob" | awk '{print $1}')
 	echo "$ovname ($overlay_blob) : $ovsize" >&2
-	DTADDR=$(printf "0x%08x" $(($DTADDR - $ovsize)))
 	FDTOVERLAY_NODE="$FDTOVERLAY_NODE
 
 		$ovnode {
@@ -162,7 +156,6 @@ OVCONFIGS=""
 			data = /incbin/(\"${overlay_blob}\");
 			type = \"flat_dt\";
 			arch = \"${ARCH}\";
-			load = <${DTADDR}>;
 			compression = \"none\";
 			hash@1 {
 				algo = \"crc32\";
