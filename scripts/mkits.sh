@@ -92,11 +92,6 @@ if [ -n "${COMPATIBLE}" ]; then
 	COMPATIBLE_PROP="compatible = \"${COMPATIBLE}\";"
 fi
 
-[ "$DTOVERLAY" ] && {
-	dtbsize=$(wc -c "$DTB" | awk '{print $1}')
-	DTADDR=$(printf "0x%08x" $(($LOAD_ADDR - $dtbsize)) )
-}
-
 [ "$FDTADDR" ] && {
 	DTADDR="$FDTADDR"
 }
@@ -153,7 +148,6 @@ OVCONFIGS=""
 	ovnode="fdt-$ovname"
 	ovsize=$(wc -c "$overlay_blob" | awk '{print $1}')
 	echo "$ovname ($overlay_blob) : $ovsize" >&2
-	DTADDR=$(printf "0x%08x" $(($DTADDR - $ovsize)))
 	FDTOVERLAY_NODE="$FDTOVERLAY_NODE
 
 		$ovnode {
@@ -162,7 +156,6 @@ OVCONFIGS=""
 			data = /incbin/(\"${overlay_blob}\");
 			type = \"flat_dt\";
 			arch = \"${ARCH}\";
-			load = <${DTADDR}>;
 			compression = \"none\";
 			hash@1 {
 				algo = \"crc32\";
@@ -174,13 +167,10 @@ OVCONFIGS=""
 "
 	OVCONFIGS="$OVCONFIGS
 
-		config-$ovname {
-			description = \"OpenWrt ${DEVICE} with $ovname\";
-			kernel = \"kernel${REFERENCE_CHAR}1\";
-			fdt = \"fdt${REFERENCE_CHAR}$FDTNUM\", \"$ovnode\";
-			${LOADABLES:+loadables = ${LOADABLES};}
+		$ovname {
+			description = \"OpenWrt ${DEVICE} overlay $ovname\";
+			fdt = \"$ovnode\";
 			${COMPATIBLE_PROP}
-			${INITRD_PROP}
 		};
 	"
 done
