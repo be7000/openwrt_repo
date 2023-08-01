@@ -686,6 +686,7 @@ platform_get_offset() {
                 esac
                 offsetcount=$(( $offsetcount + 1 ))
         done
+	echo $(( $offsetcount * 65536 ))
 }
 
 platform_copy_config() {
@@ -714,13 +715,17 @@ platform_copy_config() {
 		sync
 		umount /tmp/overlay
 	elif [ -e "$emmcblock" ]; then
+		local mmcpart="rootfs"
+
+		bin=$(get_bootconfig_name)
 		losetup --detach-all
-		local data_blockoffset="$(platform_get_offset $emmcblock)"
-		[ -z "$data_blockoffset" ] && {
-			emmcblock="$(find_mmc_part "rootfs_1")"
-			data_blockoffset="$(platform_get_offset $emmcblock)"
-		}
+		local data_blockoffset="$(platform_get_offset $(ls /tmp/rootfs-*))"
 		local loopdev="$(losetup -f)"
+		[ -f /proc/boot_info/$bin/rootfs/upgradepartition ] && {
+			mmcpart=$(cat /proc/boot_info/$bin/rootfs/upgradepartition)
+			[ "$mmcpart" == "rootfs" ] && mmcpart="rootfs_1" || mmcpart="rootfs"
+		}
+		emmcblock="$(find_mmc_part ${mmcpart})"
 		losetup -o $data_blockoffset $loopdev $emmcblock || {
 			echo "Failed to mount looped rootfs_data."
 			reboot
