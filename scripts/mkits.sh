@@ -47,7 +47,7 @@ INITRDNUM=1
 HASH=sha1
 CONFIG_ID="1";
 COMPRESS="none";
-CONFIG="config@1"
+CONFIG="config${REFERENCE_CHAR}1"
 LOADABLES=
 DTOVERLAY=
 DTADDR=
@@ -106,10 +106,10 @@ if [ -n "${INITRD}" ]; then
 			type = \"ramdisk\";
 			arch = \"${ARCH}\";
 			os = \"linux\";
-			hash@1 {
+			hash${REFERENCE_CHAR}1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash${REFERENCE_CHAR}2 {
 				algo = \"${HASH}\";
 			};
 		};
@@ -128,10 +128,10 @@ if [ -n "${ROOTFS}" ]; then
 			type = \"filesystem\";
 			arch = \"${ARCH}\";
 			compression = \"none\";
-			hash@1 {
+			hash${REFERENCE_CHAR}1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash${REFERENCE_CHAR}2 {
 				algo = \"${HASH}\";
 			};
 		};
@@ -157,10 +157,10 @@ OVCONFIGS=""
 			type = \"flat_dt\";
 			arch = \"${ARCH}\";
 			compression = \"none\";
-			hash@1 {
+			hash${REFERENCE_CHAR}1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash${REFERENCE_CHAR}2 {
 				algo = \"${HASH}\";
 			};
 		};
@@ -219,10 +219,10 @@ if [ -n "${DTB}" ]; then
 			${DTADDR:+load = <${DTADDR}>;}
 			arch = \"${ARCH}\";
 			$COMPRESSION_DATA_FIELD
-			hash@1 {
+			hash${REFERENCE_CHAR}1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash${REFERENCE_CHAR}2 {
 				algo = \"${HASH}\";
 			};
 		};
@@ -249,10 +249,10 @@ DATA="/dts-v1/;
 			compression = \"${COMPRESS}\";
 			load = <${LOAD_ADDR}>;
 			entry = <${ENTRY_ADDR}>;
-			hash@1 {
+			hash${REFERENCE_CHAR}1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash${REFERENCE_CHAR}2 {
 				algo = \"$HASH\";
 			};
 		};
