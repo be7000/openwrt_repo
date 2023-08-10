@@ -119,6 +119,10 @@ if KERNEL_KASAN
 		default 2048
 endif
 
+config KERNEL_STACKTRACE
+	bool "STACK TRACE"
+	default n
+
 config KERNEL_I2C_COMPAT
        bool "Enable compatibility bits for old user-space"
        default y
