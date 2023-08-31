@@ -389,7 +389,9 @@ get_fw_name() {
 		"8060102"|\
 		"1060001"|\
 		"1060003"|\
-		"1060002")
+		"1060002"|\
+		"8060202"|\
+		"8060302")
 			wifi_ipq="$img"_"$image_suffix1"
 			;;
 		"8060002"|\
@@ -582,6 +584,8 @@ platform_do_upgrade() {
 	qcom,ipq5332-ap-mi01.9 |\
 	qcom,ipq5332-ap-mi04.1 |\
 	qcom,ipq5332-ap-mi04.1-c2 |\
+	qcom,ipq5332-ap-rdp479 |\
+	qcom,ipq5332-ap-rdp481 |\
 	qcom,ipq5332-db-mi01.1 |\
 	qcom,ipq5332-db-mi02.1)
 		for sec in $(print_sections $1); do
