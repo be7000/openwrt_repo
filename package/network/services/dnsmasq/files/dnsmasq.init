@@ -963,9 +963,10 @@ dnsmasq_start()
 		xappend "--conf-file=$TRUSTANCHORSFILE"
 		xappend "--dnssec"
 		[ -x /etc/init.d/sysntpd ] && {
-			if /etc/init.d/sysntpd enabled || [ "$(uci_get system.ntp.enabled)" = "1" ] ; then
+			/etc/init.d/sysntpd enabled
+			[ "$?" -ne 0 -o "$(uci_get system.ntp.enabled)" = "1" ] && {
 				[ -f "$TIMEVALIDFILE" ] || xappend "--dnssec-no-timecheck"
-			fi
+			}
 		}
 		append_bool "$cfg" dnsseccheckunsigned "--dnssec-check-unsigned"
 	}
