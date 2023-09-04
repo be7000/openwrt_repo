@@ -1,0 +1,35 @@
+From a7c2a0ddd71aff325e9fbfd3cd5838852bddde8d Mon Sep 17 00:00:00 2001
+From: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+Date: Mon, 4 Sep 2023 15:47:35 +0800
+Subject: [PATCH] odhcpd: fix compilation with musl 1.2.4
+
+Use the plain function instead of the gone syscall.
+
+Fixes error in the form of:
+build_dir/target-mips_34kc_musl/odhcpd-2015-11-19/src/odhcpd.c: In function 'odhcpd_time':
+build_dir/target-mips_34kc_musl/odhcpd-2015-11-19/src/odhcpd.c:476:10: error: 'SYS_clock_gettime' undeclared (first use in this function); did you mean 'SYS_clock_gettime64'?
+  syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &ts);
+          ^~~~~~~~~~~~~~~~~
+          SYS_clock_gettime64
+
+Signed-off-by: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+---
+ src/odhcpd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/odhcpd.c b/src/odhcpd.c
+index 74830ac..69e68da 100644
+--- a/src/odhcpd.c
++++ b/src/odhcpd.c
+@@ -473,7 +473,7 @@ int odhcpd_urandom(void *data, size_t len)
+ time_t odhcpd_time(void)
+ {
+ 	struct timespec ts;
+-	syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &ts);
++	clock_gettime(CLOCK_MONOTONIC, &ts);
+ 	return ts.tv_sec;
+ }
+ 
+-- 
+2.7.4
+
