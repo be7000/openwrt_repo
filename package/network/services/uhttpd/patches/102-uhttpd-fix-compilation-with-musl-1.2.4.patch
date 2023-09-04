@@ -1,0 +1,79 @@
+From 1c635e61e8c3a68d060df71f540c0538ea07a124 Mon Sep 17 00:00:00 2001
+From: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+Date: Mon, 4 Sep 2023 13:54:17 +0800
+Subject: [PATCH] uhttpd: fix compilation with musl 1.2.4
+
+Fixes error in the form of:
+build_dir/target-mips_34kc_musl/uhttpd-2015-11-08/utils.c:50:26: error: too many arguments for format [-Werror=format-extra-args]
+   ustream_printf(cl->us, "\r\n", len);
+                          ^~~~~~
+build_dir/target-mips_34kc_musl/uhttpd-2015-11-08/utils.c: In function 'uh_chunk_vprintf':
+build_dir/target-mips_34kc_musl/uhttpd-2015-11-08/utils.c:77:25: error: too many arguments for format [-Werror=format-extra-args]
+  ustream_printf(cl->us, "\r\n", len);
+                         ^~~~~~
+cc1: all warnings being treated as errors
+CMakeFiles/uhttpd.dir/build.make:134: recipe for target 'CMakeFiles/uhttpd.dir/utils.c.o' failed
+make[6]: *** [CMakeFiles/uhttpd.dir/utils.c.o] Error 1
+---
+ proc.c  | 3 ++-
+ ubus.c  | 4 ++--
+ utils.c | 4 ++--
+ 3 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/proc.c b/proc.c
+index 4819e08..79b70de 100644
+--- a/proc.c
++++ b/proc.c
+@@ -226,7 +226,8 @@ static void proc_handle_header_end(struct relay *r)
+ 	uloop_timeout_cancel(&p->timeout);
+ 	uh_http_header(cl, cl->dispatch.proc.status_code, cl->dispatch.proc.status_msg);
+ 	blob_for_each_attr(cur, cl->dispatch.proc.hdr.head, rem)
+-		ustream_printf(cl->us, "%s: %s\r\n", blobmsg_name(cur), blobmsg_data(cur));
++		ustream_printf(cl->us, "%s: %s\r\n", blobmsg_name(cur),
++				blobmsg_get_string(cur));
+ 
+ 	ustream_printf(cl->us, "\r\n");
+ 
+diff --git a/ubus.c b/ubus.c
+index a3df412..ea741c4 100644
+--- a/ubus.c
++++ b/ubus.c
+@@ -144,11 +144,11 @@ static void uh_ubus_add_cors_headers(struct client *cl)
+ 	}
+ 
+ 	ustream_printf(cl->us, "Access-Control-Allow-Origin: %s\r\n",
+-	               blobmsg_data(tb[HDR_ORIGIN]));
++	               blobmsg_get_string(tb[HDR_ORIGIN]));
+ 
+ 	if (tb[HDR_ACCESS_CONTROL_REQUEST_HEADERS])
+ 		ustream_printf(cl->us, "Access-Control-Allow-Headers: %s\r\n",
+-		               blobmsg_data(tb[HDR_ACCESS_CONTROL_REQUEST_HEADERS]));
++		               blobmsg_get_string(tb[HDR_ACCESS_CONTROL_REQUEST_HEADERS]));
+ 
+ 	ustream_printf(cl->us, "Access-Control-Allow-Methods: POST, OPTIONS, PUT, DELETE\r\n");
+ 	ustream_printf(cl->us, "Access-Control-Allow-Credentials: true\r\n");
+diff --git a/utils.c b/utils.c
+index 29e03c0..f00bc53 100644
+--- a/utils.c
++++ b/utils.c
+@@ -47,7 +47,7 @@ void uh_chunk_write(struct client *cl, const void *data, int len)
+ 		ustream_printf(cl->us, "%X\r\n", len);
+ 	ustream_write(cl->us, data, len, true);
+ 	if (chunked)
+-		ustream_printf(cl->us, "\r\n", len);
++		ustream_printf(cl->us, "\r\n");
+ }
+ 
+ void uh_chunk_vprintf(struct client *cl, const char *format, va_list arg)
+@@ -74,7 +74,7 @@ void uh_chunk_vprintf(struct client *cl, const char *format, va_list arg)
+ 		ustream_write(cl->us, buf, len, true);
+ 	else
+ 		ustream_vprintf(cl->us, format, arg);
+-	ustream_printf(cl->us, "\r\n", len);
++	ustream_printf(cl->us, "\r\n");
+ }
+ 
+ void uh_chunk_printf(struct client *cl, const char *format, ...)
+-- 
+2.7.4
+
