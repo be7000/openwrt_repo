@@ -1,0 +1,47 @@
+From 0715e8f2180167a4fedc0e7d76b90c0eeb1d1f37 Mon Sep 17 00:00:00 2001
+From: Madhurya Kandamuru <quic_madhurya@quicinc.com>
+Date: Mon, 4 Sep 2023 14:02:04 +0530
+Subject: [PATCH] dnsmasq: adding local mkdir_p implementation to fix
+ compilation error
+
+Change-Id: I884a6332f3cc68691a33afa4d528dd62a239dfc1
+Signed-off-by: Madhurya Kandamuru <quic_madhurya@quicinc.com>
+---
+
+--- a/src/config.c
++++ b/src/config.c
+@@ -190,6 +190,31 @@ static const struct { const char *name;
+ 	{ .name = NULL, },
+ };
+ 
++static int mkdir_p(char *dir, mode_t mask)
++{
++        char *l = strrchr(dir, '/');
++        int ret;
++
++        if (!l)
++                return 0;
++
++        *l = '\0';
++
++        if (mkdir_p(dir, mask))
++                return -1;
++
++        *l = '/';
++
++        ret = mkdir(dir, mask);
++        if (ret && errno == EEXIST)
++                return 0;
++
++        if (ret)
++                syslog(LOG_ERR, "mkdir(%s, %d) failed: %m\n", dir, mask);
++
++        return ret;
++}
++
+ static void set_interface_defaults(struct interface *iface)
+ {
+ 	iface->ignore = true;
+-- 
+2.17.1
+
