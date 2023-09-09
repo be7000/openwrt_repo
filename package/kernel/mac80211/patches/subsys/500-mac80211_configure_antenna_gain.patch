@@ -37,9 +37,9 @@
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
 @@ -2749,6 +2749,9 @@ enum nl80211_commands {
-  *	When used with %NL80211_CMD_FRAME_TX_STATUS, indicates the ack RX
-  *	timestamp. When used with %NL80211_CMD_FRAME RX notification, indicates
-  *	the incoming frame RX timestamp.
+  * @NL80211_ATTR_MLO_LINK_DISABLED: Flag attribute indicating that the link is
+  *	disabled.
+  *
 + * @NL80211_ATTR_WIPHY_ANTENNA_GAIN: Configured antenna gain. Used to reduce
 + *	transmit power to stay within regulatory limits. u32, dBi.
 + *
@@ -130,9 +130,9 @@
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
 @@ -799,6 +799,7 @@ static const struct nla_policy nl80211_p
- 	[NL80211_ATTR_MLD_ADDR] = NLA_POLICY_EXACT_LEN(ETH_ALEN),
- 	[NL80211_ATTR_MLO_SUPPORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_MAX_NUM_AKM_SUITES] = { .type = NLA_REJECT },
+	[NL80211_ATTR_HW_TIMESTAMP_ENABLED] = { .type = NLA_FLAG },
+	[NL80211_ATTR_EMA_RNR_ELEMS] = { .type = NLA_NESTED },
+	[NL80211_ATTR_MLO_LINK_DISABLED] = { .type = NLA_FLAG },
 +	[NL80211_ATTR_WIPHY_ANTENNA_GAIN] = { .type = NLA_U32 },
  };
  

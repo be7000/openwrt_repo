@@ -10,11 +10,12 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=mac80211
 
-PKG_VERSION:=6.1.24
+PKG_VERSION:=6.5-rc3
 PKG_RELEASE:=3
 # PKG_SOURCE_URL:=@KERNEL/linux/kernel/projects/backports/stable/v5.15.58/
 PKG_SOURCE_URL:=http://mirror2.openwrt.org/sources/
-PKG_HASH:=5d39aca7e34c33cb9b3e366117b2e86841b7bdd37933679d6b1e61be6b150648
+#PKG_HASH:=5d39aca7e34c33cb9b3e366117b2e86841b7bdd37933679d6b1e61be6b150648
+PKG_HASH:=90550338f957db53cee014604b95349a1c571cbadeedbb0625139a983f7fd224
 
 PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/backports-$(PKG_VERSION)
@@ -50,6 +51,10 @@ endef
 
 config_package=$(if $(CONFIG_PACKAGE_kmod-$(1)),m)
 
+ifneq (,$(findstring ipq,$(CONFIG_TARGET_BOARD)))
+	QCOM:=y
+endif
+
 config-y:= \
 	WLAN \
 	CFG80211_CERTIFICATION_ONUS \
@@ -57,8 +62,10 @@ config-y:= \
 	MAC80211_RC_MINSTREL_HT \
 	MAC80211_RC_MINSTREL_VHT \
 	MAC80211_RC_DEFAULT_MINSTREL \
+	WLAN_VENDOR_ATH
+ifneq ($(QCOM),y)
+config-y += \
 	WLAN_VENDOR_ADMTEK \
-	WLAN_VENDOR_ATH \
 	WLAN_VENDOR_ATMEL \
 	WLAN_VENDOR_BROADCOM \
 	WLAN_VENDOR_CISCO \
@@ -71,7 +78,8 @@ config-y:= \
 	WLAN_VENDOR_RSI \
 	WLAN_VENDOR_ST \
 	WLAN_VENDOR_TI \
-	WLAN_VENDOR_ZYDAS \
+	WLAN_VENDOR_ZYDAS
+endif
 
 config-$(call config_package,cfg80211) += CFG80211
 config-$(CONFIG_PACKAGE_CFG80211_TESTMODE) += NL80211_TESTMODE
@@ -80,11 +88,13 @@ config-$(call config_package,mac80211) += MAC80211
 config-$(CONFIG_PACKAGE_MAC80211_MESH) += MAC80211_MESH
 
 include ath.mk
-include broadcom.mk
-include intel.mk
-include marvell.mk
-include ralink.mk
-include realtek.mk
+ifneq ($(QCOM),y)
+  include broadcom.mk
+  include intel.mk
+  include marvell.mk
+  include ralink.mk
+  include realtek.mk
+endif
 
 PKG_CONFIG_DEPENDS += \
 	$(patsubst %,CONFIG_PACKAGE_kmod-%,$(PKG_DRIVERS))
@@ -254,18 +264,19 @@ ifdef CONFIG_PACKAGE_MAC80211_TRACING
 endif
 
 config-$(call config_package,mac80211-hwsim) += MAC80211_HWSIM
-config-$(call config_package,mt7601u) += MT7601U
-config-y += WL_MEDIATEK
+ifneq ($(QCOM),y)
+  config-$(call config_package,mt7601u) += MT7601U
+  config-y += WL_MEDIATEK
 
-config-$(call config_package,wlcore) += WLCORE WLCORE_SDIO
-config-$(call config_package,wl12xx) += WL12XX
-config-$(call config_package,wl18xx) += WL18XX
-config-y += WL_TI WILINK_PLATFORM_DATA
-config-$(call config_package,rsi91x) += RSI_91X
-config-$(call config_package,rsi91x-usb) += RSI_USB
-config-$(call config_package,rsi91x-sdio) += RSI_SDIO
-
-config-$(CONFIG_LEDS_TRIGGERS) += MAC80211_LEDS
+  config-$(call config_package,wlcore) += WLCORE WLCORE_SDIO
+  config-$(call config_package,wl12xx) += WL12XX
+  config-$(call config_package,wl18xx) += WL18XX
+  config-y += WL_TI WILINK_PLATFORM_DATA
+  config-$(call config_package,rsi91x) += RSI_91X
+  config-$(call config_package,rsi91x-usb) += RSI_USB
+  config-$(call config_package,rsi91x-sdio) += RSI_SDIO
+  config-$(CONFIG_LEDS_TRIGGERS) += MAC80211_LEDS
+endif
 
 C_DEFINES=
 
@@ -325,9 +336,11 @@ endif
 ifeq ($(strip $(CONFIG_EXTERNAL_KERNEL_TREE)),"")
   ifeq ($(strip $(CONFIG_KERNEL_GIT_CLONE_URI)),"")
     define Build/Configure
-	  cmp $(PKG_BUILD_DIR)/include/linux/ath9k_platform.h $(LINUX_DIR)/include/linux/ath9k_platform.h
-	  cmp $(PKG_BUILD_DIR)/include/linux/ath5k_platform.h $(LINUX_DIR)/include/linux/ath5k_platform.h
-	  cmp $(PKG_BUILD_DIR)/include/linux/rt2x00_platform.h $(LINUX_DIR)/include/linux/rt2x00_platform.h
+#	  cmp $(PKG_BUILD_DIR)/include/linux/ath9k_platform.h $(LINUX_DIR)/include/linux/ath9k_platform.h
+#	  cmp $(PKG_BUILD_DIR)/include/linux/ath5k_platform.h $(LINUX_DIR)/include/linux/ath5k_platform.h
+	  ifneq ($(QCOM),y)
+	    cmp $(PKG_BUILD_DIR)/include/linux/rt2x00_platform.h $(LINUX_DIR)/include/linux/rt2x00_platform.h
+	  endif
     endef
   endif
 endif
@@ -337,15 +350,18 @@ define Build/Patch
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/build,build/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/subsys,subsys/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath,ath/)
-	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
-	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
-	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
+#	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
+#	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
+#	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath11k,ath11k/)
+	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath12k,ath12k/)
+ifneq ($(QCOM),y)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rt2x00,rt2x00/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mt7601u,mt7601u/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mwl,mwl/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/brcm,brcm/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rtl,rtl/)
+endif
 	$(if $(QUILT),touch $(PKG_BUILD_DIR)/.quilt_used)
 endef
 
@@ -353,15 +369,18 @@ define Quilt/Refresh/Package
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/build,build/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/subsys,subsys/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath,ath/)
-	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
-	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
-	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
+#	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
+#	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
+#	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath11k,ath11k/)
+	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath12k,ath12k/)
+ifneq ($(QCOM),y)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rt2x00,rt2x00/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mt7601u,mt7601u/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mwl,mwl/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/brcm,brcm/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rtl,rtl/)
+endif
 endef
 
 define Build/Compile
