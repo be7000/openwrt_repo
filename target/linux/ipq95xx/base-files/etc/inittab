@@ -15,4 +15,4 @@
 #
 ::sysinit:/etc/init.d/rcS S boot
 ::shutdown:/etc/init.d/rcS K shutdown
-ttyMSM0::askfirst:/bin/ash --login
+ttyMSM0::askconsole:/bin/login
