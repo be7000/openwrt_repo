@@ -345,6 +345,8 @@ ifeq ($(strip $(CONFIG_EXTERNAL_KERNEL_TREE)),"")
   endif
 endif
 
+EXTERNAL_PATCH_DIR:=$(TOPDIR)/openwrt-patches/package/kernel/mac80211/patches
+
 define Build/Patch
 	$(if $(QUILT),rm -rf $(PKG_BUILD_DIR)/patches; mkdir -p $(PKG_BUILD_DIR)/patches)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/build,build/)
@@ -362,6 +364,9 @@ ifneq ($(QCOM),y)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/brcm,brcm/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rtl,rtl/)
 endif
+	$(call PatchDir,$(PKG_BUILD_DIR),$(EXTERNAL_PATCH_DIR)/subsys,subsys/)
+	$(call PatchDir,$(PKG_BUILD_DIR),$(EXTERNAL_PATCH_DIR)/ath11k,ath11k/)
+	$(call PatchDir,$(PKG_BUILD_DIR),$(EXTERNAL_PATCH_DIR)/ath12k,ath12k/)
 	$(if $(QUILT),touch $(PKG_BUILD_DIR)/.quilt_used)
 endef
 
