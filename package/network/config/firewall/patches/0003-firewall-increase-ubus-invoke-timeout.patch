@@ -1,0 +1,30 @@
+From 4341c65ce6a7cc7ccddc4beb6cb26507120431e9 Mon Sep 17 00:00:00 2001
+From: Nitin Shetty <quic_nitinsj@quicinc.com>
+Date: Tue, 3 Oct 2023 09:39:52 +0530
+Subject: [PATCH] [firewall] increase ubus invoke timeout
+
+timeout is observed while invoking handler
+function of ubus object "network.interface".
+so increase the timeout from 2000ms to 3000ms
+
+Signed-off-by: Nitin Shetty <quic_nitinsj@quicinc.com>
+---
+ ubus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ubus.c b/ubus.c
+index cf5c8b1..09aeba4 100644
+--- a/ubus.c
++++ b/ubus.c
+@@ -53,7 +53,7 @@ fw3_ubus_connect(void)
+ 	if (ubus_lookup_id(ctx, "network.interface", &id))
+ 		goto out;
+ 
+-	if (ubus_invoke(ctx, id, "dump", b.head, dump_cb, NULL, 2000))
++	if (ubus_invoke(ctx, id, "dump", b.head, dump_cb, NULL, 3000))
+ 		goto out;
+ 
+ 	status = true;
+-- 
+2.37.3
+
