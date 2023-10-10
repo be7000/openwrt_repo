@@ -204,7 +204,7 @@ hostapd_set_bss_options() {
 	local enc wep_rekey wpa_group_rekey wpa_strict_rekey wpa_pair_rekey wpa_master_rekey pid sae owe suite_b
 	local add_sha256_str ieee80211r_str enc_list ieee80211ai_sha256_str ieee80211ai_sha384_str sae_str owe_str suite_b_str
 	local owe_transition_bssid owe_transition_ssid owe_transition_ifname owe_groups
-	local sae_reflection_attack sae_commit_override sae_password sae_pwe sae_anti_clogging_threshold sae_groups sae_sync sae_require_mfp
+	local sae_reflection_attack sae_commit_override sae_password sae_pwe transition_disable sae_anti_clogging_threshold sae_groups sae_sync sae_require_mfp
 
 	[ -z "$vif" ] && hostapd_get_vif_name
 
@@ -229,6 +229,7 @@ hostapd_set_bss_options() {
 	config_get  sae_commit_override  "$vif" sae_commit_override
 	config_get  sae_password  "$vif" sae_password
 	config_get  sae_pwe  "$vif" sae_pwe
+	config_get  transition_disable  "$vif" transition_disable
 	config_get  sae_anti_clogging_threshold   "$vif" sae_anti_clogging_threshold
 
 	config_get  owe_transition_bssid   "$vif" owe_transition_bssid
@@ -600,6 +601,7 @@ hostapd_set_bss_options() {
 			[ -n "$sae_commit_override" ] && append "$var" "sae_commit_override=$sae_commit_override" "$N"
 			[ -n "$sae_password" ] && append "$var" "sae_password=$sae_password" "$N"
 			[ -n "$sae_pwe" ] && append "$var" "sae_pwe=$sae_pwe" "$N"
+			[ -n "$transition_disable" ] && append "$var" "transition_disable=$transition_disable" "$N"
 			[ -n "$sae_anti_clogging_threshold" ] && append "$var" "sae_anti_clogging_threshold=$sae_anti_clogging_threshold" "$N"
 
 			add_sae_groups() {
