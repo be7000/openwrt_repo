@@ -169,6 +169,9 @@ xconfig: scripts/config/qconf prepare-tmpinfo FORCE
 
 prepare_kernel_conf: .config toolchain/install FORCE
 
+clean_kernel: FORCE
+	$(_SINGLE)$(NO_TRACE_MAKE) target/linux/clean
+
 ifeq ($(wildcard $(STAGING_DIR_HOST)/bin/quilt),)
   prepare_kernel_conf:
 	@+$(SUBMAKE) -r tools/quilt/compile
@@ -275,7 +278,7 @@ package/symlinks-clean:
 help:
 	cat README.md
 
-distclean:
+distclean: clean_kernel
 	rm -rf bin build_dir .ccache .config* dl feeds key-build* logs package/feeds staging_dir tmp
 	@$(_SINGLE)$(SUBMAKE) -C scripts/config clean
 
