@@ -209,6 +209,7 @@ hostapd_set_bss_options() {
 	[ -z "$vif" ] && hostapd_get_vif_name
 
 	config_load wireless
+	vif=$(echo $vifs | cut -d " " -f "$if_idx")
 
 	config_get enc "$vif" encryption "none"
 	config_get wep_rekey        "$vif" wep_rekey        # 300
