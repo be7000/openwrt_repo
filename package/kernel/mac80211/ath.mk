@@ -21,6 +21,10 @@ ifdef CONFIG_PACKAGE_MAC80211_DEBUGFS
 	ATH9K_HTC_DEBUGFS \
 	ATH10K_DEBUGFS \
 	ATH11K_DEBUGFS \
+	ATH11K_SPECTRAL \
+	ATH11K_PKTLOG \
+	ATH11K_CFR \
+	ATH11K_SMART_ANT_ALG \
 	CARL9170_DEBUGFS \
 	ATH5K_DEBUG \
 	ATH6KL_DEBUG \
@@ -39,7 +43,7 @@ ifdef CONFIG_PACKAGE_MAC80211_TRACING
 endif
 
 config-$(call config_package,ath) += ATH_CARDS ATH_COMMON
-config-$(CONFIG_PACKAGE_ATH_DEBUG) += ATH_DEBUG ATH10K_DEBUG ATH11K_DEBUG ATH12K_DEBUG ATH9K_STATION_STATISTICS
+config-$(CONFIG_PACKAGE_ATH_DEBUG) += ATH_DEBUG ATH10K_DEBUG ATH11K_DEBUG ATH12K_DEBUG ATH12K_DEBUGFS ATH12K_PKTLOG ATH9K_STATION_STATISTICS
 config-$(CONFIG_PACKAGE_ATH_DFS) += ATH9K_DFS_CERTIFIED ATH10K_DFS_CERTIFIED
 config-$(CONFIG_PACKAGE_ATH_SPECTRAL) += ATH9K_COMMON_SPECTRAL ATH10K_SPECTRAL ATH11K_SPECTRAL
 config-$(CONFIG_PACKAGE_ATH_DYNACK) += ATH9K_DYNACK
@@ -58,14 +62,19 @@ config-$(CONFIG_ATH10K_LEDS) += ATH10K_LEDS
 config-$(CONFIG_ATH10K_THERMAL) += ATH10K_THERMAL
 config-$(CONFIG_ATH11K_THERMAL) += ATH11K_THERMAL
 
+
+config-$(CONFIG_TARGET_ipq53xx) += ATH12K_AHB
+
 config-$(call config_package,ath9k-htc) += ATH9K_HTC
 config-$(call config_package,ath10k) += ATH10K ATH10K_PCI
 config-$(call config_package,ath10k-smallbuffers) += ATH10K ATH10K_PCI ATH10K_SMALLBUFFERS
-config-$(call config_package,ath11k) += ATH11K
-config-$(call config_package,ath11k-ahb) += ATH11K_AHB
-config-$(call config_package,ath11k-pci) += ATH11K_PCI
-#TODO need to change the below to ath12k
-config-$(call config_package,ath11k) += ATH12K
+config-$(call config_package,ath11k) += ATH11K ATH11K_AHB ATH11K_PCI
+config-$(call config_package,ath12k) += ATH12K
+
+config-$(CONFIG_PACKAGE_kmod-ath12k) += ATH12K_SPECTRAL
+ifeq ($(CONFIG_KERNEL_IPQ_MEM_PROFILE),512)
+config-y += ATH12K_MEM_PROFILE_512M
+endif
 
 config-$(call config_package,ath5k) += ATH5K
 ifdef CONFIG_TARGET_ath25
@@ -82,6 +91,10 @@ config-$(call config_package,carl9170) += CARL9170
 config-$(call config_package,ar5523) += AR5523
 
 config-$(call config_package,wil6210) += WIL6210
+
+ifneq "6.1.31" "$(word 1, $(sort 6.1.31 $(LINUX_VERSION)))"
+config-$(CONFIG_PACKAGE_ATH12K_SAWF) += ATH12K_SAWF
+endif
 
 define KernelPackage/ath/config
   if PACKAGE_kmod-ath
@@ -306,7 +319,9 @@ define KernelPackage/ath11k
   URL:=https://wireless.wiki.kernel.org/en/users/drivers/ath11k
   DEPENDS+= +kmod-ath +@DRIVER_11AC_SUPPORT +@DRIVER_11AX_SUPPORT \
   +kmod-crypto-michael-mic +ATH11K_THERMAL:kmod-hwmon-core +ATH11K_THERMAL:kmod-thermal
-  FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k.ko
+  FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k.ko \
+        $(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k_ahb.ko \
+        $(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k_pci.ko
 endef
 
 define KernelPackage/ath11k/description
@@ -327,7 +342,7 @@ define KernelPackage/ath12k
   $(call KernelPackage/mac80211/Default)
   TITLE:=QTI 802.11be wireless cards support
   URL:=https://wireless.wiki.kernel.org/en/users/drivers/ath12k
-  DEPENDS+= +kmod-ath +@DRIVER_11N_SUPPORT +@DRIVER_11W_SUPPORT
+  DEPENDS+= +kmod-ath +@DRIVER_11N_SUPPORT +@DRIVER_11W_SUPPORT +@DRIVER_11AC_SUPPORT +@DRIVER_11AX_SUPPORT
   FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath12k/ath12k.ko
   AUTOLOAD:=$(call AutoProbe,ath12k)
 endef
