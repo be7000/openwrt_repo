@@ -1110,3 +1110,7 @@ config KERNEL_CPU_THERMAL
 config KERNEL_CPU_BIG_ENDIAN
         bool "Enable Big Endian mode"
         default n
+
+config KERNEL_CRYPTO_MANAGER_DISABLE_TESTS
+	bool "Disable run-time self tests"
+	default n
