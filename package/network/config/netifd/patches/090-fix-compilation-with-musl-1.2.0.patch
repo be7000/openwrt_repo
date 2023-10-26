@@ -1,0 +1,28 @@
+From b1e83288fdbf9ac80f5377b279404adaf05e0c4d Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Wed, 25 Mar 2020 16:11:40 -0700
+Subject: [PATCH] system-linux: fix compilation with musl 1.2.0
+
+Switched to the plain function instead of the now gone syscall.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ system-linux.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/system-linux.c b/system-linux.c
+index d533be8..d36d287 100644
+--- a/system-linux.c
++++ b/system-linux.c
+@@ -2421,7 +2421,7 @@ time_t system_get_rtime(void)
+ 	struct timespec ts;
+ 	struct timeval tv;
+ 
+-	if (syscall(__NR_clock_gettime, CLOCK_MONOTONIC, &ts) == 0)
++	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
+ 		return ts.tv_sec;
+ 
+ 	if (gettimeofday(&tv, NULL) == 0)
+-- 
+2.30.2
+
