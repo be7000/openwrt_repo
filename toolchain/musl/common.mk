@@ -8,19 +8,25 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=musl
-PKG_VERSION:=1.1.16
-PKG_RELEASE=1
+PKG_VERSION:=1.2.4
+PKG_RELEASE:=1
 
-PKG_MD5SUM:=14e8c5ac74f887d53256b3dcaf9b4aaa
-
-PKG_SOURCE_URL:=http://www.musl-libc.org/releases
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://musl.libc.org/releases/
+PKG_HASH:=7a35eae33d5372a7c0da1188de798726f68825513b7ae3ebe97aaaa52114f039
+
 LIBC_SO_VERSION:=$(PKG_VERSION)
 PATCH_DIR:=$(PATH_PREFIX)/patches
 
+BUILD_DIR_HOST:=$(BUILD_DIR_TOOLCHAIN)
+HOST_BUILD_PREFIX:=$(TOOLCHAIN_DIR)
 HOST_BUILD_DIR:=$(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME)-$(PKG_VERSION)
 
-include $(INCLUDE_DIR)/toolchain-build.mk
+include $(INCLUDE_DIR)/host-build.mk
+include $(INCLUDE_DIR)/hardening.mk
+
+TARGET_CFLAGS:= $(filter-out -O%,$(TARGET_CFLAGS))
+TARGET_CFLAGS+= $(if $(CONFIG_MUSL_DISABLE_CRYPT_SIZE_HACK),,-DCRYPT_SIZE_HACK)
 
 MUSL_CONFIGURE:= \
 	$(TARGET_CONFIGURE_OPTS) \
@@ -30,25 +36,12 @@ MUSL_CONFIGURE:= \
 		--prefix=/ \
 		--host=$(GNU_HOST_NAME) \
 		--target=$(REAL_GNU_TARGET_NAME) \
-		--disable-gcc-wrapper
-
-ifeq ($(CONFIG_MUSL_ENABLE_DEBUG),y)
-MUSL_CONFIGURE+= \
-	--enable-debug
-endif
-
-define Host/Prepare
-	$(call Host/Prepare/Default)
-	$(if $(strip $(QUILT)), \
-		cd $(HOST_BUILD_DIR); \
-		if $(QUILT_CMD) next >/dev/null 2>&1; then \
-			$(QUILT_CMD) push -a; \
-		fi
-	)
-	ln -snf $(PKG_NAME)-$(PKG_VERSION) $(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME)
-endef
+		--disable-gcc-wrapper \
+		--enable-debug \
+		--enable-optimize
 
 define Host/Configure
+	ln -snf $(PKG_NAME)-$(PKG_VERSION) $(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME)
 	( cd $(HOST_BUILD_DIR); rm -f config.cache; \
 		$(MUSL_CONFIGURE) \
 	);
