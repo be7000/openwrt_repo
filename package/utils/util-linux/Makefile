@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2007-2015 OpenWrt.org
+# Copyright (C) 2007-2018 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,12 +8,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=util-linux
-PKG_VERSION:=2.25.2
-PKG_RELEASE:=4
+PKG_VERSION:=2.37
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=@KERNEL/linux/utils/$(PKG_NAME)/v2.25
-PKG_MD5SUM:=cab3d7be354000f629bc601238b629b3
+PKG_SOURCE_URL:=@KERNEL/linux/utils/$(PKG_NAME)/v2.37
+PKG_HASH:=bd07b7e98839e0359842110525a3032fdb8eaf3a90bedde3dd1652d32d15cce5
+PKG_CPE_ID:=cpe:/a:kernel:util-linux
 
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYING getopt/COPYING libblkid/COPYING libmount/COPYING Documentation/licenses/COPYING.GPLv2 Documentation/licenses/COPYING.LGPLv2.1 libuuid/COPYING Documentation/licenses/COPYING.BSD-3
@@ -32,6 +33,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/util-linux/Default
   SECTION:=utils
   CATEGORY:=Utilities
+  DEPENDS:= +librt
   URL:=http://www.kernel.org/pub/linux/utils/util-linux/
 endef
 
