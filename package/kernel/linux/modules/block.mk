@@ -193,7 +193,7 @@ $(eval $(call KernelPackage,block2mtd))
 define KernelPackage/dax
   SUBMENU:=$(BLOCK_MENU)
   TITLE:=DAX: direct access to differentiated memory
-  KCONFIG:=CONFIG_DAX
+  KCONFIG:=CONFIG_DAX=y
   FILES:=$(LINUX_DIR)/drivers/dax/dax.ko
 endef
 
@@ -219,7 +219,7 @@ define KernelPackage/dm
 	CONFIG_DM_SNAPSHOT=n \
 	CONFIG_DM_LOG_USERSPACE=n \
 	CONFIG_MD=y \
-	CONFIG_BLK_DEV_DM \
+	CONFIG_BLK_DEV_DM=y \
 	CONFIG_DM_CRYPT \
 	CONFIG_DM_MIRROR
   FILES:= \
