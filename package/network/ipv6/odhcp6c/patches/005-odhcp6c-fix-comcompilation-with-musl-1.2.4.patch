@@ -1,0 +1,34 @@
+From 1b0dfdd7f933cbaadfb83af1609debce4a171ad0 Mon Sep 17 00:00:00 2001
+From: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+Date: Mon, 4 Sep 2023 15:33:54 +0800
+Subject: [PATCH] odhcp6c: fix comcompilation with musl 1.2.4
+
+Use the plain function instead of the gone syscall.
+
+Fixes error in the form of:
+build_dir/target-mips_34kc_musl/odhcp6c-2015-07-29/src/odhcp6c.c:461:10: error: 'SYS_clock_gettime' undeclared (first use in this function); did you mean 'SYS_clock_gettime32'?
+  syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &t);
+          ^~~~~~~~~~~~~~~~~
+          SYS_clock_gettime32
+
+Signed-off-by: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+---
+ src/odhcp6c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/odhcp6c.c b/src/odhcp6c.c
+index 133ade7..7e5c3f3 100644
+--- a/src/odhcp6c.c
++++ b/src/odhcp6c.c
+@@ -458,7 +458,7 @@ static int usage(void)
+ uint64_t odhcp6c_get_milli_time(void)
+ {
+ 	struct timespec t = {0, 0};
+-	syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &t);
++	clock_gettime(CLOCK_MONOTONIC, &t);
+ 	return ((uint64_t)t.tv_sec) * 1000 + ((uint64_t)t.tv_nsec) / 1000000;
+ }
+ 
+-- 
+2.7.4
+
