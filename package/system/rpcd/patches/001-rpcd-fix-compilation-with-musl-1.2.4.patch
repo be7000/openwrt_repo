@@ -1,0 +1,26 @@
+From f61d82f2c2340df1d5f0d8d46967a25b43a0914f Mon Sep 17 00:00:00 2001
+From: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+Date: Mon, 4 Sep 2023 13:36:05 +0800
+Subject: [PATCH] rpcd: fix compilation with musl 1.2.4
+
+Signed-off-by: Ronghua Zeng <quic_ronghuaz@quicinc.com>
+---
+ session.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/session.c b/session.c
+index 951201b..17a43d1 100644
+--- a/session.c
++++ b/session.c
+@@ -226,7 +226,7 @@ rpc_session_to_blob(struct rpc_session *ses, bool acls)
+ 
+ 	blobmsg_add_string(&buf, "ubus_rpc_session", ses->id);
+ 	blobmsg_add_u32(&buf, "timeout", ses->timeout);
+-	blobmsg_add_u32(&buf, "expires", uloop_timeout_remaining(&ses->t) / 1000);
++	blobmsg_add_u64(&buf, "expires", uloop_timeout_remaining64(&ses->t) / 1000);
+ 
+ 	if (acls) {
+ 		c = blobmsg_open_table(&buf, "acls");
+-- 
+2.7.4
+
