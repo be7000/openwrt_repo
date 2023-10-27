@@ -871,7 +871,7 @@ define KernelPackage/crypto-sha1
 endef
 
 define KernelPackage/crypto-sha1/arm
-  FILES+=$(LINUX_DIR)/arch/arm/crypto/sha1-arm.ko
+  FILES+=$(LINUX_DIR)/arch/arm/crypto/sha1-arm.ko@ge6.1
   AUTOLOAD+=$(call AutoLoad,09,sha1-arm)
 endef
 
@@ -960,13 +960,13 @@ define KernelPackage/crypto-sha512
 	CONFIG_CRYPTO_SHA512_ARM \
 	CONFIG_CRYPTO_SHA512_OCTEON \
 	CONFIG_CRYPTO_SHA512_SSSE3
-  FILES:=$(LINUX_DIR)/crypto/sha512_generic.ko
+  FILES:=$(LINUX_DIR)/crypto/sha512_generic.ko@ge6.1
   AUTOLOAD:=$(call AutoLoad,09,sha512_generic)
   $(call AddDepends/crypto)
 endef
 
 define KernelPackage/crypto-sha512/arm
-  FILES+=$(LINUX_DIR)/arch/arm/crypto/sha512-arm.ko
+  FILES+=$(LINUX_DIR)/arch/arm/crypto/sha512-arm.ko@ge6.1
   AUTOLOAD+=$(call AutoLoad,09,sha512-arm)
 endef
 
