@@ -57,7 +57,7 @@ CONFIGURE_ARGS = \
 		$(if $(CONFIG_KEXEC_ZLIB),--with,--without)-zlib \
 		$(if $(CONFIG_KEXEC_LZMA),--with,--without)-lzma
 
-TARGET_CFLAGS += -ffunction-sections -fdata-sections
+TARGET_CFLAGS += -ffunction-sections -fdata-sections -D_GNU_SOURCE
 TARGET_LDFLAGS += -Wl,--gc-sections
 
 CONFIGURE_VARS += \
