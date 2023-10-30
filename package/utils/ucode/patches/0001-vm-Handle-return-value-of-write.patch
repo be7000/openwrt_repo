@@ -1,0 +1,41 @@
+From 0cec73facd0656e6cf869f95a26c44932c2bc002 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Mon, 30 Oct 2023 21:29:55 +0100
+Subject: [PATCH] vm: Handle return value of write
+
+Fix a compile error when compiling against glibc:
+vm.c: In function 'uc_vm_signal_raise':
+vm.c:3161:9: error: ignoring return value of 'write' declared with attribute 'warn_unused_result' [-Werror=unused-result]
+ 3161 |         write(vm->signal.sigpipe[1], &signum, sizeof(signum));
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ vm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/vm.c b/vm.c
+index f4bc308..6ecf36b 100644
+--- a/vm.c
++++ b/vm.c
+@@ -3152,13 +3152,16 @@ void
+ uc_vm_signal_raise(uc_vm_t *vm, int signo)
+ {
+ 	uint8_t signum = signo;
++	ssize_t size;
+ 
+ 	if (signo <= 0 || signo >= UC_SYSTEM_SIGNAL_COUNT)
+ 		return;
+ 
+ 	vm->signal.raised[signo / 64] |= (1ull << (signo % 64));
+ 
+-	write(vm->signal.sigpipe[1], &signum, sizeof(signum));
++	size = write(vm->signal.sigpipe[1], &signum, sizeof(signum));
++	if (size != sizeof(signum))
++		fprintf(stderr, "writing to signal pipe failed\n");
+ }
+ 
+ int
+-- 
+2.39.2
+
