@@ -1,0 +1,37 @@
+From 19ab9f7a2c23bf7692b7a987248f959319a8747a Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Mon, 30 Oct 2023 21:39:26 +0100
+Subject: [PATCH] Deactivate _FORTIFY_SOURCE
+
+_FORTIFY_SOURCE only works with compiler optimizations activated.
+We have to deactivate it when we set -O0.
+
+This fixes the following error message with glibc:
+ error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O) [-Werror=cpp]
+
+musl libc does not show an error message in this case, but has the same
+internal problems.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ CMakeLists.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a1ee0c1..78954c0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -22,8 +22,9 @@ ADD_EXECUTABLE(urngd
+ )
+ TARGET_LINK_LIBRARIES(urngd ${ubox})
+ 
+-# jitter RNG must not be compiled with optimizations
++# jitter RNG must not be compiled with optimizations, _FORTIFY_SOURCE needs optimizations
+ SET_SOURCE_FILES_PROPERTIES(${JTEN_DIR}/jitterentropy-base.c PROPERTIES COMPILE_FLAGS -O0)
++SET_SOURCE_FILES_PROPERTIES(${JTEN_DIR}/jitterentropy-base.c PROPERTIES COMPILE_FLAGS -U_FORTIFY_SOURCE)
+ 
+ INSTALL(TARGETS urngd RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
+ 
+-- 
+2.39.2
+
