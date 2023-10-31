@@ -1,7 +1,9 @@
-From 19ab9f7a2c23bf7692b7a987248f959319a8747a Mon Sep 17 00:00:00 2001
+From f79d2f4099ec60b315d59e5624e6644c09337666 Mon Sep 17 00:00:00 2001
 From: Hauke Mehrtens <hauke@hauke-m.de>
 Date: Mon, 30 Oct 2023 21:39:26 +0100
-Subject: [PATCH] Deactivate _FORTIFY_SOURCE
+Subject: [PATCH] Deactivate _FORTIFY_SOURCE in jitterentropy-base.c
+
+This fixes compilation with glibc.
 
 _FORTIFY_SOURCE only works with compiler optimizations activated.
 We have to deactivate it when we set -O0.
@@ -14,21 +16,24 @@ internal problems.
 
 Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- CMakeLists.txt | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ CMakeLists.txt | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index a1ee0c1..78954c0 100644
+index a1ee0c1..e3f9359 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -22,8 +22,9 @@ ADD_EXECUTABLE(urngd
+@@ -22,8 +22,11 @@ ADD_EXECUTABLE(urngd
  )
  TARGET_LINK_LIBRARIES(urngd ${ubox})
  
 -# jitter RNG must not be compiled with optimizations
+-SET_SOURCE_FILES_PROPERTIES(${JTEN_DIR}/jitterentropy-base.c PROPERTIES COMPILE_FLAGS -O0)
 +# jitter RNG must not be compiled with optimizations, _FORTIFY_SOURCE needs optimizations
- SET_SOURCE_FILES_PROPERTIES(${JTEN_DIR}/jitterentropy-base.c PROPERTIES COMPILE_FLAGS -O0)
-+SET_SOURCE_FILES_PROPERTIES(${JTEN_DIR}/jitterentropy-base.c PROPERTIES COMPILE_FLAGS -U_FORTIFY_SOURCE)
++SET_PROPERTY(
++  SOURCE ${JTEN_DIR}/jitterentropy-base.c
++  APPEND PROPERTY COMPILE_FLAGS -O0 -U_FORTIFY_SOURCE
++)
  
  INSTALL(TARGETS urngd RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR})
  
