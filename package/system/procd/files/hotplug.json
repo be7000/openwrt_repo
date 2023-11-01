@@ -73,6 +73,12 @@
 		[ "button", "/etc/rc.button/%BUTTON%" ]
 	],
 	[ "if",
+		[ "eq", "SUBSYSTEM",
+			[ "devcoredump", "minidump" ]
+		],
+		[ "exec", "/sbin/hotplug-call", "%SUBSYSTEM%" ]
+	],
+	[ "if",
 		[ "and",
 			[ "eq", "SUBSYSTEM", "usb-serial" ],
 			[ "regex", "DEVNAME",
