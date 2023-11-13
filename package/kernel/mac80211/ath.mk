@@ -25,6 +25,8 @@ ifdef CONFIG_PACKAGE_MAC80211_DEBUGFS
 	ATH11K_PKTLOG \
 	ATH11K_CFR \
 	ATH11K_SMART_ANT_ALG \
+	ATH12K_DEBUGFS \
+	ATH12K_PKTLOG \
 	CARL9170_DEBUGFS \
 	ATH5K_DEBUG \
 	ATH6KL_DEBUG \
@@ -43,7 +45,7 @@ ifdef CONFIG_PACKAGE_MAC80211_TRACING
 endif
 
 config-$(call config_package,ath) += ATH_CARDS ATH_COMMON
-config-$(CONFIG_PACKAGE_ATH_DEBUG) += ATH_DEBUG ATH10K_DEBUG ATH11K_DEBUG ATH12K_DEBUG ATH12K_DEBUGFS ATH12K_PKTLOG ATH9K_STATION_STATISTICS
+config-$(CONFIG_PACKAGE_ATH_DEBUG) += ATH_DEBUG ATH10K_DEBUG ATH11K_DEBUG ATH12K_DEBUG
 config-$(CONFIG_PACKAGE_ATH_DFS) += ATH9K_DFS_CERTIFIED ATH10K_DFS_CERTIFIED
 config-$(CONFIG_PACKAGE_ATH_SPECTRAL) += ATH9K_COMMON_SPECTRAL ATH10K_SPECTRAL ATH11K_SPECTRAL
 config-$(CONFIG_PACKAGE_ATH_DYNACK) += ATH9K_DYNACK
@@ -72,6 +74,7 @@ config-$(call config_package,ath11k) += ATH11K ATH11K_AHB ATH11K_PCI
 config-$(call config_package,ath12k) += ATH12K
 
 config-$(CONFIG_PACKAGE_kmod-ath12k) += ATH12K_SPECTRAL
+config-$(CONFIG_PACKAGE_ATH12K_SAWF) += ATH12K_SAWF
 ifeq ($(CONFIG_KERNEL_IPQ_MEM_PROFILE),512)
 config-y += ATH12K_MEM_PROFILE_512M
 endif
@@ -91,10 +94,6 @@ config-$(call config_package,carl9170) += CARL9170
 config-$(call config_package,ar5523) += AR5523
 
 config-$(call config_package,wil6210) += WIL6210
-
-ifneq "6.1.31" "$(word 1, $(sort 6.1.31 $(LINUX_VERSION)))"
-config-$(CONFIG_PACKAGE_ATH12K_SAWF) += ATH12K_SAWF
-endif
 
 define KernelPackage/ath/config
   if PACKAGE_kmod-ath
@@ -350,6 +349,15 @@ endef
 define KernelPackage/ath12k/description
 This module adds support for Qualcomm Technologies 802.11ax family of
 chipsets.
+endef
+
+define KernelPackage/ath12k/config
+	config PACKAGE_ATH12K_SAWF
+		bool "SAWF and Telemetry support in ATH12K"
+		default y
+		help
+			This option enables support for SAWF and Telemetry
+			in ATH12K.
 endef
 
 define KernelPackage/ath11k-ahb
