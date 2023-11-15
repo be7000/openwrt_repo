@@ -108,7 +108,7 @@ do_flash_emmc() {
 	local bin=$1
 	local emmcblock=$2
 
-	dd if=/dev/zero of=${emmcblock}
+	dd if=/dev/zero of=${emmcblock} &> /dev/null
 	dd if=/tmp/${bin}.bin of=${emmcblock}
 }
 
