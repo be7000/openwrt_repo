@@ -209,7 +209,6 @@ hostapd_set_bss_options() {
 	[ -z "$vif" ] && hostapd_get_vif_name
 
 	config_load wireless
-	vif=$(echo $vifs | cut -d " " -f "$if_idx")
 
 	config_get enc "$vif" encryption "none"
 	config_get wep_rekey        "$vif" wep_rekey        # 300
@@ -930,11 +929,15 @@ hostapd_get_vif_name () {
 				config_get vifs "$device" vifs
 				append vifs "$CONFIG_SECTION"
 				config_set "$device" vifs "$vifs"
+				local vindex=0
 				for vif_interface in $vifs; do
-					[ "$device" == "radio$index" ] && {
+					let "vindex=vindex+1"
+					if [ "$device" == "radio$index" ] && [ $vindex == $if_idx ]; then
+					{
 						config_set "$device" phy "$phy"
 						vif=$vif_interface
 					}
+					fi
 				done
 			;;
 		esac
