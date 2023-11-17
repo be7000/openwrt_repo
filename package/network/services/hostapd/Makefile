@@ -569,13 +569,15 @@ ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(ST
   endef
 endif
 
+EXTERNAL_PATCH_DIR:=$(TOPDIR)/openwrt-patches/package/network/services/hostapd/
+
 define Build/Configure
 	$(Build/Configure/rebuild)
-	$(if $(wildcard ./files/hostapd-$(CONFIG_VARIANT).config), \
-		$(CP) ./files/hostapd-$(CONFIG_VARIANT).config $(PKG_BUILD_DIR)/hostapd/.config \
+	$(if $(wildcard $(EXTERNAL_PATCH_DIR)/files/hostapd-$(CONFIG_VARIANT).config), \
+		$(CP) $(EXTERNAL_PATCH_DIR)/files/hostapd-$(CONFIG_VARIANT).config $(PKG_BUILD_DIR)/hostapd/.config \
 	)
-	$(if $(wildcard ./files/wpa_supplicant-$(CONFIG_VARIANT).config), \
-		$(CP) ./files/wpa_supplicant-$(CONFIG_VARIANT).config $(PKG_BUILD_DIR)/wpa_supplicant/.config
+	$(if $(wildcard $(EXTERNAL_PATCH_DIR)/files/wpa_supplicant-$(CONFIG_VARIANT).config), \
+		$(CP) $(EXTERNAL_PATCH_DIR)/files/wpa_supplicant-$(CONFIG_VARIANT).config $(PKG_BUILD_DIR)/wpa_supplicant/.config
 	)
 endef
 
