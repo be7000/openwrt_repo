@@ -604,9 +604,6 @@ hostapd_set_bss_options() {
 	[ "$airtime_bss_limit" -gt 0 ] && append bss_conf "airtime_bss_limit=$airtime_bss_limit" "$N"
 	json_for_each_item append_airtime_sta_weight airtime_sta_weight
 
-	append bss_conf "bss_load_update_period=$bss_load_update_period" "$N"
-	append bss_conf "chan_util_avg_period=$chan_util_avg_period" "$N"
-	append bss_conf "disassoc_low_ack=$disassoc_low_ack" "$N"
 	append bss_conf "skip_inactivity_poll=$skip_inactivity_poll" "$N"
 	append bss_conf "preamble=$short_preamble" "$N"
 	append bss_conf "wmm_enabled=$wmm" "$N"
@@ -842,7 +839,6 @@ hostapd_set_bss_options() {
 
 	append bss_conf "ssid=$ssid" "$N"
 	[ -n "$network_bridge" ] && append bss_conf "bridge=$network_bridge${N}wds_bridge=" "$N"
-	[ -n "$network_ifname" ] && append bss_conf "snoop_iface=$network_ifname" "$N"
 	[ -n "$iapp_interface" ] && {
 		local ifname
 		network_get_device ifname "$iapp_interface" || ifname="$iapp_interface"
@@ -1028,12 +1024,6 @@ hostapd_set_bss_options() {
 		[ -z "$vlan_file" ] && set_default vlan_file /var/run/hostapd-$ifname.vlan
 		append bss_conf "dynamic_vlan=$dynamic_vlan" "$N"
 		append bss_conf "vlan_naming=$vlan_naming" "$N"
-		if [ -n "$vlan_bridge" ]; then
-			append bss_conf "vlan_bridge=$vlan_bridge" "$N"
-		else
-			set_default vlan_no_bridge 1
-		fi
-		append bss_conf "vlan_no_bridge=$vlan_no_bridge" "$N"
 		[ -n "$vlan_tagged_interface" ] && \
 			append bss_conf "vlan_tagged_interface=$vlan_tagged_interface" "$N"
 		[ -n "$vlan_file" ] && {
@@ -1279,6 +1269,8 @@ wpa_supplicant_set_fixed_freq() {
 		HE80|VHT80) append network_data "max_oper_chwidth=1" "$N$T";;
 		HE160|VHT160) append network_data "max_oper_chwidth=2" "$N$T";;
 		HE20|HE40|VHT20|VHT40) append network_data "max_oper_chwidth=0" "$N$T";;
+		HE160|EHT160|VHT160) append network_data "enable_160mhz_bw=1" "$N$T";;
+		EHT320) append network_data "enable_320mhz_bw=1" "$N$T";;
 		*) append network_data "disable_vht=1" "$N$T";;
 	esac
 }
@@ -1288,6 +1280,7 @@ wpa_supplicant_add_network() {
 	local freq="$2"
 	local htmode="$3"
 	local noscan="$4"
+	local disable_40mhz_scan=0
 
 	_wpa_supplicant_common "$1"
 	wireless_vif_parse_encryption
@@ -1329,9 +1322,16 @@ wpa_supplicant_add_network() {
 		[ "$_w_driver" = "nl80211" ] ||	append wpa_key_mgmt "WPA-NONE"
 	}
 
+	[[ "$_w_mode" = "sta" ]] && {
+		[ -n "$freq_list" ] && {
+			freq_list="freq_list=$freq_list"
+		}
+	}
+
 	[ "$_w_mode" = "mesh" ] && {
 		json_get_vars mesh_id mesh_fwding mesh_rssi_threshold encryption
 		[ -n "$mesh_id" ] && ssid="${mesh_id}"
+		[ -n "$noscan" ] && disable_40mhz_scan=$noscan
 
 		append network_data "mode=5" "$N$T"
 		[ -n "$mesh_fwding" ] && append network_data "mesh_fwding=${mesh_fwding}" "$N$T"
@@ -1555,9 +1555,12 @@ wpa_supplicant_add_network() {
 	local bssid_blacklist bssid_whitelist
 	json_get_values bssid_blacklist bssid_blacklist
 	json_get_values bssid_whitelist bssid_whitelist
+	json_get_var sae_pwe sae_pwe
 
 	[ -n "$bssid_blacklist" ] && append network_data "bssid_blacklist=$bssid_blacklist" "$N$T"
 	[ -n "$bssid_whitelist" ] && append network_data "bssid_whitelist=$bssid_whitelist" "$N$T"
+
+	[ -n "$sae_pwe" ] && append saepwe "sae_pwe=$sae_pwe" "$N$T"
 
 	[ -n "$basic_rate" ] && {
 		local br rate_list=
@@ -1577,11 +1580,17 @@ wpa_supplicant_add_network() {
 		echo "wps_cred_processing=1" >> "$_config"
 	else
 		cat >> "$_config" <<EOF
+$mesh_ctrl_interface
+$user_mpm
+$saepwe
+$freq_list
 network={
 	$scan_ssid
 	ssid="$ssid"
 	key_mgmt=$key_mgmt
 	$network_data
+	disable_40mhz_scan=$disable_40mhz_scan
+	$freq_list
 }
 EOF
 	fi
@@ -1594,19 +1603,20 @@ wpa_supplicant_run() {
 
 	_wpa_supplicant_common "$ifname"
 
-	ubus wait_for wpa_supplicant
-	local supplicant_res="$(ubus call wpa_supplicant config_add "{ \
-		\"driver\": \"${_w_driver:-wext}\", \"ctrl\": \"$_rpath\", \
-		\"iface\": \"$ifname\", \"config\": \"$_config\" \
-		${network_bridge:+, \"bridge\": \"$network_bridge\"} \
-		${hostapd_ctrl:+, \"hostapd_ctrl\": \"$hostapd_ctrl\"} \
-		}")"
+	/usr/sbin/wpa_supplicant -B \
+            ${network_bridge:+-b $network_bridge} \
+            -P "/var/run/wpa_supplicant-${ifname}.pid" \
+            -D ${_w_driver:-wext} \
+            -i "$ifname" \
+            -c "$_config" \
+            -C "$_rpath" \
+            "$@"
 
 	ret="$?"
 
-	[ "$ret" != 0 -o -z "$supplicant_res" ] && wireless_setup_vif_failed WPA_SUPPLICANT_FAILED
+	wireless_add_process "$(cat "/var/run/wpa_supplicant-${ifname}.pid")" /usr/sbin/wpa_supplicant 1
 
-	wireless_add_process "$(jsonfilter -s "$supplicant_res" -l 1 -e @.pid)" "/usr/sbin/wpa_supplicant" 1 1
+	[ "$ret" != 0 ] && wireless_setup_vif_failed WPA_SUPPLICANT_FAILED
 
 	return $ret
 }
