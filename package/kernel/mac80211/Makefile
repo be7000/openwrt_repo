@@ -522,13 +522,13 @@ define KernelPackage/cfg80211/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(STAGING_DIR)/usr/include/
 	$(CP) $(PKG_BUILD_DIR)/include/ath/ath_sawf.h $(STAGING_DIR)/usr/include
-	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/mac80211.sh $(1)/lib/wifi
+	$(INSTALL_DATA) ./files/lib/wifi/mac80211.sh $(1)/lib/wifi
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/def_service_classes.json $(1)/lib/wifi/sawf/
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/service_classes.json $(1)/lib/wifi/sawf/
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/telemetry/config.json $(1)/lib/wifi/sawf/telemetry/
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/telemetry/sla.json $(1)/lib/wifi/sawf/telemetry/
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/telemetry/sla_detect.json $(1)/lib/wifi/sawf/telemetry/
-	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/lib/netifd-wlan/wireless/mac80211.sh $(1)/lib/netifd/wireless
+	$(INSTALL_BIN) ./files/lib/netifd/wireless/mac80211.sh $(1)/lib/netifd/wireless
 	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/lib/performance.sh $(1)/lib
 	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/lib/smp_affinity_settings.sh $(1)/lib
 	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/lib/boost_performance.sh $(1)/lib
