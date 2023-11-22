@@ -8,12 +8,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libnl
-PKG_VERSION:=3.2.21
+PKG_VERSION:=3.7.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://www.infradead.org/~tgr/libnl/files/
-PKG_MD5SUM:=6fe7136558a9071e70673dcda38545b3
+PKG_SOURCE_URL:=https://github.com/thom311/libnl/releases/download/libnl$(subst .,_,$(PKG_VERSION))
+PKG_HASH:=9fe43ccbeeea72c653bdcf8c93332583135cda46a79507bfd0a483bb57f65939
+
 PKG_LICENSE:=LGPL-2.1
 
 PKG_FIXUP:=autoreconf
@@ -44,8 +45,7 @@ endef
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)
 	$(CP) $(PKG_INSTALL_DIR)/* $(1)/
-	mkdir -p $(1)/usr/include/libnl
-	$(CP) $(PKG_BUILD_DIR)/include/linux $(1)/usr/include/libnl/
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/libnl3/* $(1)/usr/include/libnl3/
 endef
 
 define Package/libnl/install
