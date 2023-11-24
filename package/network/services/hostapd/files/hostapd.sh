@@ -1281,6 +1281,9 @@ wpa_supplicant_add_network() {
 	local htmode="$3"
 	local noscan="$4"
 	local disable_40mhz_scan=0
+	local ru_punct_bitmap=$5
+	local disable_csa_dfs=$6
+	local ccfs=0
 
 	_wpa_supplicant_common "$1"
 	wireless_vif_parse_encryption
@@ -1306,6 +1309,7 @@ wpa_supplicant_add_network() {
 	set_default default_disabled 0
 
 	local key_mgmt='NONE'
+	local ru_punct_str=${ru_punct_bitmap:+ru_punct_bitmap=$ru_punct_bitmap}
 	local network_data=
 	local T="	"
 
@@ -1548,6 +1552,15 @@ wpa_supplicant_add_network() {
 				[ "$wpa" -ge 2 ] && append network_data "ieee80211w=$ieee80211w" "$N$T"
 			;;
 		esac
+		[[ "$htmode" == "EHT320" ]] && {
+                        config_ccfs=$7
+                        if [ -n $config_ccfs ] && [ $config_ccfs -gt 0 ]; then
+                                ccfs=$config_ccfs
+                        fi
+                }
+		[ -n "$disable_csa_dfs" ] && {
+			 disable_csa_dfs="disable_csa_dfs=$disable_csa_dfs"
+		}
 	}
 	[ -n "$bssid" ] && append network_data "bssid=$bssid" "$N$T"
 	[ -n "$beacon_int" ] && append network_data "beacon_int=$beacon_int" "$N$T"
@@ -1582,6 +1595,7 @@ wpa_supplicant_add_network() {
 		cat >> "$_config" <<EOF
 $mesh_ctrl_interface
 $user_mpm
+$disable_csa_dfs
 $saepwe
 $freq_list
 network={
@@ -1590,6 +1604,8 @@ network={
 	key_mgmt=$key_mgmt
 	$network_data
 	disable_40mhz_scan=$disable_40mhz_scan
+	$ru_punct_str
+	ccfs=$ccfs
 	$freq_list
 }
 EOF
