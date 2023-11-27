@@ -519,9 +519,6 @@ define KernelPackage/cfg80211/install
 	$(INSTALL_DIR) $(1)/lib/wifi $(1)/lib/netifd/wireless
 	$(INSTALL_DIR) $(1)/lib/wifi/sawf
 	$(INSTALL_DIR) $(1)/lib/wifi/sawf/telemetry
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_DIR) $(STAGING_DIR)/usr/include/
-	$(CP) $(PKG_BUILD_DIR)/include/ath/ath_sawf.h $(STAGING_DIR)/usr/include
 	$(INSTALL_DATA) ./files/lib/wifi/mac80211.sh $(1)/lib/wifi
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/def_service_classes.json $(1)/lib/wifi/sawf/
 	$(INSTALL_DATA) $(EXTERNAL_FILE_DIR)/files/lib/wifi/service_classes.json $(1)/lib/wifi/sawf/
@@ -536,6 +533,24 @@ define KernelPackage/cfg80211/install
 	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/lib/apsta_mode.sh $(1)/lib
 	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/coredump.sh $(1)/etc/hotplug.d/devcoredump
 	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/lib/wifi-config.sh $(1)/etc/hotplug.d/ieee80211/01-wifi-detect
+endef
+
+define KernelPackage/ath/install
+	$(INSTALL_DIR) $(STAGING_DIR)/usr/include/
+	$(CP) $(PKG_BUILD_DIR)/include/ath/ath_sawf.h $(STAGING_DIR)/usr/include/
+endef
+
+define KernelPackage/ath11k/install
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/etc/init.d/ath11k_nss_enable.sh $(1)/etc/init.d
+	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/etc/init.d/ath11k_uboot_mod_params.sh $(1)/etc/init.d
+	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/etc/init.d/qca-nss-pbuf $(1)/etc/init.d
+endef
+
+define KernelPackage/ath12k/install
+	$(call KernelPackage/ath/install)
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(EXTERNAL_FILE_DIR)/files/etc/init.d/ath12k_dyn_dbg_enable.sh $(1)/etc/init.d
 endef
 
 $(eval $(foreach drv,$(PKG_DRIVERS),$(call KernelPackage,$(drv))))
