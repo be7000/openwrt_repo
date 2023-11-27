@@ -357,6 +357,10 @@ detect_mac80211() {
 			iter=$total_bands
 		fi
 
+		uci -q set wireless.mac80211=smp_affinity
+		uci -q set wireless.mac80211.enable_smp_affinity=1
+		uci -q set wireless.mac80211.enable_color=1
+
 		while [ $bandidx -le $iter ]
 		do
 			_mode_band=$(eval echo $mode_band | awk -v I=$mode_bandidx '{print $I}')
