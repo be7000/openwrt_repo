@@ -367,6 +367,8 @@ detect_mac80211() {
 			_channel=$(eval echo $channel | awk -v I=$mode_bandidx '{print $I}')
 			if [ $_mode_band == '6g' ]; then
 				_channel=49
+			elif [ $_mode_band == '2g' ]; then
+				_channel=6
 			fi
 			_htmode=$(eval echo $htmode | awk -v I=$mode_bandidx '{print $I}')
 			mode_bandidx=$(($mode_bandidx + 1))
