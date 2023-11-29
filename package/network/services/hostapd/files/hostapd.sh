@@ -1266,15 +1266,22 @@ wpa_supplicant_set_fixed_freq() {
 		VHT*) append network_data "vht=1" "$N$T";;
 	esac
 	case "$htmode" in
-		HE80|VHT80) append network_data "max_oper_chwidth=1" "$N$T";;
-		HE160|VHT160) append network_data "max_oper_chwidth=2" "$N$T";;
+		HE80|VHT80|EHT80) append network_data "max_oper_chwidth=1" "$N$T";;
+		HE160|VHT160|EHT160)
+			append network_data "max_oper_chwidth=2" "$N$T"
+			if [ "$_w_mode" = "mesh" ]; then
+				append network_data "enable_160mhz_bw=1" "$N$T"
+			fi
+		;;
 		HE20|HE40|VHT20|VHT40) append network_data "max_oper_chwidth=0" "$N$T";;
+		EHT320)
+			if [ "$_w_mode" = "mesh" ]; then
+				append network_data "enable_160mhz_bw=1" "$N$T"
+				append network_data "enable_320mhz_bw=1" "$N$T"
+			fi
+			append network_data "max_oper_chwidth=9" "$N$T"
+		;;
 		*) append network_data "disable_vht=1" "$N$T";;
-	esac
-	case "$htmode" in
-		HE160|EHT160|VHT160) append network_data "enable_160mhz_bw=1" "$N$T";;
-		EHT320) append network_data "enable_320mhz_bw=1" "$N$T";;
-		EHT80) ;;
 	esac
 }
 
@@ -1337,6 +1344,7 @@ wpa_supplicant_add_network() {
 
 	[ "$_w_mode" = "mesh" ] && {
 		json_get_vars mesh_id mesh_fwding mesh_rssi_threshold encryption
+		beacon_int=
 		[ -n "$mesh_id" ] && ssid="${mesh_id}"
 		[ -n "$noscan" ] && disable_40mhz_scan=$noscan
 
@@ -1347,6 +1355,19 @@ wpa_supplicant_add_network() {
 		[ "$noscan" = "1" ] && append network_data "noscan=1" "$N$T"
 		[ "$encryption" = "none" -o -z "$encryption" ] || append wpa_key_mgmt "SAE"
 		scan_ssid=""
+
+		[[ "$htmode" == "EHT320" ]] && {
+                        config_ccfs=$7
+                        if [ -n $config_ccfs ] && [ $config_ccfs -gt 0 ]; then
+                                ccfs=$config_ccfs
+                        fi
+                }
+		[ -n "$disable_csa_dfs" ] && {
+			 disable_csa_dfs="disable_csa_dfs=$disable_csa_dfs"
+		}
+		[ -n "$freq_list" ] && {
+			freq_list="freq_list=$freq_list"
+		}
 	}
 
 	[ "$_w_mode" = "sta" ] && {
@@ -1555,15 +1576,6 @@ wpa_supplicant_add_network() {
 				[ "$wpa" -ge 2 ] && append network_data "ieee80211w=$ieee80211w" "$N$T"
 			;;
 		esac
-		[[ "$htmode" == "EHT320" ]] && {
-                        config_ccfs=$7
-                        if [ -n $config_ccfs ] && [ $config_ccfs -gt 0 ]; then
-                                ccfs=$config_ccfs
-                        fi
-                }
-		[ -n "$disable_csa_dfs" ] && {
-			 disable_csa_dfs="disable_csa_dfs=$disable_csa_dfs"
-		}
 	}
 	[ -n "$bssid" ] && append network_data "bssid=$bssid" "$N$T"
 	[ -n "$beacon_int" ] && append network_data "beacon_int=$beacon_int" "$N$T"
