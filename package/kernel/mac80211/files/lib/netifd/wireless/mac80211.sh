@@ -1426,6 +1426,7 @@ mac80211_setup_vif() {
 	case "$mode" in
 		mesh)
 			wireless_vif_parse_encryption
+			freq_list=$(get_sta_freq_list $phy $freq)
 			if [ $auto_channel -gt 0 ]; then
 				chan=$(echo ${channel_list} | cut -d '-' -f 1)
 				freq="$(get_freq "$phy" "$chan" "$band")"
@@ -1578,11 +1579,12 @@ mac80211_vap_cleanup() {
 					hostapd_cli -iglobal raw REMOVE ${wdev}
 					rm /var/run/hostapd-${wdev}.lock
 					rm /var/run/hostapd/${wdev}
+					rm -rf /var/run/hostapd-${4}.lock
 				fi
 
 				if [ -f "/var/run/wifi-$device.pid" ]; then
 					pid=$(cat /var/run/wifi-$device.pid)
-					kill -9 $pid
+					kill -15 $pid
 					rm -rf  /var/run/wifi-$device.pid
 					rm /var/run/hostapd/w*
 				fi
@@ -1594,7 +1596,7 @@ mac80211_vap_cleanup() {
 				}
 
 				[ -f "/var/run/wpa_supplicant-${wdev}.pid" ] && { \
-					kill -9 $(cat /var/run/wpa_supplicant-${wdev}.pid)
+					kill -15 $(cat /var/run/wpa_supplicant-${wdev}.pid)
 					rm -rf /var/run/wpa_supplicant-${wdev}.pid
 					rm /var/run/wpa_supplicant-${wdev}.lock
 				}
@@ -1620,9 +1622,9 @@ mac80211_interface_cleanup() {
 		mac80211_vap_cleanup wpa_supplicant "$sta_ifnames" $phy
 		mac80211_vap_cleanup none "$adhoc_ifnames" $phy
 	else
-		mac80211_vap_cleanup hostapd "${primary_ap}"
-		mac80211_vap_cleanup wpa_supplicant "$(uci -q -P /var/state get wireless.${device}.splist)"
-		mac80211_vap_cleanup none "$(uci -q -P /var/state get wireless.${device}.umlist)"
+		mac80211_vap_cleanup hostapd "${primary_ap}" $phy $2 $2
+		mac80211_vap_cleanup wpa_supplicant "$(uci -q -P /var/state get wireless.${device}.splist)" $phy
+		mac80211_vap_cleanup none "$(uci -q -P /var/state get wireless.${device}.umlist)" $phy
 	fi
 }
 
