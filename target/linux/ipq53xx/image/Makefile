@@ -4,7 +4,8 @@ include $(INCLUDE_DIR)/image.mk
 UBIFS_OPTS = -m 2048 -e 124KiB -c 4096 -U -F
 UBI_OPTS = -m 2048 -p 128KiB
 
-IPQ53XX_KERNEL_SIZE=6044k
+# Opkg package is not enabled in 16M profile, use this config to limit 16M profile builds
+IPQ53XX_KERNEL_SIZE=$(if $(CONFIG_PACKAGE_opkg),6044k,1788k)
 IPQ53XX_ROOTFS_SIZE=40036k
 IPQ53XX_32_KERNEL_LOADADDR = 0x40008000
 IPQ53XX_KERNEL_LOADADDR = 0x40080000
