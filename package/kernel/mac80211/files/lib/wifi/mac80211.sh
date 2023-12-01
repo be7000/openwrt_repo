@@ -357,10 +357,19 @@ detect_mac80211() {
 			iter=$total_bands
 		fi
 
+		uci -q set wireless.mac80211=smp_affinity
+		uci -q set wireless.mac80211.enable_smp_affinity=1
+		uci -q set wireless.mac80211.enable_color=1
+
 		while [ $bandidx -le $iter ]
 		do
 			_mode_band=$(eval echo $mode_band | awk -v I=$mode_bandidx '{print $I}')
 			_channel=$(eval echo $channel | awk -v I=$mode_bandidx '{print $I}')
+			if [ $_mode_band == '6g' ]; then
+				_channel=49
+			elif [ $_mode_band == '2g' ]; then
+				_channel=6
+			fi
 			_htmode=$(eval echo $htmode | awk -v I=$mode_bandidx '{print $I}')
 			mode_bandidx=$(($mode_bandidx + 1))
 
