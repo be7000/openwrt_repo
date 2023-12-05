@@ -1130,6 +1130,9 @@ mac80211_prepare_vif() {
 }
 
 mac80211_setup_supplicant() {
+	local centre_freq
+	local wpa_state
+	local cac_state
 	local enable=$1
 	local add_sp=0
 	local spobj="$(ubus -S list | grep wpa_supplicant.${ifname})"
@@ -1167,10 +1170,52 @@ mac80211_setup_supplicant() {
 		[ "${NEW_MD5_SP}" == "${OLD_MD5_SP}" ] || ubus call $spobj reload
 	fi
 	uci -q -P /var/state set wireless.${device}.md5_${ifname}="${NEW_MD5_SP}"
+
+	if [ ! $channel = "acs_survey" ] && [ ! $channel -eq 0 ];then
+		case "$htmode" in
+			VHT20|HT20|HE20|EHT20)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "20")")";;
+			HT40*|VHT40|HE40|EHT40)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "40")")";;
+			VHT80|HE80|EHT80)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "80")")";;
+			VHT160|HE160|EHT160)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "160")")";;
+			EHT320)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "320")")";;
+		esac
+	fi
+
+	while true;
+	do
+		if [ $(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2) = "COMPLETED" ]; then
+			break;
+		fi
+
+		if [ $(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2) = "DISCONNECTED" ]; then
+			continue
+		fi
+
+		wpa_state="$(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2)"
+		if [ $centre_freq -gt 5240 ] && [ $centre_freq -lt 5745 ]; then
+			cac_state="$(wpa_cli -i $ifname status 2> /dev/null | grep cac | cut -d'=' -f 2)"
+			if [ $wpa_state = "SCANNING" ] && [ $cac_state = "inprogress" ]; then
+				break;
+			fi
+		fi
+
+		if [ $wpa_state = "INACTIVE" ]; then
+			break;
+		fi
+		usleep 100000
+	done
 	return 0
 }
 
 mac80211_setup_supplicant_noctl() {
+	local centre_freq
+	local wpa_state
+	local cac_state
 	local enable=$1
 	local spobj="$(ubus -S list | grep wpa_supplicant.${ifname})"
 	wpa_supplicant_prepare_interface "$ifname" nl80211 || {
@@ -1192,6 +1237,45 @@ mac80211_setup_supplicant_noctl() {
 	else
 		ubus call $spobj reload
 	fi
+
+	if [ ! $channel = "acs_survey" ] && [ ! $channel -eq 0 ];then
+		case "$htmode" in
+			VHT20|HT20|HE20|EHT20)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "20")")";;
+			HT40*|VHT40|HE40|EHT40)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "40")")";;
+			VHT80|HE80|EHT80)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "80")")";;
+			VHT160|HE160|EHT160)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "160")")";;
+			EHT320)
+				centre_freq="$(get_seg0_freq "$freq" "$channel" "$(mac80211_get_seg0 "320")")";;
+		esac
+	fi
+
+	while true;
+	do
+		if [ $(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2) = "COMPLETED" ]; then
+			break;
+		fi
+
+		if [ $(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2) = "DISCONNECTED" ]; then
+			continue
+		fi
+
+		wpa_state="$(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2)"
+		if [ $centre_freq -gt 5240 ] && [ $centre_freq -lt 5745 ]; then
+			cac_state="$(wpa_cli -i $ifname status 2> /dev/null | grep cac | cut -d'=' -f 2)"
+			if [ $wpa_state = "SCANNING" ] && [ $cac_state = "inprogress" ]; then
+				break;
+			fi
+		fi
+
+		if [ $wpa_state = "INACTIVE" ]; then
+			break;
+		fi
+		usleep 100000
+	done
 }
 
 mac80211_prepare_iw_htmode() {
@@ -1814,6 +1898,9 @@ drv_mac80211_setup() {
 			hostapd_add_bss=1
 		fi
 	}
+
+	for_each_interface "mesh" mac80211_setup_vif
+
 	[ -n "$hostapd_ctrl" ] && {
 		local no_reload=1
 		if [ -n "$(ubus list | grep hostapd.$primary_ap)" ]; then
@@ -1860,9 +1947,7 @@ drv_mac80211_setup() {
 	uci -q -P /var/state set wireless.${device}.aplist="${NEWAPLIST}"
 	uci -q -P /var/state set wireless.${device}.md5="${NEW_MD5}"
 
-	for_each_interface "ap" mac80211_setup_vif
-
-	for_each_interface "sta adhoc mesh monitor" mac80211_setup_vif
+	for_each_interface "ap sta adhoc monitor" mac80211_setup_vif
 
 	uci -q -P /var/state set wireless.${device}.splist="${NEWSPLIST}"
 	uci -q -P /var/state set wireless.${device}.umlist="${NEWUMLIST}"
