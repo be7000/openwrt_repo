@@ -389,7 +389,7 @@ mac80211_hostapd_setup_base() {
 			vht_cap="$(($vht_cap | $cap))"
 		done
 
-		append base_cfg "vht_oper_chwidth=$vht_oper_chwidth" "$N"
+		[ -n "$vht_oper_chwidth" ] && append base_cfg "vht_oper_chwidth=$vht_oper_chwidth" "$N"
 		[ -n "$vht_center_seg0" ] && append base_cfg "vht_oper_centr_freq_seg0_idx=$vht_center_seg0" "$N"
 
 		cap_rx_stbc=$((($vht_cap >> 8) & 7))
@@ -517,11 +517,11 @@ mac80211_hostapd_setup_base() {
 
 		append base_cfg "ieee80211ax=1" "$N"
 		[ "$hwmode" = "a" ] && {
-			append base_cfg "he_oper_chwidth=$vht_oper_chwidth" "$N"
-			[ -n $vht_center_seg0 ] && append base_cfg "he_oper_centr_freq_seg0_idx=$vht_center_seg0" "$N"
+			[ -n "$vht_oper_chwidth" ] && append base_cfg "he_oper_chwidth=$vht_oper_chwidth" "$N"
+			[ -n "$vht_center_seg0" ] && append base_cfg "he_oper_centr_freq_seg0_idx=$vht_center_seg0" "$N"
 			if [ "$enable_be" != "0" ]; then
-				append base_cfg "eht_oper_chwidth=$eht_oper_chwidth" "$N"
-				append base_cfg "eht_oper_centr_freq_seg0_idx=$eht_center_seg0"  "$N"
+				[ -n "$eht_oper_chwidth" ] && append base_cfg "eht_oper_chwidth=$eht_oper_chwidth" "$N"
+				[ -n "$eht_center_seg0" ] && append base_cfg "eht_oper_centr_freq_seg0_idx=$eht_center_seg0"  "$N"
 			fi
 		}
 		if [ "$enable_be" != "0" ]; then
@@ -666,9 +666,9 @@ mac80211_wds_support_check() {
 			;;
 		"IPQ9574")
 			local freq="$(get_freq "$phy" "$channel" "$band")"
-			local board_type=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $2}' | awk -F- '{print $3}')
+			local board_type=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $3}' | awk -F- '{print $3}')
 
-			if [ $board_type == "C6" ] && [ $freq -gt 2000 ] && [ $freq -lt 3000]; then
+			if [ $board_type == "C6" ] && [ $freq -gt 2000 ] && [ $freq -lt 3000 ]; then
 				frame_mode=$(cat /sys/module/ath11k/parameters/frame_mode)
 			else
 				frame_mode=$(cat /sys/module/ath12k/parameters/frame_mode)
