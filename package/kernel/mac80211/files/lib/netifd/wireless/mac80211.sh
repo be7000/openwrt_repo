@@ -568,7 +568,7 @@ mac80211_hostapd_setup_base() {
 			if [ -n $ru_punct_acs_threshold ] && [ $ru_punct_acs_threshold -gt 0 ]; then
 				append base_cfg "ru_punct_acs_threshold=$ru_punct_acs_threshold" "$N"
 			fi
-			[ -n "$use_ru_puncture_dfs" ] && append base_cfg "n=$use_ru_puncture_dfs" "$N"
+			[ -n "$use_ru_puncture_dfs" ] && append base_cfg "use_ru_puncture_dfs=$use_ru_puncture_dfs" "$N"
 		fi
 		mac80211_add_he_capabilities \
 			he_su_beamformer:${he_phy_cap:6:2}:0x80:$he_su_beamformer \
@@ -1000,7 +1000,7 @@ mac80211_prepare_vif() {
 		if ([ -n "$ht_mode" ] && [[ $ht_mode == "EHT"* ]] && [ -n "$mld" ]); then
 			config_get mld_ifname "$mld" ifname
 			if [ -z "$mld_ifname" ]; then
-				ml_idx=$(mac80211_get_mld_idx $mld)
+				ml_idx=$(mac80211_get_mld_idx $mld ${1:5:1})
 				[ -z "$ml_idx" ] || ifname="wlan$ml_idx"
 			else
 				ifname="$mld_ifname"
@@ -1921,7 +1921,6 @@ drv_mac80211_setup() {
 			add_ap=1
 			#ubus wait_for hostapd
 			#local hostapd_res="$(ubus call hostapd config_add "{\"iface\":\"$primary_ap\", \"config\":\"${hostapd_conf_file}\"}")"
-			touch /var/run/hostapd-$device-updated-cfg
 			#ret="$?"
 			#[ "$ret" != 0 -o -z "$hostapd_res" ] && {
 			#	wireless_setup_failed HOSTAPD_START_FAILED
@@ -1929,20 +1928,34 @@ drv_mac80211_setup() {
 			#}
 			#wireless_add_process "$(jsonfilter -s "$hostapd_res" -l 1 -e @.pid)" "/usr/sbin/hostapd" 1 1
 		fi
-		hostapd_cfg_updated=$(ls /var/run/hostapd-*-updated-cfg | wc -l)
-		if [ "$hostapd_cfg_updated" = "$radio_up_count" ]; then
-			bands_info=$(ls /var/run/hostapd*updated-cfg | grep -o band.)
-			for __band in $bands_info
-			do
-				append  config_files /var/run/hostapd-phy${phy#phy}_${__band}.conf
-			done
-			#MLO vaps, single instance of hostapd is started
-			/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $config_files
+
+		local dev_wlan=
+		if [ "$is_sphy_mband" -eq 1 ]; then
+			dev_wlan="wlan$((${device:5:1} + ${device:11:1}))"
+		else
+			dev_wlan="wlan${phy#phy}"
 		fi
 
 		if [ -z "$is_sphy_mband" ] || [ "$hostapd_add_bss" -eq 1 ]; then
-			/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $hostapd_conf_file
+			[ -f "/var/run/hostapd-$dev_wlan.lock" ] && rm /var/run/hostapd-$dev_wlan.lock
+			# let hostapd manage interface $dev_wlan
+			hostapd_cli -iglobal raw ADD bss_config=$dev_wlan:$hostapd_conf_file
+			touch /var/run/hostapd-$dev_wlan.lock
+		else
+			touch /var/run/hostapd-$device-updated-cfg
+			hostapd_cfg_updated=$(ls /var/run/hostapd-*-updated-cfg | wc -l)
+		
+			if [ "$hostapd_cfg_updated" = "$radio_up_count" ]; then
+				bands_info=$(ls /var/run/hostapd*updated-cfg | grep -o band.)
+				for __band in $bands_info
+				do
+					append  config_files /var/run/hostapd-phy${phy#phy}_${__band}.conf
+				done
+				#MLO vaps, single instance of hostapd is started
+				/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $config_files
+			fi
 		fi
+
 	}
 	uci -q -P /var/state set wireless.${device}.aplist="${NEWAPLIST}"
 	uci -q -P /var/state set wireless.${device}.md5="${NEW_MD5}"
@@ -2103,6 +2116,8 @@ mac80211_derive_ml_info() {
         config_load wireless
         mld_vaps_count=0
         radio_up_count=0
+        sta_vaps_count=0
+        sta_radio=0
 
         mac80211_get_wifi_mlds() {
                 append _mlds $1
@@ -2207,7 +2222,7 @@ mac80211_get_mld_idx() {
 		return
 	fi
 
-	index=0
+	index=$2
 	for _mld in $_mlds
 	do
 		if [ "$mld_name" == "$_mld" ]; then
