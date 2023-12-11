@@ -36,8 +36,9 @@ endif
 HOST_BUILD_DIR:=$(KERNEL_BUILD_DIR)/linux-$(LINUX_VERSION)
 PKG_HASH:=$(LINUX_KERNEL_HASH)
 LINUX_DIR := $(HOST_BUILD_DIR)
-FILES_DIR := 
+FILES_DIR := $(PLATFORM_DIR)/files-$(LINUX_SRC_VERSION)
 PATCH_DIR := ./patches$(if $(wildcard ./patches-$(LINUX_VERSION)),-$(LINUX_VERSION))
+PATCH_DIR = $(PLATFORM_DIR)/patches$(if $(wildcard $(PLATFORM_DIR)/patches-$(KERNEL_PATCHVER)),-$(KERNEL_PATCHVER))
 
 include $(INCLUDE_DIR)/toolchain-build.mk
 include $(INCLUDE_DIR)/kernel-defaults.mk
