@@ -1962,6 +1962,7 @@ drv_mac80211_setup() {
 				/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $config_files
 			fi
 		fi
+		hostapd_dpp_action $ifname
 
 	}
 	uci -q -P /var/state set wireless.${device}.aplist="${NEWAPLIST}"
