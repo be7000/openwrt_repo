@@ -750,9 +750,24 @@ mac80211_get_addr() {
 mac80211_generate_mac() {
 	local phy="$1"
 	local id="${macidx:-0}"
+	local mode="$2"
+	local device="$3"
 
 	local ref="$(cat /sys/class/ieee80211/${phy}/macaddress)"
 	local mask="$(cat /sys/class/ieee80211/${phy}/address_mask)"
+
+	[ "$mask" = "00:00:00:00:00:00" ] && {
+		mask="ff:ff:ff:ff:ff:ff";
+
+		[ "$(wc -l < /sys/class/ieee80211/${phy}/addresses)" -gt 1 ] && {
+			addr="$(mac80211_get_addr "$phy" "$id")"
+			[ -n "$addr" ] && {
+				echo "$addr"
+				return
+			}
+		}
+	}
+
 	if [ $is_sphy_mband -eq 1 ]; then
 		dev_idx=${device:11:1}
 		local ref_dec=$( printf '%d\n' $( echo "0x$ref" | tr -d ':' ) )
@@ -760,20 +775,8 @@ mac80211_generate_mac() {
 		local genref="$( echo $( printf '%012x\n' $(($(($mac_mask + $ref_dec))))) \
 			| sed 's!\(..\)!\1:!g;s!:$!!' )"
 			ref=$genref
-	else
-
-		[ "$mask" = "00:00:00:00:00:00" ] && {
-			mask="ff:ff:ff:ff:ff:ff";
-
-			[ "$(wc -l < /sys/class/ieee80211/${phy}/addresses)" -gt $id ] && {
-				addr="$(mac80211_get_addr "$phy" "$id")"
-				[ -n "$addr" ] && {
-					echo "$addr"
-					return
-				}
-			}
-		}
 	fi
+
 	local oIFS="$IFS"; IFS=":"; set -- $mask; IFS="$oIFS"
 
 	local mask1=$1
@@ -1035,7 +1038,7 @@ mac80211_prepare_vif() {
 	json_select ..
 
 	if [ -z "$macaddr" ]; then
-		macaddr="$(mac80211_generate_mac $phy)"
+		macaddr="$(mac80211_generate_mac $phy $mode $1)"
 		macidx="$(($macidx + 1))"
 	elif [ "$macaddr" = 'random' ]; then
 		macaddr="$(macaddr_random)"
