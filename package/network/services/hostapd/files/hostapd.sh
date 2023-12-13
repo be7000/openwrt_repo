@@ -73,6 +73,12 @@ hostapd_append_wpa_key_mgmt() {
 		owe)
 			append wpa_key_mgmt "OWE"
 		;;
+		sae-ext-key)
+			append wpa_key_mgmt "SAE-EXT-KEY"
+		;;
+		ft-sae-ext-key)
+			append wpa_key_mgmt "FT-SAE-EXT-KEY"
+		;;
 	esac
 
 	[ "$fils" -gt 0 ] && {
@@ -374,6 +380,8 @@ hostapd_common_add_bss_config() {
 	config_add_string fils_dhcp
 
 	config_add_int ocv
+	config_add_array 'sae_groups:list(saelist)'
+	config_add_array 'owe_groups:list(owelist)'
 }
 
 hostapd_set_vlan_file() {
@@ -561,6 +569,9 @@ hostapd_set_bss_options() {
 		multicast_to_unicast_all proxy_arp per_sta_vif \
 		eap_server eap_user_file ca_cert server_cert private_key private_key_passwd server_id \
 		vendor_elements fils ocv
+	
+	json_get_values sae_groups sae_groups
+	json_get_values owe_groups owe_groups
 
 	set_default fils 0
 	set_default isolate 0
@@ -641,9 +652,17 @@ hostapd_set_bss_options() {
 			set_default sae_require_mfp 1
 			set_default sae_pwe 2
 		;;
+		ft-sae-ext-key|sae-ext-key)
+			set_default ieee80211w 2
+			set_default sae_pwe 2
+		;;
 	esac
 	[ -n "$sae_require_mfp" ] && append bss_conf "sae_require_mfp=$sae_require_mfp" "$N"
 	[ -n "$sae_pwe" ] && append bss_conf "sae_pwe=$sae_pwe" "$N"
+	[ -n "$sae_groups" ] && append bss_conf "sae_groups=$sae_groups" "$N"
+	if [ "$auth_type" = "owe" ]; then
+		[ -n "$owe_groups" ] && append bss_conf "owe_groups=$owe_groups" "$N"
+	fi
 
 	local vlan_possible=""
 
