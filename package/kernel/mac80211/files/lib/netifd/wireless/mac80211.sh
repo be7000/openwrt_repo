@@ -97,6 +97,8 @@ drv_mac80211_init_iface_config() {
 	config_add_int max_listen_int
 	config_add_int dtim_period
 	config_add_int start_disabled
+	config_add_int ieee80211w
+	config_add_int beacon_prot
 
 	# mesh
 	config_add_string mesh_id
@@ -687,12 +689,22 @@ mac80211_hostapd_setup_bss() {
 	local ifname="$2"
 	local macaddr="$3"
 	local type="$4"
+	local ieee80211w
+	local beacon_prot
 
 	hostapd_cfg=
 	append hostapd_cfg "$type=$ifname" "$N"
 
 	hostapd_set_bss_options hostapd_cfg "$phy" "$vif" || return 1
-	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled
+	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled ieee80211w beacon_prot
+
+	case "$auth_type" in
+		psk|sae|psk-sae|owe|eap*|wep|sae-mixed|ft-sae-ext-key)
+			if [ $ieee80211w -gt 0 ] && [ $beacon_prot -gt 0 ]; then
+				append hostapd_cfg "beacon_prot=1" "$N"
+			fi
+		;;
+	esac
 
 	set_default wds 0
 	set_default start_disabled 0
