@@ -155,11 +155,8 @@ mac80211_hostapd_setup_base() {
 
 	json_get_vars noscan ht_coex min_tx_power:0 tx_burst disable_csa_dfs use_ru_puncture_dfs
 	json_get_values ht_capab_list ht_capab
-	json_get_values channel_list channels
+	[ "$auto_channel" -gt 0 ] && json_get_values channel_list channels
 	json_get_vars disable_eml_cap discard_6g_awgn_event
-
-	[ "$auto_channel" = 0 ] && [ -z "$channel_list" ] && \
-		channel_list="$channel"
 
 	[ "$min_tx_power" -gt 0 ] && append base_cfg "min_tx_power=$min_tx_power"
 
@@ -1786,6 +1783,7 @@ drv_mac80211_setup() {
 		ccfs
 	json_get_values basic_rate_list basic_rate
 	json_get_values scan_list scan_list
+	json_get_values channel_list channels
 	json_select ..
 
 	find_phy $1 || {
