@@ -255,7 +255,7 @@ mac80211_hostapd_setup_base() {
 
 	# 802.11ac
 	enable_ac=0
-	vht_oper_chwidth=0
+	vht_oper_chwidth=
 	eht_oper_chwidth=0
 	vht_center_seg0=
 	eht_center_seg0=
@@ -272,7 +272,10 @@ mac80211_hostapd_setup_base() {
 				0) idx=$(($channel - 2));;
 			esac
 			enable_ac=1
-			vht_center_seg0=$idx
+			if [ $channel -ge 36 ]; then
+				vht_oper_chwidth=0
+				vht_center_seg0=$idx
+			fi
 		;;
 		VHT80|HE80|EHT80)
 			case "$(( (($channel / 4) + $chan_ofs) % 4 ))" in
@@ -343,6 +346,7 @@ mac80211_hostapd_setup_base() {
 			vht_center_seg0=$idx
 			idx="$(mac80211_get_seg0 "320")"
 			eht_center_seg0=$idx
+			enable_ac=1
 			if [ -n $ccfs ] && [ $ccfs -gt 0 ]; then
 				append base_cfg "eht_oper_centr_freq_seg0_idx=$ccfs" "$N"
 			elif [ -z $ccfs ] || [ "$ccfs" -eq "0" ]; then
@@ -360,7 +364,7 @@ mac80211_hostapd_setup_base() {
 		case "$htmode" in
 			HE20|EHT20) op_class=131;;
 			EHT320) op_class=137;;
-			HE*|EHT*) op_class=$((132 + $vht_oper_chwidth))
+			HE*|EHT*) op_class=$((132 + $eht_oper_chwidth))
 		esac
 		[ -n "$op_class" ] && append base_cfg "op_class=$op_class" "$N"
 	}
@@ -1451,6 +1455,12 @@ mac80211_get_seg0() {
 					1) seg0=$(($channel - 2));;
 					0) seg0=$(($channel + 2));;
 				esac
+			elif [ $freq -lt 2484 ]; then
+				if [ "$channel" -lt 7 ]; then
+					seg0=$(($channel + 2))
+				else
+					seg0=$(($channel - 2))
+				fi
 			elif [ $freq != 5935 ]; then
 				case "$(( ($channel / 4) % 2 ))" in
 					1) seg0=$(($channel + 2));;
