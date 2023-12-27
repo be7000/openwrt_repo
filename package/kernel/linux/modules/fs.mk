@@ -10,7 +10,7 @@ FS_MENU:=Filesystems
 define KernelPackage/fs-9p
   SUBMENU:=$(FS_MENU)
   TITLE:=Plan 9 Resource Sharing Support
-  DEPENDS:=+kmod-9pnet
+  DEPENDS:=+kmod-9pnet +LINUX_6_1:kmod-fs-netfs
   KCONFIG:=\
 	CONFIG_9P_FS \
 	CONFIG_9P_FS_POSIX_ACL=n \
@@ -87,10 +87,14 @@ define KernelPackage/fs-smbfs-common
   SUBMENU:=$(FS_MENU)
   TITLE:=SMBFS common dependencies support
   HIDDEN:=1
-  KCONFIG:=CONFIG_SMBFS_COMMON
+  KCONFIG:=\
+	CONFIG_SMBFS_COMMON@le6.1 \
+	CONFIG_SMBFS@gt6.1
   FILES:= \
-	$(LINUX_DIR)/fs/smbfs_common/cifs_arc4.ko \
-	$(LINUX_DIR)/fs/smbfs_common/cifs_md4.ko
+	$(LINUX_DIR)/fs/smbfs_common/cifs_arc4.ko@le6.1 \
+	$(LINUX_DIR)/fs/smbfs_common/cifs_md4.ko@le6.1 \
+	$(LINUX_DIR)/fs/smb/common/cifs_arc4.ko@gt6.1 \
+	$(LINUX_DIR)/fs/smb/common/cifs_md4.ko@gt6.1
 endef
 
 define KernelPackage/fs-smbfs-common/description
@@ -108,7 +112,8 @@ define KernelPackage/fs-cifs
 	CONFIG_CIFS_DFS_UPCALL=n \
 	CONFIG_CIFS_UPCALL=n
   FILES:= \
-	$(LINUX_DIR)/fs/cifs/cifs.ko
+	$(LINUX_DIR)/fs/cifs/cifs.ko@le6.1 \
+	$(LINUX_DIR)/fs/smb/client/cifs.ko@gt6.1
   AUTOLOAD:=$(call AutoLoad,30,cifs)
   $(call AddDepends/nls)
   DEPENDS+= \
@@ -124,7 +129,9 @@ define KernelPackage/fs-cifs
     +kmod-crypto-des \
     +kmod-asn1-decoder \
     +kmod-oid-registry \
-    +kmod-dnsresolver
+    +kmod-dnsresolver \
+    +kmod-fs-netfs \
+    +kmod-fs-ksmbd
 endef
 
 define KernelPackage/fs-cifs/description
@@ -371,7 +378,10 @@ define KernelPackage/fs-ksmbd
 	CONFIG_SMB_SERVER_SMBDIRECT=n \
 	CONFIG_SMB_SERVER_CHECK_CAP_NET_ADMIN=n \
 	CONFIG_SMB_SERVER_KERBEROS5=n
-  FILES:=$(LINUX_DIR)/fs/ksmbd/ksmbd.ko
+  FILES:= \
+	 $(LINUX_DIR)/fs/ksmbd/ksmbd.ko@le6.1 \
+	 $(LINUX_DIR)/fs/nls/nls_ucs2_utils.ko@gt6.1 \
+	 $(LINUX_DIR)/fs/smb/server/ksmbd.ko@gt6.1
   AUTOLOAD:=$(call AutoLoad,41,ksmbd)
 endef
 
