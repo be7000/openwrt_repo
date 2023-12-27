@@ -24,6 +24,8 @@ OLDSPLIST=
 NEWUMLIST=
 OLDUMLIST=
 
+hostapd_started=
+
 drv_mac80211_init_device_config() {
 	hostapd_common_add_device_config
 
@@ -1545,7 +1547,9 @@ mac80211_setup_vif() {
 	json_get_var vif_enable enable 1
 
 	[ "$vif_enable" = 1 ] || action=down
-	if [ "$mode" != "ap" ] || [ "$ifname" = "$ap_ifname" ]; then
+	if [ "$mode" != "ap" ] || \
+	   ( [ "$ifname" = "$ap_ifname" ] && \
+	     ! ( [[ "$mode" = "ap" ]] && [ "$hostapd_started" -eq 1 ] ) ); then
 		ip link set dev "$ifname" "$action" || {
 			wireless_setup_vif_failed IFUP_ERROR
 			json_select ..
@@ -1963,6 +1967,7 @@ drv_mac80211_setup() {
 
 	[ -n "$hostapd_ctrl" ] && {
 		local no_reload=1
+		hostapd_started=1
 		if [ -n "$(ubus list | grep hostapd.$primary_ap)" ]; then
 			no_reload=0
 			[ "${NEW_MD5}" = "${OLD_MD5}" ] || {
@@ -2002,6 +2007,9 @@ drv_mac80211_setup() {
 			hostapd_cli -iglobal raw ADD bss_config=$dev_wlan:$hostapd_conf_file
 			touch /var/run/hostapd-$dev_wlan.lock
 		else
+			if [ -f "/var/run/wifi-$device.pid" ]; then
+				return
+			fi
 			touch /var/run/hostapd-$device-updated-cfg
 			hostapd_cfg_updated=$(ls /var/run/hostapd-*-updated-cfg | wc -l)
 		
@@ -2013,6 +2021,14 @@ drv_mac80211_setup() {
 				done
 				#MLO vaps, single instance of hostapd is started
 				/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $config_files
+				ret="$?"
+				wireless_add_process "$(cat /var/run/wifi-"$device".pid)" "/usr/sbin/hostapd" 1
+				[ "$ret" != 0 ] && {
+					wireless_setup_failed HOSTAPD_START_FAILED
+					return
+				}
+			else
+				hostapd_started=0
 			fi
 		fi
 		hostapd_dpp_action $ifname
