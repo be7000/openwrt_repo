@@ -14,7 +14,6 @@ configure_service_param() {
 	[ -z "$disable" ] && disable='0'
 
 	if [ $enable_service -eq 1 ] && [ "$disable" -eq 0 ]; then
-		json_get_var app_name app_name
 		json_get_var min_thruput_rate min_thruput_rate
 		json_get_var max_thruput_rate max_thruput_rate
 		json_get_var burst_size burst_size
@@ -32,7 +31,6 @@ configure_service_param() {
 		json_get_var ul_mu_mimo_disable ul_mu_mimo_disable
 
 		cmd="iw $phy service_class create $svc_id "
-		[ ! -z "$app_name" ] && cmd=$cmd"'$app_name' "
 		[ ! -z "$min_thruput_rate" ] && cmd=$cmd"min_tput $min_thruput_rate "
 		[ ! -z "$max_thruput_rate" ] && cmd=$cmd"max_tput $max_thruput_rate "
 		[ ! -z "$burst_size" ] && cmd=$cmd"burst_size $burst_size "
