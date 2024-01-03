@@ -342,12 +342,11 @@ mac80211_hostapd_setup_base() {
 			vht_oper_chwidth=2
 			vht_center_seg0=$idx
 			idx="$(mac80211_get_seg0 "320")"
-			eht_center_seg0=$idx
 			enable_ac=1
 			if [ -n $ccfs ] && [ $ccfs -gt 0 ]; then
-				append base_cfg "eht_oper_centr_freq_seg0_idx=$ccfs" "$N"
+				eht_center_seg0="$ccfs"
 			elif [ -z $ccfs ] || [ "$ccfs" -eq "0" ]; then
-				append base_cfg "eht_oper_centr_freq_seg0_idx=$idx" "$N"
+				eht_center_seg0="$idx"
 			fi
 		;;
 	esac
