@@ -25,6 +25,8 @@ NEWUMLIST=
 OLDUMLIST=
 
 hostapd_started=
+bss_color=
+enable_color=
 
 drv_mac80211_init_device_config() {
 	hostapd_common_add_device_config
@@ -71,7 +73,6 @@ drv_mac80211_init_device_config() {
 		eht_ulmumimo_320mhz \
 		rx_stbc \
 		tx_stbc \
-		he_bss_color \
 		he_spr_sr_control \
 		he_spr_non_srg_obss_pd_max_offset \
 		ru_punct_bitmap \
@@ -512,7 +513,6 @@ mac80211_hostapd_setup_base() {
 			he_spr_sr_control:3 \
 			he_spr_psr_enabled:0 \
 			he_spr_non_srg_obss_pd_max_offset:0 \
-			he_bss_color:128 \
 			he_bss_color_enabled:1 \
 			he_ul_mumimo \
 			eht_ulmumimo_80mhz \
@@ -596,8 +596,20 @@ mac80211_hostapd_setup_base() {
 			append base_cfg "he_ul_mumimo=-1" "$N"
 		fi
 
+		#If he_bss_color_enabled is set to zero by default, handle
+		#enable_color accordingly. he_bss_color will not work in this case.
 		if [ "$he_bss_color_enabled" -gt 0 ]; then
-			append base_cfg "he_bss_color=$he_bss_color" "$N"
+			config_get enable_color mac80211 enable_color 1
+			if [ "$enable_color" -eq 1 ]; then
+				bss_color=$(head -1 /dev/urandom | tr -dc '0-9' | head -c2)
+				[ -z "$bss_color" ] && bss_color=0
+				[ "$bss_color" != "0" ] && bss_color=${bss_color#0}
+				bss_color=$((bss_color % 63))
+				bss_color=$((bss_color + 1))
+				append base_cfg "he_bss_color=$bss_color" "$N"
+			fi
+
+
 			[ "$he_spr_non_srg_obss_pd_max_offset" -gt 0 ] && { \
 				append base_cfg "he_spr_non_srg_obss_pd_max_offset=$he_spr_non_srg_obss_pd_max_offset" "$N"
 				he_spr_sr_control=$((he_spr_sr_control | (1 << 2)))
