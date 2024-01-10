@@ -182,6 +182,8 @@ define Package/hostapd-macsec
 $(call Package/hostapd/Default,$(1))
   TITLE+= (macsec)
   DEPENDS+= @TARGET_ipq||TARGET_ipq50xx||TARGET_ipq60xx||TARGET_ipq95xx||TARGET_ipq53xx||TARGET_ipq807x +kmod-qca-nss-macsec +libopenssl
+  PROVIDES:=hostapd-macsec
+  CONFLICTS:=
   VARIANT:=macsec
 endef
 
@@ -454,6 +456,7 @@ define Package/wpa-supplicant-macsec
 $(call Package/wpa-supplicant/Default,$(1))
   TITLE:=WPA Supplicant (MACSEC)
   DEPENDS+= @TARGET_ipq||TARGET_ipq50xx||TARGET_ipq60xx||TARGET_ipq95xx||TARGET_ipq53xx||TARGET_ipq807x +kmod-qca-nss-macsec +libopenssl
+  PROVIDES:=wpa-supplicant-macsec
   CONFLICTS:=
   VARIANT:=supplicant-macsec
 endef
@@ -839,7 +842,6 @@ $(eval $(call BuildPackage,hostapd-mini))
 $(eval $(call BuildPackage,hostapd-openssl))
 $(eval $(call BuildPackage,hostapd-wolfssl))
 $(eval $(call BuildPackage,hostapd-mbedtls))
-$(eval $(call BuildPackage,hostapd-macsec))
 $(eval $(call BuildPackage,wpad))
 $(eval $(call BuildPackage,wpad-mesh-openssl))
 $(eval $(call BuildPackage,wpad-mesh-wolfssl))
@@ -862,10 +864,11 @@ $(eval $(call BuildPackage,wpa-supplicant-p2p))
 $(eval $(call BuildPackage,wpa-supplicant-openssl))
 $(eval $(call BuildPackage,wpa-supplicant-wolfssl))
 $(eval $(call BuildPackage,wpa-supplicant-mbedtls))
-$(eval $(call BuildPackage,wpa-supplicant-macsec))
 $(eval $(call BuildPackage,wpa-cli))
 $(eval $(call BuildPackage,hostapd-utils))
 $(eval $(call BuildPackage,eapol-test))
 $(eval $(call BuildPackage,eapol-test-openssl))
 $(eval $(call BuildPackage,eapol-test-wolfssl))
 $(eval $(call BuildPackage,eapol-test-mbedtls))
+$(eval $(call BuildPackage,hostapd-macsec))
+$(eval $(call BuildPackage,wpa-supplicant-macsec))
