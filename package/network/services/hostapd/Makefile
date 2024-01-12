@@ -5,7 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hostapd
-PKG_RELEASE:=1.2
+PKG_RELEASE:=6
 
 PKG_SOURCE_URL:=http://w1.fi/hostap.git
 PKG_SOURCE_PROTO:=git
@@ -723,6 +723,10 @@ define Package/hostapd-common/install
 	$(INSTALL_BIN) ./files/wps-hotplug.sh $(1)/etc/rc.button/wps
 	$(INSTALL_DATA) ./files/wpad_acl.json $(1)/usr/share/acl.d
 	$(INSTALL_DATA) ./files/wpad.json $(1)/etc/capabilities
+	$(INSTALL_DATA) $(EXTERNAL_PATCH_DIR)/files/dpp-hostapd-event-update.sh $(1)/lib/netifd/dpp-hostapd-event-update
+	chmod 0755 $(1)/lib/netifd/dpp-hostapd-event-update
+	$(INSTALL_DATA) $(EXTERNAL_PATCH_DIR)/files/dpp-supplicant-event-update.sh $(1)/lib/netifd/dpp-supplicant-event-update
+	chmod 0755 $(1)/lib/netifd/dpp-supplicant-event-update
 endef
 
 define Package/hostapd/install

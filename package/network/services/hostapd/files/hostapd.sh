@@ -382,6 +382,10 @@ hostapd_common_add_bss_config() {
 	config_add_int ocv
 	config_add_array 'sae_groups:list(saelist)'
 	config_add_array 'owe_groups:list(owelist)'
+
+	config_add_int dpp
+	config_add_string dpp_csign dpp_connector dpp_netaccesskey dpp_ppkey dpp_connector_sign
+
 }
 
 hostapd_set_vlan_file() {
@@ -568,8 +572,8 @@ hostapd_set_bss_options() {
 		ppsk airtime_bss_weight airtime_bss_limit airtime_sta_weight \
 		multicast_to_unicast_all proxy_arp per_sta_vif \
 		eap_server eap_user_file ca_cert server_cert private_key private_key_passwd server_id \
-		vendor_elements fils ocv
-	
+		vendor_elements fils ocv dpp
+
 	json_get_values sae_groups sae_groups
 	json_get_values owe_groups owe_groups
 
@@ -963,6 +967,7 @@ hostapd_set_bss_options() {
 		append bss_conf "wpa_disable_eapol_key_retries=$wpa_disable_eapol_key_retries" "$N"
 
 		hostapd_append_wpa_key_mgmt
+		[ "$dpp" -eq "1" ] && append wpa_key_mgmt "DPP"
 		[ -n "$wpa_key_mgmt" ] && append bss_conf "wpa_key_mgmt=$wpa_key_mgmt" "$N"
 	fi
 
@@ -1166,6 +1171,18 @@ hostapd_set_bss_options() {
 	bss_md5sum="$(echo $bss_conf | md5sum | cut -d" " -f1)"
 	append bss_conf "config_id=$bss_md5sum" "$N"
 
+	if [ "$dpp" -eq "1" ]; then
+		json_get_vars \
+			dpp_csign dpp_connector dpp_netaccesskey dpp_ppkey\
+			dpp_connector_sign
+
+		[ -n "$dpp_csign" ] && append bss_conf "dpp_csign=$dpp_csign" "$N"
+		[ -n "$dpp_connector" ] && append bss_conf "dpp_connector=$dpp_connector" "$N"
+		[ -n "$dpp_netaccesskey" ] && append bss_conf "dpp_netaccesskey=$dpp_netaccesskey" "$N"
+		[ -n "$dpp_ppkey" ] && append bss_conf " dpp_ppkey=$dpp_ppkey" "$N"
+		[ -n "$dpp_connector_sign" ] && append bss_conf "dpp_connector_sign=$dpp_connector_sign" "$N"
+	fi
+
 	append "$var" "$bss_conf" "$N"
 	return 0
 }
@@ -1201,6 +1218,14 @@ hostapd_set_log_options() {
 	append "$var" "logger_stdout_level=$log_level" "$N"
 
 	return 0
+}
+
+hostapd_dpp_action() {
+	local ifname="$1"
+
+	if [ "${dpp}" -eq 1 ]; then
+		/usr/sbin/hostapd_cli -i $ifname -p /var/run/hostapd -a /lib/netifd/dpp-hostapd-event-update -B
+	fi
 }
 
 _wpa_supplicant_common() {
@@ -1320,7 +1345,7 @@ wpa_supplicant_add_network() {
 		basic_rate mcast_rate \
 		ieee80211w ieee80211r fils ocv \
 		multi_ap \
-		default_disabled
+		default_disabled dpp
 
 	case "$auth_type" in
 		sae|owe|eap192|eap-eap192)
@@ -1621,6 +1646,19 @@ wpa_supplicant_add_network() {
 		append network_data "mcast_rate=$mc_rate" "$N$T"
 	}
 
+	if [ "${dpp}" -eq 1 ]; then
+		json_get_vars \
+			dpp_csign dpp_connector dpp_netaccesskey dpp_ppkey\
+			dpp_connector_sign
+
+		[ -n "$dpp_csign" ] && append network_data "dpp_csign=$dpp_csign" "$N"
+		[ -n "$dpp_connector" ] && append network_data "dpp_connector=$dpp_connector" "$N"
+		[ -n "$dpp_netaccesskey" ] && append network_data "dpp_netaccesskey=$dpp_netaccesskey" "$N"
+		[ -n "$dpp_ppkey" ] && append network_data "dpp_ppkey=$dpp_ppkey" "$N"
+		[ -n "$dpp_connector_sign" ] && append network_data "dpp_connector_sign=$dpp_connector_sign" "$N"
+
+	fi
+
 	if [ "$key_mgmt" = "WPS" ]; then
 		echo "wps_cred_processing=1" >> "$_config"
 	else
@@ -1663,6 +1701,10 @@ wpa_supplicant_run() {
 	ret="$?"
 
 	wireless_add_process "$(cat "/var/run/wpa_supplicant-${ifname}.pid")" /usr/sbin/wpa_supplicant 1
+
+	if [ "${dpp}" -eq 1 ]; then
+		/usr/sbin/wpa_cli -i $ifname -p /var/run/wpa_supplicant -a /lib/netifd/dpp-supplicant-event-update -B
+	fi
 
 	[ "$ret" != 0 ] && wireless_setup_vif_failed WPA_SUPPLICANT_FAILED
 

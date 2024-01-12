@@ -97,6 +97,8 @@ drv_mac80211_init_iface_config() {
 	config_add_int max_listen_int
 	config_add_int dtim_period
 	config_add_int start_disabled
+	config_add_int ieee80211w
+	config_add_int beacon_prot
 
 	# mesh
 	config_add_string mesh_id
@@ -155,11 +157,8 @@ mac80211_hostapd_setup_base() {
 
 	json_get_vars noscan ht_coex min_tx_power:0 tx_burst disable_csa_dfs use_ru_puncture_dfs
 	json_get_values ht_capab_list ht_capab
-	json_get_values channel_list channels
+	[ "$auto_channel" -gt 0 ] && json_get_values channel_list channels
 	json_get_vars disable_eml_cap discard_6g_awgn_event
-
-	[ "$auto_channel" = 0 ] && [ -z "$channel_list" ] && \
-		channel_list="$channel"
 
 	[ "$min_tx_power" -gt 0 ] && append base_cfg "min_tx_power=$min_tx_power"
 
@@ -253,7 +252,7 @@ mac80211_hostapd_setup_base() {
 
 	# 802.11ac
 	enable_ac=0
-	vht_oper_chwidth=0
+	vht_oper_chwidth=
 	eht_oper_chwidth=0
 	vht_center_seg0=
 	eht_center_seg0=
@@ -270,7 +269,10 @@ mac80211_hostapd_setup_base() {
 				0) idx=$(($channel - 2));;
 			esac
 			enable_ac=1
-			vht_center_seg0=$idx
+			if [ $channel -ge 36 ]; then
+				vht_oper_chwidth=0
+				vht_center_seg0=$idx
+			fi
 		;;
 		VHT80|HE80|EHT80)
 			case "$(( (($channel / 4) + $chan_ofs) % 4 ))" in
@@ -340,11 +342,11 @@ mac80211_hostapd_setup_base() {
 			vht_oper_chwidth=2
 			vht_center_seg0=$idx
 			idx="$(mac80211_get_seg0 "320")"
-			eht_center_seg0=$idx
+			enable_ac=1
 			if [ -n $ccfs ] && [ $ccfs -gt 0 ]; then
-				append base_cfg "eht_oper_centr_freq_seg0_idx=$ccfs" "$N"
+				eht_center_seg0="$ccfs"
 			elif [ -z $ccfs ] || [ "$ccfs" -eq "0" ]; then
-				append base_cfg "eht_oper_centr_freq_seg0_idx=$idx" "$N"
+				eht_center_seg0="$idx"
 			fi
 		;;
 	esac
@@ -358,7 +360,7 @@ mac80211_hostapd_setup_base() {
 		case "$htmode" in
 			HE20|EHT20) op_class=131;;
 			EHT320) op_class=137;;
-			HE*|EHT*) op_class=$((132 + $vht_oper_chwidth))
+			HE*|EHT*) op_class=$((132 + $eht_oper_chwidth))
 		esac
 		[ -n "$op_class" ] && append base_cfg "op_class=$op_class" "$N"
 	}
@@ -687,12 +689,22 @@ mac80211_hostapd_setup_bss() {
 	local ifname="$2"
 	local macaddr="$3"
 	local type="$4"
+	local ieee80211w
+	local beacon_prot
 
 	hostapd_cfg=
 	append hostapd_cfg "$type=$ifname" "$N"
 
 	hostapd_set_bss_options hostapd_cfg "$phy" "$vif" || return 1
-	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled
+	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled ieee80211w beacon_prot
+
+	case "$auth_type" in
+		psk|sae|psk-sae|owe|eap*|wep|sae-mixed|ft-sae-ext-key)
+			if [ $ieee80211w -gt 0 ] && [ $beacon_prot -gt 0 ]; then
+				append hostapd_cfg "beacon_prot=1" "$N"
+			fi
+		;;
+	esac
 
 	set_default wds 0
 	set_default start_disabled 0
@@ -1439,6 +1451,12 @@ mac80211_get_seg0() {
 					1) seg0=$(($channel - 2));;
 					0) seg0=$(($channel + 2));;
 				esac
+			elif [ $freq -lt 2484 ]; then
+				if [ "$channel" -lt 7 ]; then
+					seg0=$(($channel + 2))
+				else
+					seg0=$(($channel - 2))
+				fi
 			elif [ $freq != 5935 ]; then
 				case "$(( ($channel / 4) % 2 ))" in
 					1) seg0=$(($channel + 2));;
@@ -1749,6 +1767,40 @@ drv_mac80211_cleanup() {
 	hostapd_common_cleanup
 }
 
+mac80211_update_bondif() {
+	local iflist
+	config_load wireless
+	mac80211_get_wifi_mlds() {
+		append _mlds $1
+	}
+
+	config_foreach mac80211_get_wifi_mlds wifi-mld
+
+	if [ -z "$_mlds" ]; then
+		return
+	fi
+	for _mld in $_mlds
+	do
+		config_get mld_ifname "$_mld" ifname
+		config_get is_bonded "$_mld" bonded
+		mac80211_export_mld_info
+		#Check if ppe_ds_enable is set and then update the bondif
+		if ([ $mld_vaps_count -ge 2 ] && [ -n $mld_ifname ]); then
+			cmd="ls /sys/class/net"
+			iface=$($cmd | grep "$mld_ifname"_b)
+			if ([ -d /sys/class/net/"$mld_ifname"_b ] && [ -n $network_bridge ]); then
+				bonded_macaddr=$(iw dev $mld_ifname info | grep addr | head -1 | awk '{print $2}')
+				brctl delif $network_bridge $mld_ifname
+				brctl addif $network_bridge "$mld_ifname"_b
+				ifconfig "$mld_ifname"_b down
+				ifconfig "$mld_ifname"_b hw ether $bonded_macaddr
+				ifconfig "$mld_ifname"_b up
+			fi
+		fi
+	done
+	return
+}
+
 drv_mac80211_setup() {
 	local device=$1
 	# Note: In case of single wiphy, the device name would be radio#idx_band#bid
@@ -1776,6 +1828,7 @@ drv_mac80211_setup() {
 		ccfs
 	json_get_values basic_rate_list basic_rate
 	json_get_values scan_list scan_list
+	json_get_values channel_list channels
 	json_select ..
 
 	find_phy $1 || {
@@ -1962,6 +2015,7 @@ drv_mac80211_setup() {
 				/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $config_files
 			fi
 		fi
+		hostapd_dpp_action $ifname
 
 	}
 	uci -q -P /var/state set wireless.${device}.aplist="${NEWAPLIST}"
@@ -2020,6 +2074,17 @@ drv_mac80211_setup() {
                        fi
                 }
         fi
+
+	[ -f "/lib/performance.sh" ] && {
+		. /lib/performance.sh
+	}
+	for_each_interface "ap mesh" mac80211_set_fq_limit
+	#Check if ppe_ds_enable is set and then update the bondif
+	if [ $(cat /sys/module/ath12k/parameters/ppe_ds_enable) -eq 1 ]; then
+		mac80211_update_bondif
+	fi
+
+
 }
 
 _list_phy_interfaces() {
