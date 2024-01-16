@@ -159,7 +159,7 @@ wifi_updown() {
 	[ enable = "$1" ] && {
 		_wifi_updown disable "$2" "$3"
 		ubus_wifi_cmd "$cmd" "$2"
-		ubus call network reload
+		[ "$DISABLE_NET_RELOAD" == "1" ] || ubus call network reload
 		scan_wifi
 		cmd=up
 	}
@@ -339,6 +339,13 @@ if grep -q 'skip_wifi' /proc/cmdline; then
 	exit 0
 fi
 
+DISABLE_NET_RELOAD=0
+type check_network_reload &>/dev/null && {
+        check_network_reload
+        DISABLE_NET_RELOAD=$?
+        echo "Disable Network Reload $DISABLE_NET_RELOAD" > /dev/console
+}
+
 case "$1" in
 	down) wifi_updown "disable" "$2" "$3";;
 	detect) wifi_detect_notice ;;
@@ -353,9 +360,9 @@ case "$1" in
 	recover) wifi_recover "$2";;
 	mlo) mlo "$@";;
         multi_up|\
-        multi_down) ubus call network reload; multi_radio_wifi_updown "$@";;
+        multi_down) [ "$DISABLE_NET_RELOAD" == "1" ] || ubus call network reload; multi_radio_wifi_updown "$@";;
 	--help|help) usage;;
 	reconf) wifi_updown "reconf" "$2";;
-	''|up) ubus call network reload; wifi_updown "enable" "$2" "$3" "wifi_up";;
+	''|up) [ "$DISABLE_NET_RELOAD" == "1" ] || ubus call network reload; wifi_updown "enable" "$2" "$3" "wifi_up";;
 	*) usage; exit 1;;
 esac
