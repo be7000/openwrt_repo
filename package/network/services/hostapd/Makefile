@@ -616,6 +616,7 @@ TARGET_CPPFLAGS := \
 	$(if $(CONFIG_WPA_MSG_MIN_PRIORITY),-DCONFIG_MSG_MIN_PRIORITY=$(CONFIG_WPA_MSG_MIN_PRIORITY))
 
 TARGET_LDFLAGS += -lubox -lubus
+TARGET_CFLAGS += -fPIC
 
 ifdef CONFIG_PACKAGE_kmod-cfg80211
   TARGET_LDFLAGS += -lm -lnl-tiny
@@ -708,6 +709,24 @@ endef
 define Build/Compile
 	$(Build/Compile/$(LOCAL_TYPE))
 	$(Build/Compile/$(BUILD_VARIANT))
+endef
+
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/include
+	$(INSTALL_DIR) $(1)/usr/lib/
+	$(CP) $(PKG_BUILD_DIR)/src/common/wpa_ctrl.h $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/src/utils/os.h $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/src/utils/common.h $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/src/utils/wpa_debug.h $(1)/usr/include
+ifneq ($(CONFIG_PACKAGE_hostapd-utils),)
+ifneq ($(LOCAL_VARIANT),macsec)
+	ar rcs $(1)/usr/lib/libwpa_ctrl.a \
+		$(PKG_BUILD_DIR)/build/hostapd/src/common/wpa_ctrl.o \
+		$(PKG_BUILD_DIR)/build/hostapd/src/utils/os_unix.o \
+		$(PKG_BUILD_DIR)/build/hostapd/src/utils/wpa_debug.o \
+		$(PKG_BUILD_DIR)/build/hostapd/src/utils/common.o
+endif
+endif
 endef
 
 define Install/hostapd
