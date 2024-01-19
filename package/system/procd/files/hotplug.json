@@ -74,7 +74,7 @@
 	],
 	[ "if",
 		[ "eq", "SUBSYSTEM",
-			[ "devcoredump", "minidump" ]
+			[ "devcoredump", "minidump", "minidump2mem" ]
 		],
 		[ "exec", "/sbin/hotplug-call", "%SUBSYSTEM%" ]
 	],
