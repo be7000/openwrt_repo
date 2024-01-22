@@ -601,7 +601,10 @@ detect_mac80211() {
 			macaddr="$(cat /sys/class/ieee80211/${dev}/macaddress)"
 
 			# work around phy rename related race condition
-			[ -n "$path" -o -n "$macaddr" ] || continue
+			if ! [ -n "$path" ] || ! [ -n "$macaddr" ]; then
+				bandidx=$((bandidx + 1))
+				continue
+			fi
 
 			found=
 			config_foreach check_mac80211_device wifi-device "$path" "$macaddr"
