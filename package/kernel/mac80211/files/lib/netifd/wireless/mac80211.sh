@@ -1041,7 +1041,7 @@ mac80211_prepare_vif() {
 				break;
 			fi
 		done
-		[ -n "$ifname" ] || ifname="wlan${phy#phy}${if_idx:+-$if_idx}"
+		[ -n "$ifname" ] || ifname="wlan${phy:0-1}${if_idx:+-$if_idx}"
 	fi
 
 	if_idx=$((${if_idx:-0} + 1))
@@ -1998,7 +1998,7 @@ drv_mac80211_setup() {
 		if [ "$is_sphy_mband" -eq 1 ]; then
 			dev_wlan="wlan$((${device:5:1} + ${device:11:1}))"
 		else
-			dev_wlan="wlan${phy#phy}"
+			dev_wlan="wlan${phy:0-1}"
 		fi
 
 		if [ -z "$is_sphy_mband" ] || [ "$hostapd_add_bss" -eq 1 ]; then
