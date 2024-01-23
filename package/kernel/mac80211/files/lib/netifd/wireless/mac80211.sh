@@ -360,7 +360,13 @@ mac80211_hostapd_setup_base() {
 	[ "$band" = "6g" ] && {
 		op_class=
 		case "$htmode" in
-			HE20|EHT20) op_class=131;;
+			HE20|EHT20)
+				if [ "$freq" == "5935" ]; then
+					op_class=136
+				else
+					op_class=131
+				fi
+			;;
 			EHT320) op_class=137;;
 			HE*|EHT*) op_class=$((132 + $eht_oper_chwidth))
 		esac
