@@ -72,7 +72,7 @@ config USES_MINOR
 
 config USES_UBIFS
 	bool
-	select NAND_SUPPORT
+	select NAND_SUPPORT if !TARGET_PROFILE=QSDK_16M
 
 config LOW_MEMORY_FOOTPRINT
 	bool
