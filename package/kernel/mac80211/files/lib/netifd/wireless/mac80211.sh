@@ -27,6 +27,11 @@ OLDUMLIST=
 hostapd_started=
 bss_color=
 enable_color=
+interf_dfs=
+link_ids=
+interf_state=
+link=
+hostapd_state=
 
 drv_mac80211_init_device_config() {
 	hostapd_common_add_device_config
@@ -1224,6 +1229,11 @@ mac80211_setup_supplicant() {
 
 		while true;
 		do
+			wpa_state="$(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2)"
+
+			if [ -z "$wpa_state" ]; then
+                                break;
+                        fi
 			if [ $(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2) = "COMPLETED" ]; then
 				break;
 			fi
@@ -1232,7 +1242,6 @@ mac80211_setup_supplicant() {
 				continue
 			fi
 
-			wpa_state="$(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2)"
 			if [ $centre_freq -gt 5240 ] && [ $centre_freq -lt 5745 ]; then
 				cac_state="$(wpa_cli -i $ifname status 2> /dev/null | grep cac | cut -d'=' -f 2)"
 				if [ $wpa_state = "SCANNING" ] && [ $cac_state = "inprogress" ]; then
@@ -1293,6 +1302,12 @@ mac80211_setup_supplicant_noctl() {
 
 		while true;
 		do
+			wpa_state="$(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2)"
+
+			if [ -z "$wpa_state" ]; then
+				break;
+			fi
+
 			if [ $(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2) = "COMPLETED" ]; then
 				break;
 			fi
@@ -1301,7 +1316,6 @@ mac80211_setup_supplicant_noctl() {
 				continue
 			fi
 
-			wpa_state="$(wpa_cli -i $ifname status 2> /dev/null | grep wpa_state | cut -d'=' -f 2)"
 			if [ $centre_freq -gt 5240 ] && [ $centre_freq -lt 5745 ]; then
 				cac_state="$(wpa_cli -i $ifname status 2> /dev/null | grep cac | cut -d'=' -f 2)"
 				if [ $wpa_state = "SCANNING" ] && [ $cac_state = "inprogress" ]; then
@@ -1401,6 +1415,23 @@ mac80211_setup_adhoc() {
 		${brstr:+basic-rates $brstr} \
 		${mcval:+mcast-rate $mcval} \
 		${keyspec:+keys $keyspec}
+}
+
+mac80211_set_fq_limit() {
+	json_select data
+	json_get_vars ifname
+	json_select ..
+
+	json_select config
+	json_get_vars fq_limit
+
+	if [ $fq_limit -gt 0 ]; then
+		tc qdisc add dev $ifname parent :1 fq_codel limit $fq_limit
+		tc qdisc add dev $ifname parent :2 fq_codel limit $fq_limit
+		tc qdisc add dev $ifname parent :3 fq_codel limit $fq_limit
+		tc qdisc add dev $ifname parent :4 fq_codel limit $fq_limit
+	fi
+	json_select ..
 }
 
 mac80211_setup_mesh() {
@@ -1567,7 +1598,7 @@ mac80211_setup_vif() {
 	[ "$vif_enable" = 1 ] || action=down
 	if [ "$mode" != "ap" ] || \
 	   ( [ "$ifname" = "$ap_ifname" ] && \
-	     ! ( [[ "$mode" = "ap" ]] && [ "$hostapd_started" -eq 1 ] ) ); then
+	     ( [[ "$mode" = "ap" ]] && [ "$hostapd_started" -eq 1 ] ) ); then
 		ip link set dev "$ifname" "$action" || {
 			wireless_setup_vif_failed IFUP_ERROR
 			json_select ..
@@ -1771,9 +1802,9 @@ mac80211_interface_cleanup() {
 		local ap_ifnames="$(uci -q -P /var/state get wireless.${device}.aplist)"
 		local sta_ifnames="$(uci -q -P /var/state get wireless.${device}.splist)"
 		local adhoc_ifnames="$(uci -q -P /var/state get wireless.${device}.umlist)"
-		mac80211_vap_cleanup hostapd "$ap_ifnames" $phy $dev_wlan $2
 		mac80211_vap_cleanup wpa_supplicant "$sta_ifnames" $phy
 		mac80211_vap_cleanup none "$adhoc_ifnames" $phy
+		mac80211_vap_cleanup hostapd "$ap_ifnames" $phy $dev_wlan $2
 	else
 		mac80211_vap_cleanup hostapd "${primary_ap}" $phy $2 $2
 		mac80211_vap_cleanup wpa_supplicant "$(uci -q -P /var/state get wireless.${device}.splist)" $phy
@@ -2037,13 +2068,52 @@ drv_mac80211_setup() {
 					append  config_files /var/run/hostapd-phy${phy#phy}_${__band}.conf
 				done
 				#MLO vaps, single instance of hostapd is started
-				/usr/sbin/hostapd -B -P /var/run/wifi-$device.pid $config_files
+				/usr/sbin/hostapd -B -P /var/run/wifi-"$device".pid $config_files
 				ret="$?"
-				wireless_add_process "$(cat /var/run/wifi-"$device".pid)" "/usr/sbin/hostapd" 1
-				[ "$ret" != 0 ] && {
-					wireless_setup_failed HOSTAPD_START_FAILED
-					return
-				}
+				if [ "$band" = "5g" ]; then
+
+	                                interf_dfs="$(cat /var/run/hostapd-phy0_band1.conf | grep interface | grep wlan | cut -d'=' -f 2 )"
+					config_get ht_mode $device htmode
+					if ([ -n "$ht_mode" ] && [[ $ht_mode == "EHT"* ]]); then
+						#Wait until link ids are filled, hostapd_cli command can give empty output in starting.
+						while [ -z "$link_ids" ]; do
+							link_ids="$(hostapd_cli -i wlan0 status | grep link_id= | cut -d'=' -f 2)"
+						done
+					fi
+					if [ -n "$link_ids" ]; then
+						for i in $link_ids
+						do
+							interf_state="$(hostapd_cli -i $interf_dfs -l $i status | grep state | cut -d'=' -f 2)"
+							if [ "$interf_state" = "DFS" ]; then
+								link=$i
+							fi
+						done
+					fi
+
+					while true;
+					do
+						if [ -n "$link" ]; then
+							hostapd_state="$(hostapd_cli -i $interf_dfs -l $link status 2> /dev/null | grep state | cut -d'=' -f 2)"
+						else
+							hostapd_state="$(hostapd_cli -i $interf_dfs status 2> /dev/null | grep state | cut -d'=' -f 2)"
+						fi
+						if [ "$hostapd_state" = "ENABLED" ]; then
+							wireless_add_process "$(cat /var/run/wifi-"$device".pid)" "/usr/sbin/hostapd" 1
+							[ "$ret" != 0 ] && {
+							wireless_setup_failed HOSTAPD_START_FAILED
+							return
+							}
+							break;
+						fi
+
+					done
+				else
+					wireless_add_process "$(cat /var/run/wifi-"$device".pid)" "/usr/sbin/hostapd" 1
+					[ "$ret" != 0 ] && {
+						wireless_setup_failed HOSTAPD_START_FAILED
+						return
+					}
+				fi
 			else
 				hostapd_started=0
 			fi
