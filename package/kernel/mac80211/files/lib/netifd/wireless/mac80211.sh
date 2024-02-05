@@ -53,7 +53,6 @@ drv_mac80211_init_device_config() {
 		htc_vht \
 		rx_antenna_pattern \
 		tx_antenna_pattern \
-		he_spr_sr_control \
 		he_spr_psr_enabled \
 		he_bss_color_enabled \
 		he_twt_required \
@@ -73,6 +72,7 @@ drv_mac80211_init_device_config() {
 		rx_stbc \
 		tx_stbc \
 		he_bss_color \
+		he_spr_sr_control \
 		he_spr_non_srg_obss_pd_max_offset \
 		ru_punct_bitmap \
 		ru_punct_acs_threshold \
@@ -615,7 +615,7 @@ mac80211_hostapd_setup_base() {
 			fi
 		fi
 
-		if [[ $htmode == "EHT"* ]] || [ "$is_6ghz" == "1" ]; then
+		if [[ $htmode == "HE"* ]] || [ "$is_6ghz" == "1" ]; then
 			if [ "$has_ap" -gt 1 ]; then
 				[ -n $multiple_bssid ] && [ $multiple_bssid -gt 0 ] && ([ -z $ema ] || ([ -n $ema ] && [ $ema -eq 0 ])) && append base_cfg "mbssid=1" "$N"
 				[ -n $ema ] && [ $ema -gt 0 ] && append base_cfg "mbssid=2" "$N" && append base_cfg "ema=1" "$N"
