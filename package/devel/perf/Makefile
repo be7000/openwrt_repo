@@ -28,7 +28,7 @@ define Package/perf
   SECTION:=devel
   CATEGORY:=Development
   DEPENDS:= +libelf +libdw +PACKAGE_libunwind:libunwind +libpthread +librt +objdump @!IN_SDK @KERNEL_PERF_EVENTS \
-	    +PACKAGE_libbfd:libbfd +PACKAGE_libopcodes:libopcodes
+	    +PACKAGE_libbfd:libbfd +PACKAGE_libopcodes:libopcodes +libstdcpp
   TITLE:=Linux performance monitoring tool
   VERSION:=$(LINUX_VERSION)-$(PKG_RELEASE)
   URL:=http://www.kernel.org
@@ -65,7 +65,8 @@ MAKE_FLAGS = \
 	$(if $(findstring c,$(OPENWRT_VERBOSE)),V=1,V='') \
 	WERROR=0 \
 	O=$(PKG_BUILD_DIR) \
-	prefix=/usr
+	prefix=/usr \
+	NO_LIBTRACEEVENT=1
 
 define Build/Compile
 	+$(MAKE_FLAGS) $(MAKE) $(PKG_JOBS) \
