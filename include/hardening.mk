@@ -9,6 +9,9 @@ PKG_SSP ?= 1
 PKG_FORTIFY_SOURCE ?= 1
 PKG_RELRO ?= 1
 
+ifdef CONFIG_PKG_MAP_SYMBOL
+    TARGET_CFLAGS += -Wl,-Map,ipq-$(PKG_NAME).map
+endif
 ifdef CONFIG_PKG_CHECK_FORMAT_SECURITY
   ifeq ($(strip $(PKG_CHECK_FORMAT_SECURITY)),1)
     TARGET_CFLAGS += -Wformat -Werror=format-security
