@@ -2070,14 +2070,19 @@ drv_mac80211_setup() {
 				#MLO vaps, single instance of hostapd is started
 				/usr/sbin/hostapd -B -P /var/run/wifi-"$device".pid $config_files
 				ret="$?"
-				if [ "$band" = "5g" ]; then
 
-	                                interf_dfs="$(cat /var/run/hostapd-phy0_band1.conf | grep interface | grep wlan | cut -d'=' -f 2 )"
+				if [ "$band" = "5g" ]; then
+					interf_dfs="$(cat /var/run/hostapd-${phy}_band${device:11:1}.conf | grep interface | grep wlan | cut -d'=' -f 2 )"
+					iw dev $interf_dfs info 2> /dev/null
+					ifret="$?"
+				fi
+				if [ "$band" = "5g" -a "$ifret" -eq 0 ]; then
 					config_get ht_mode $device htmode
+
 					if ([ -n "$ht_mode" ] && [[ $ht_mode == "EHT"* ]]); then
 						#Wait until link ids are filled, hostapd_cli command can give empty output in starting.
 						while [ -z "$link_ids" ]; do
-							link_ids="$(hostapd_cli -i wlan0 status | grep link_id= | cut -d'=' -f 2)"
+							link_ids="$(hostapd_cli -i $interf_dfs status | grep link_id= | cut -d'=' -f 2)"
 						done
 					fi
 					if [ -n "$link_ids" ]; then
@@ -2089,7 +2094,6 @@ drv_mac80211_setup() {
 							fi
 						done
 					fi
-
 					while true;
 					do
 						if [ -n "$link" ]; then
