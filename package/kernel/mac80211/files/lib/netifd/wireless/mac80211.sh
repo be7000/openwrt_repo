@@ -168,7 +168,7 @@ mac80211_hostapd_setup_base() {
 	[ "$auto_channel" -gt 0 ] && json_get_values channel_list channels
 	json_get_vars disable_eml_cap discard_6g_awgn_event
 
-	[ "$min_tx_power" -gt 0 ] && append base_cfg "min_tx_power=$min_tx_power"
+	[ "$min_tx_power" -gt 0 ] && append base_cfg "min_tx_power=$min_tx_power" "$N"
 
 	if [ "$band" = "2g" ]; then
 		sedString="iw phy ${phy} info | awk  '/Band 1/{ f = 1; next } /Band /{ f = 0 } f'"
@@ -411,6 +411,11 @@ mac80211_hostapd_setup_base() {
 		cap_rx_stbc=$((($vht_cap >> 8) & 7))
 		[ "$rx_stbc" -lt "$cap_rx_stbc" ] && cap_rx_stbc="$rx_stbc"
 		vht_cap="$(( ($vht_cap & ~(0x700)) | ($cap_rx_stbc << 8) ))"
+
+		[ "$vht_oper_chwidth" -lt 2 ] && {
+			vht160=0
+			short_gi_160=0
+		}
 
 		mac80211_add_capabilities vht_capab $vht_cap \
 			RXLDPC:0x10::$rxldpc \
