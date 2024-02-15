@@ -1654,6 +1654,7 @@ mac80211_setup_vif() {
                             [ "$sta_vaps_count" -gt 1 ] && [ "$sta_radio" -gt 1 ]); then
                                 #Keep count of the links to be supported before the supplicant is started
                                 touch /var/run/wpa_supplicant-$device-updated-cfg
+				echo freq_list=$freq_list > /var/run/wpa_supplicant-$device-updated-cfg
                                 sta_cfg_updated=$(ls /var/run/wpa_supplicant-*-updated-cfg | wc -l)
                                 if [ -n "$freq_list" ]; then
                                         if [ -f  "/tmp/${mld}_freq_list" ]; then
@@ -1670,8 +1671,6 @@ mac80211_setup_vif() {
                                 if [ "$sta_cfg_updated" = "$sta_radio" ]; then
                                         mac80211_setup_supplicant || failed=1
                                         sta_started=1
-					rm -rf /var/run/wpa_supplicant-*-updated-cfg
-					rm -rf /tmp/*_freq_list
                                 fi
                         else
                                 mac80211_setup_supplicant || failed=1

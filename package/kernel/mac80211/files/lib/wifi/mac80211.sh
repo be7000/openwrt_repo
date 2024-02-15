@@ -443,12 +443,18 @@ pre_mac80211() {
                                 rm -rf /var/run/hostapd-*updated-cfg
                         fi
                         rm -rf /var/run/wpa_supplicant-*-updated-cfg  2>/dev/null
+			rm -rf /tmp/*_freq_list 2>/dev/null
 			if [ -f "$MLD_VAP_DETAILS" ]; then
 				rm -rf $MLD_VAP_DETAILS
 			fi
 			sawf_supp="/sys/module/ath12k/parameters/sawf"
 			if [ -f $sawf_supp ] && [ $(cat $sawf_supp) == "Y" ]; then
 				configure_service_class 0
+			fi
+			if [ -f "/tmp/apsta_mode.pid" ]; then
+				pid=$(cat /tmp/apsta_mode.pid)
+				kill -15 $pid 2>/dev/null
+				rm /tmp/apsta_mode.pid 2>/dev/null
 			fi
 		;;
 	esac
