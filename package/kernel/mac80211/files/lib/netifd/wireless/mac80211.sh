@@ -1760,6 +1760,13 @@ mac80211_vap_cleanup() {
 			continue;
 		fi
 
+		## PPE expects interface to be removed from the bridge
+		## before issuing ppe_vp_free from driver cleanup
+		bridge_name=$(ip link show $wdev | awk '/master/ {print $9}')
+		if [ -n "$bridge_name" ]; then
+			echo "brctl delif $bridge_name $wdev" > /dev/console
+			brctl delif $bridge_name $wdev 2>/dev/null
+		fi
 		case $service in
 			"hostapd")
 				if ( [ -f "/var/run/hostapd-${wdev}.lock" ] || \
