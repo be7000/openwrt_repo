@@ -32,6 +32,7 @@ link_ids=
 interf_state=
 link=
 hostapd_state=
+mld_names=
 
 drv_mac80211_init_device_config() {
 	hostapd_common_add_device_config
@@ -2139,6 +2140,7 @@ drv_mac80211_setup() {
 							wireless_setup_failed HOSTAPD_START_FAILED
 							return
 							}
+							update_primary_link
 							break;
 						fi
 
@@ -2149,6 +2151,7 @@ drv_mac80211_setup() {
 						wireless_setup_failed HOSTAPD_START_FAILED
 						return
 					}
+					update_primay_link
 				fi
 			else
 				hostapd_started=0
@@ -2315,6 +2318,7 @@ mac80211_update_mld_configs() {
 		config_get ml_device $name device
 		config_get ht_mode $ml_device htmode
 		if ([ -n "$ht_mode" ] && [[ $ht_mode == "EHT"* ]]  && [ -n "$mld_name" ]); then
+			append mld_names $mld_name
 			mac80211_update_mld_iface_config $name $mld_name
 		fi
 	done
@@ -2500,6 +2504,27 @@ get_sta_freq_list() {
 			fi
 		done
 	done
+}
+
+update_primary_link ()
+{
+        if [ -n "$mld_names" ]; then
+                for mld_iface in $mld_names; do
+                        config_get mld_primary_link "$mld_iface" primary_link
+                        config_get mld_ifname "$mld_iface" ifname
+                        if [ -n "$mld_primary_link" ]; then
+                                while true;
+                                do
+                                        ifname_state="$(hostapd_cli -i $mld_ifname status 2> /dev/null | grep state | cut -d'=' -f 2)"
+                                        if [ "$ifname_state" = "ENABLED" ]; then
+                                                echo "$mld_primary_link" > /sys/kernel/debug/ieee80211/phy${phy#phy}/netdev:$mld_ifname/primary_link
+                                                break;
+                                        fi
+                                done
+                        fi
+                done
+        fi
+
 }
 
 add_driver mac80211
