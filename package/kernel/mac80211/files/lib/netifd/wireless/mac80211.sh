@@ -790,11 +790,41 @@ mac80211_get_addr() {
 	head -n $idx /sys/class/ieee80211/${phy}/addresses | tail -n1
 }
 
+mac80211_hwidx_from_channel_list() {
+	local phy="$1"
+	local i=0
+	local first_chan highest_chan chidx hw_nchans
+	local n_hw_idx=$(iw phy ${phy} info | grep -e "channel list" | wc -l)
+
+	while [ "$i" -lt "$n_hw_idx" ]; do
+		hw_nchans=$(iw phy ${phy} info | awk -v p1="$i channel list" \
+			-v p2="$((i+1)) channel list"  ' $0 ~ p1{f=1;next} $0 ~ p2 {f=0} f')
+		first_chan=$(echo $hw_nchans | awk '{print $1}')
+		highest_chan=$first_chan
+		for chidx in $hw_nchans; do
+			if [ "$chidx" -gt "$highest_chan" ]; then
+				highest_chan=$chidx;
+			fi
+		done
+		if [ "$2" == "$first_chan-$highest_chan" ]; then
+			break;
+		fi
+		i=$((i+1))
+	done
+
+	if [ "$i" -eq "$n_hw_idx" ]; then
+		echo ""
+	else
+		echo $i
+	fi
+}
+
 mac80211_generate_mac() {
 	local phy="$1"
 	local id="${macidx:-0}"
 	local mode="$2"
 	local device="$3"
+	local hw_idx n_hwidx
 
 	local ref="$(cat /sys/class/ieee80211/${phy}/macaddress)"
 	local mask="$(cat /sys/class/ieee80211/${phy}/address_mask)"
@@ -802,22 +832,33 @@ mac80211_generate_mac() {
 	[ "$mask" = "00:00:00:00:00:00" ] && {
 		mask="ff:ff:ff:ff:ff:ff";
 
-		[ "$(wc -l < /sys/class/ieee80211/${phy}/addresses)" -gt 1 ] && {
-			addr="$(mac80211_get_addr "$phy" "$id")"
-			[ -n "$addr" ] && {
-				echo "$addr"
-				return
+		[ $is_sphy_mband -eq 0 ] && {
+			[ "$(wc -l < /sys/class/ieee80211/${phy}/addresses)" -gt 1 ] && {
+				addr="$(mac80211_get_addr "$phy" "$id")"
+				[ -n "$addr" ] && {
+					echo "$addr"
+					return
+				}
 			}
 		}
 	}
 
 	if [ $is_sphy_mband -eq 1 ]; then
-		dev_idx=${device:11:1}
-		local ref_dec=$( printf '%d\n' $( echo "0x$ref" | tr -d ':' ) )
-		local mac_mask=$(($(($(($dev_idx << 8)) | $dev_idx))))
-		local genref="$( echo $( printf '%012x\n' $(($(($mac_mask + $ref_dec))))) \
-			| sed 's!\(..\)!\1:!g;s!:$!!' )"
+		n_hwidx=$(iw phy ${phy} info | grep -e "channel list" | wc -l)
+		if [ -n "$channel_list" ] && \
+		[ "$(wc -l < /sys/class/ieee80211/${phy}/addresses)" == "$n_hwidx" ]; then
+			hw_idx="$(mac80211_hwidx_from_channel_list "$phy" "$channel_list")"
+		fi
+		if [ -n "$hw_idx" ]; then
+			ref="$(mac80211_get_addr "$phy" "$hw_idx")"
+		else
+			dev_idx=${device:11:1}
+			local ref_dec=$( printf '%d\n' $( echo "0x$ref" | tr -d ':' ) )
+			local mac_mask=$(($(($(($dev_idx << 8)) | $dev_idx))))
+			local genref="$( echo $( printf '%012x\n' $(($(($mac_mask + $ref_dec))))) \
+				| sed 's!\(..\)!\1:!g;s!:$!!' )"
 			ref=$genref
+		fi
 	fi
 
 	local oIFS="$IFS"; IFS=":"; set -- $mask; IFS="$oIFS"
