@@ -1,0 +1,66 @@
+From 5d8faaf9db4638de44958865bdb780916b3899fd Mon Sep 17 00:00:00 2001
+From: Karthik T S <quic_kartikts@quicinc.com>
+Date: Tue, 12 Mar 2024 10:23:38 +0530
+Subject: [PATCH] netifd: get ifindex directly from device to avoid race
+ condition
+
+Signed-off-by: Karthik T S <quic_kartikts@quicinc.com>
+---
+ system-linux.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/system-linux.c b/system-linux.c
+index b7ec12e..567cc38 100644
+--- a/system-linux.c
++++ b/system-linux.c
+@@ -566,13 +566,24 @@ static int system_get_sendredirects(struct device *dev, char *buf, const size_t
+ 			dev->ifname, buf, buf_sz);
+ }
+ 
++static void
++system_device_update_state(struct device *dev, unsigned int flags, unsigned int ifindex)
++{
++        if (dev->type == &simple_device_type) {
++                if (dev->external)
++                        device_set_disabled(dev, !(flags & IFF_UP));
++
++                device_set_present(dev, ifindex > 0);
++        }
++        device_set_link(dev, flags & IFF_LOWER_UP ? true : false);
++}
++
+ /* Evaluate netlink messages */
+ static int cb_rtnl_event(struct nl_msg *msg, void *arg)
+ {
+ 	struct nlmsghdr *nh = nlmsg_hdr(msg);
++	struct ifinfomsg *ifi = NLMSG_DATA(nh);
+ 	struct nlattr *nla[__IFLA_MAX];
+-	int link_state = 0;
+-	char buf[10];
+ 
+ 	if (nh->nlmsg_type != RTM_NEWLINK)
+ 		goto out;
+@@ -585,10 +596,7 @@ static int cb_rtnl_event(struct nl_msg *msg, void *arg)
+ 	if (!dev)
+ 		goto out;
+ 
+-	if (!system_get_dev_sysctl("/sys/class/net/%s/carrier", dev->ifname, buf, sizeof(buf)))
+-		link_state = strtoul(buf, NULL, 0);
+-
+-	device_set_link(dev, link_state ? true : false);
++	system_device_update_state(dev, ifi->ifi_flags, system_if_resolve(dev));
+ 
+ out:
+ 	return 0;
+@@ -1796,7 +1804,7 @@ static int cb_if_check_valid(struct nl_msg *msg, void *arg)
+ 		return NL_SKIP;
+ 
+ 	device_set_present(chk->dev, ifi->ifi_index > 0 ? true : false);
+-	device_set_link(chk->dev, ifi->ifi_flags & IFF_LOWER_UP ? true : false);
++	system_device_update_state(chk->dev, ifi->ifi_flags, ifi->ifi_index);
+ 
+ 	return NL_OK;
+ }
+-- 
+2.17.1
+
