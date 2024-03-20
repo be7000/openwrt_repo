@@ -65,7 +65,7 @@ config-$(CONFIG_ATH10K_THERMAL) += ATH10K_THERMAL
 config-$(CONFIG_ATH11K_THERMAL) += ATH11K_THERMAL
 
 
-config-$(CONFIG_TARGET_ipq53xx) += ATH12K_AHB
+config-$(CONFIG_TARGET_ipq53xx) += ATH12K_AHB ATH12K_POWER_OPTIMIZATION
 
 config-$(call config_package,ath9k-htc) += ATH9K_HTC
 config-$(call config_package,ath10k) += ATH10K ATH10K_PCI
