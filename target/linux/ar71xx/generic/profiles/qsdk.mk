@@ -46,7 +46,9 @@ define Profile/QSDK_IOE_SB
 		  qca-legacy-uboot-ap143-16M qca-legacy-uboot-ap143-32M \
 		  qca-legacy-uboot-cus531-16M qca-legacy-uboot-cus531-dual \
 		  qca-legacy-uboot-cus531-32M qca-legacy-uboot-cus531-nand \
-		  qca-legacy-uboot-cus532k
+		  qca-legacy-uboot-cus532k \
+		  qca-legacy-uboot-cus531-711-16M \
+		  qca-legacy-uboot-cus531-711-nand qca-legacy-uboot-cus531-711-dual
 endef
 
 define Profile/QSDK_IOE_SB/Description
