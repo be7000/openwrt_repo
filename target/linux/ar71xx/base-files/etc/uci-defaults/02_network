@@ -67,6 +67,14 @@ ap143)
 	ucidef_add_switch_vlan "eth1" "1" "0 1 2 3 4"
 	;;
 
+cus531-711 |\
+cus531-711-dual |\
+cus531-711-nand)
+	ucidef_set_interfaces_lan_wan "eth1" "eth0"
+	ucidef_add_switch "switch0" "1" "1"
+	ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 4"
+	;;
+
 archer-c5 |\
 archer-c7 |\
 tl-wdr4900-v2)

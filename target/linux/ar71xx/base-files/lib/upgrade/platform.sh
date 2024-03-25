@@ -469,6 +469,9 @@ platform_check_image() {
 	ap147ioe | \
 	ap147ioe-nand | \
 	ap147ioe-dual | \
+	cus531-711 | \
+	cus531-711-nand | \
+	cus531-711-dual | \
 	cus531 | \
 	cus531-dual | \
 	cus531-nand | \
@@ -554,6 +557,9 @@ platform_do_upgrade() {
 	ap147ioe | \
 	ap147ioe-nand | \
 	ap147ioe-dual | \
+	cus531-711 | \
+	cus531-711-nand | \
+	cus531-711-dual | \
 	cus531 | \
 	cus531-dual | \
 	cus531-nand | \

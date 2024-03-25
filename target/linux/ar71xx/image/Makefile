@@ -1992,7 +1992,7 @@ $(eval $(call SingleProfile,AthLzma,64k,CUS531_16M,cus531_16M,CUS531,ttyS0,11520
 $(eval $(call SingleProfile,IoENAND,64k,CUS531NAND,cus531_nand,CUS531-NAND,ttyS0,115200,,KRuImage,CUS531-NAND,2097152))
 $(eval $(call SingleProfile,AthLzma,64k,CUS531MP3_16M,cus531mp3_16M,CUS531MP3,ttyS0,115200,,RKuImage))
 $(eval $(call SingleProfile,IoENAND,64k,CUS531MP3NAND,cus531mp3_nand,CUS531MP3-NAND,ttyS0,115200,,KRuImage,CUS531MP3-NAND,2097152))
-$(eval $(call SingleProfile,IoENAND,64k,CUS531_711,cus531_711,CUS531-711,ttyS0,115200,,KRuImage,CUS531-711,2097152))
+$(eval $(call SingleProfile,IoENAND,64k,CUS531_711NAND,cus531_711_nand,CUS531-711-NAND,ttyS0,115200,,KRuImage,CUS531-711-NAND,4194304))
 $(eval $(call SingleProfile,IoENAND,64k,CUS532K,cus532k_nand,CUS532K,ttyS0,115200,,KRuImage,CUS532K,2097152))
 $(eval $(call SingleProfile,AthLzma,64k,DB120,db120,DB120,ttyS0,115200,$$(db120_mtdlayout),RKuImage))
 $(eval $(call SingleProfile,AthLzma,64k,DRAGINO2,dragino2,DRAGINO2,ttyATH0,115200,$$(dragino2_mtdlayout),KRuImage,65536))
@@ -2172,6 +2172,7 @@ $(eval $(call MultiProfile,AP136,AP136_010 AP136_020))
 $(eval $(call MultiProfile,AP143,AP143_16M))
 $(eval $(call MultiProfile,CUS531,CUS531_16M CUS531NAND))
 $(eval $(call MultiProfile,CUS531MP3,CUS531MP3_16M CUS531MP3NAND))
+$(eval $(call MultiProfile,CUS531_711,CUS531_711NAND))
 $(eval $(call MultiProfile,AP147,AP147_010))
 $(eval $(call MultiProfile,AP147-IOE,AP147IOE_16M AP147IOENAND))
 $(eval $(call MultiProfile,AP151,AP151_16M))
@@ -2255,20 +2256,22 @@ define Image/Build/Profile/QSDK_IOE_SB
 	$(call Image/Build/Profile/CUS531,$(1))
 	$(call Image/Build/Profile/AP143,$(1))
 	$(call Image/Build/Profile/CUS532K,$(1))
+	$(call Image/Build/Profile/CUS531_711,$(1))
 endef
 
 define Image/Build/Profile/QSDK_IOE_DBPAN
 	$(call Image/Build/Profile/CUS531MP3,$(1))
 	$(call Image/Build/Profile/AP147-IOE,$(1))
-	$(call Image/Build/Profile/CUS531_711,$(1))
 endef
 
 define Image/Build/Profile/QSDK_IOE_PREMIUM
 	$(call Image/Build/Profile/CUS531MP3,$(1))
+	$(call Image/Build/Profile/CUS531_711,$(1))
 endef
 
 define Image/Build/Profile/QSDK_IOE_TEST
 	$(call Image/Build/Profile/CUS531MP3,$(1))
+	$(call Image/Build/Profile/CUS531_711,$(1))
 endef
 
 # $(1): filesystem type.

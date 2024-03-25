@@ -390,6 +390,15 @@ ar71xx_board_detect() {
 	*"AP147 IoE dual reference board")
 		name="ap147ioe-dual"
 		;;
+	*"CUS531_711 reference board")
+		name="cus531-711"
+		;;
+	*"CUS531_711 dual reference board")
+		name="cus531-711-dual"
+		;;
+	*"CUS531_711 nand reference board")
+		name="cus531-711-nand"
+		;;
 	*"AP151 reference board")
 		name="ap151"
 		;;
