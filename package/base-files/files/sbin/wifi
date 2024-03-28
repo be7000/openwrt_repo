@@ -311,7 +311,9 @@ scan_wifi() {
 				config_set "$device" vifs "$vifs"
 			;;
 			wifi-mld)
-				append MLD_DEVICES "$CONFIG_SECTION"
+				if ! list_contains MLD_DEVICES "$CONFIG_SECTION" ; then
+					append MLD_DEVICES "$CONFIG_SECTION"
+				fi
 			;;
 		esac
 	}
