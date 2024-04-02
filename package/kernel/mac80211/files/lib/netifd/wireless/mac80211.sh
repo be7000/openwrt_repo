@@ -108,6 +108,8 @@ drv_mac80211_init_iface_config() {
 	config_add_int start_disabled
 	config_add_int ieee80211w
 	config_add_int beacon_prot
+	config_add_int unsol_bcast_presp
+	config_add_int fils_discovery
 
 	# mesh
 	config_add_string mesh_id
@@ -728,6 +730,7 @@ mac80211_hostapd_setup_bss() {
 
 	hostapd_set_bss_options hostapd_cfg "$phy" "$vif" || return 1
 	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled ieee80211w beacon_prot
+	json_get_vars unsol_bcast_presp fils_discovery
 
 	case "$auth_type" in
 		psk|sae|psk-sae|owe|eap*|wep|sae-mixed|ft-sae-ext-key)
