@@ -46,9 +46,7 @@ define Profile/QSDK_IOE_SB
 		  qca-legacy-uboot-ap143-16M qca-legacy-uboot-ap143-32M \
 		  qca-legacy-uboot-cus531-16M qca-legacy-uboot-cus531-dual \
 		  qca-legacy-uboot-cus531-32M qca-legacy-uboot-cus531-nand \
-		  qca-legacy-uboot-cus532k \
-		  qca-legacy-uboot-cus531-711-16M \
-		  qca-legacy-uboot-cus531-711-nand qca-legacy-uboot-cus531-711-dual
+		  qca-legacy-uboot-cus532k
 endef
 
 define Profile/QSDK_IOE_SB/Description
@@ -63,6 +61,8 @@ define Profile/QSDK_IOE_DBPAN
 		  qca-legacy-uboot-cus531mp3-dual qca-legacy-uboot-cus531mp3-nand \
 		  qca-legacy-uboot-ap147ioe-16M qca-legacy-uboot-ap147ioe-nand \
 		  qca-legacy-uboot-ap147ioe-dual \
+		  qca-legacy-uboot-cus531-711-16M \
+		  qca-legacy-uboot-cus531-711-nand qca-legacy-uboot-cus531-711-dual \
 		  kmod-usb-serial kmod-usb-serial-pl2303 kmod-ath10k \
 		  ath10k-firmware-qca9888 ftm qcmbr-10.4-netlink
 endef
