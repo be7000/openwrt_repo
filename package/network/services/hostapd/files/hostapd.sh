@@ -1345,7 +1345,8 @@ wpa_supplicant_add_network() {
 		basic_rate mcast_rate \
 		ieee80211w ieee80211r fils ocv \
 		multi_ap \
-		default_disabled dpp
+		default_disabled dpp \
+		ppe_vp
 
 	case "$auth_type" in
 		sae|owe|eap192|eap-eap192)
@@ -1659,6 +1660,26 @@ wpa_supplicant_add_network() {
 
 	fi
 
+	local ppe_vp_type=
+	case "$ppe_vp" in
+		"passive")
+			ppe_vp_type=1
+			;;
+		"active")
+			ppe_vp_type=2
+			;;
+		"ds")
+			ppe_vp_type=3
+			;;
+		*)
+			ppe_vp_type=3
+			;;
+	esac
+
+	[ "$mode" = "mesh" ] && {
+		ppe_vp_type=1
+	}
+
 	if [ "$key_mgmt" = "WPS" ]; then
 		echo "wps_cred_processing=1" >> "$_config"
 	else
@@ -1667,6 +1688,7 @@ $mesh_ctrl_interface
 $user_mpm
 $disable_csa_dfs
 $saepwe
+ppe_vp=$ppe_vp_type
 $freq_list
 network={
 	$scan_ssid

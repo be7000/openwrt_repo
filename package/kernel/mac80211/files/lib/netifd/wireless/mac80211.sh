@@ -110,6 +110,7 @@ drv_mac80211_init_iface_config() {
 	config_add_int beacon_prot
 	config_add_int unsol_bcast_presp
 	config_add_int fils_discovery
+	config_add_string ppe_vp
 
 	# mesh
 	config_add_string mesh_id
@@ -726,6 +727,7 @@ mac80211_hostapd_setup_bss() {
 	local ifname="$2"
 	local macaddr="$3"
 	local type="$4"
+	local mode="$5"
 	local ieee80211w
 	local beacon_prot
 
@@ -735,6 +737,7 @@ mac80211_hostapd_setup_bss() {
 	hostapd_set_bss_options hostapd_cfg "$phy" "$vif" || return 1
 	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled ieee80211w beacon_prot
 	json_get_vars unsol_bcast_presp fils_discovery
+	json_get_vars wds wds_bridge dtim_period max_listen_int start_disabled ieee80211w beacon_prot ppe_vp
 
 	case "$auth_type" in
 		psk|sae|psk-sae|owe|eap*|wep|sae-mixed|ft-sae-ext-key)
@@ -781,6 +784,21 @@ mac80211_hostapd_setup_bss() {
 	if ([ -n "$ht_mode" ] && [[ $ht_mode == "EHT"* ]]); then
 		append hostapd_cfg "mld_ap=1" "$N"
 	fi
+
+	case "$ppe_vp" in
+		"passive")
+			append hostapd_cfg "ppe_vp=1" "$N"
+			;;
+		"active")
+			append hostapd_cfg "ppe_vp=2" "$N"
+			;;
+		"ds")
+			append hostapd_cfg "ppe_vp=3" "$N"
+			;;
+		*)
+			append hostapd_cfg "ppe_vp=3" "$N"
+			;;
+	esac
 
 	cat >> "$hostapd_conf_file"  <<EOF
 $hostapd_cfg
@@ -1014,7 +1032,8 @@ mac80211_iw_interface_add() {
 	local phy="$1"
 	local ifname="$2"
 	local type="$3"
-	local wdsflag="$4"
+	local ppe_vp="$4"
+	local wdsflag="$5"
 	local rc
 	local oldifname
 
@@ -1073,6 +1092,7 @@ mac80211_iw_interface_add() {
 		[ "$oldifname" ] && ip link set "$oldifname" name "$ifname" 1>/dev/null 2>&1
 		rc="$?"
 	}
+	iw dev $ifname set_intf_offload type $ppe_vp
 
 	[ "$rc" != 0 ] && echo "Failed to create interface $ifname"
 	return $rc
@@ -1085,9 +1105,10 @@ mac80211_set_ifname() {
 }
 
 mac80211_prepare_vif() {
+	ppe_vp="ds"
 	json_select config
 
-	json_get_vars ifname mode ssid wds powersave macaddr enable wpa_psk_file vlan_file mld
+	json_get_vars ifname mode ssid wds powersave macaddr enable wpa_psk_file vlan_file mld ppe_vp
 	if [ $is_sphy_mband -eq 1 ]; then
 		wdev=$((${1:5:1} + ${1:11:1}))
 		config_get ht_mode $device htmode
@@ -1122,6 +1143,11 @@ mac80211_prepare_vif() {
 	fi
 
 	if_idx=$((${if_idx:-0} + 1))
+	[ -z $ppe_vp ] && ppe_vp="ds"
+
+	if [ $mode == "mesh" ]; then
+		ppe_vp="passive"
+	fi
 
 	set_default wds 0
 	set_default powersave 0
@@ -1149,7 +1175,7 @@ mac80211_prepare_vif() {
 	# It is far easier to delete and create the desired interface
 	case "$mode" in
 		adhoc)
-			mac80211_iw_interface_add "$phy" "$ifname" adhoc || return
+			mac80211_iw_interface_add "$phy" "$ifname" adhoc "$ppe_vp" || return
 		;;
 		ap)
 			# Hostapd will handle recreating the interface and
@@ -1160,7 +1186,7 @@ mac80211_prepare_vif() {
 				type=interface
 			fi
 
-			mac80211_hostapd_setup_bss "$phy" "$ifname" "$macaddr" "$type" || return
+			mac80211_hostapd_setup_bss "$phy" "$ifname" "$macaddr" "$type" "$mode" || return
 
 			NEWAPLIST="${NEWAPLIST}$ifname "
 			[ -n "$hostapd_ctrl" ] || {
@@ -1169,10 +1195,10 @@ mac80211_prepare_vif() {
 			}
 		;;
 		mesh)
-			mac80211_iw_interface_add "$phy" "$ifname" mp || return
+			mac80211_iw_interface_add "$phy" "$ifname" mp "$ppe_vp" || return
 		;;
 		monitor)
-			mac80211_iw_interface_add "$phy" "$ifname" monitor || return
+			mac80211_iw_interface_add "$phy" "$ifname" monitor "$ppe_vp" || return
 			NEWUMLIST="${NEWUMLIST}$ifname"
 		;;
 		sta)
@@ -1186,7 +1212,7 @@ mac80211_prepare_vif() {
 				fi
 				wdsflag="4addr on"
 			fi
-			mac80211_iw_interface_add "$phy" "$ifname" managed "$wdsflag" || return
+			mac80211_iw_interface_add "$phy" "$ifname" managed "$ppe_vp" "$wdsflag" || return
 			if [ "$wds" -gt 0 ]; then
 				iw "$ifname" set 4addr on
 			else
@@ -2278,6 +2304,7 @@ mac80211_update_mld_iface_config() {
 	config_get mld_encryption "$mld_name" encryption
 	config_get mld_key "$mld_name" key
 	config_get mld_sae "$mld_name" sae_pwe
+	config_get mld_vp "$mld_name" ppe_vp
 
 	json_get_keys _ifaces interfaces
 	json_select interfaces
@@ -2301,6 +2328,10 @@ mac80211_update_mld_iface_config() {
 			if [ -n "$mld_sae" ]; then
 				json_add_int "sae_pwe" "$mld_sae"
 				uci_set wireless "$vif_name" sae_pwe "$mld_sae"
+			fi
+			if [ -n "$mld_vp" ]; then
+				json_add_string "ppe_vp" "$mld_vp"
+				uci_set wireless "$vif_name" ppe_vp "$mld_vp"
 			fi
 		fi
 		json_select ..
