@@ -1992,7 +1992,7 @@ $(eval $(call SingleProfile,AthLzma,64k,CUS531_16M,cus531_16M,CUS531,ttyS0,11520
 $(eval $(call SingleProfile,IoENAND,64k,CUS531NAND,cus531_nand,CUS531-NAND,ttyS0,115200,,KRuImage,CUS531-NAND,2097152))
 $(eval $(call SingleProfile,AthLzma,64k,CUS531MP3_16M,cus531mp3_16M,CUS531MP3,ttyS0,115200,,RKuImage))
 $(eval $(call SingleProfile,IoENAND,64k,CUS531MP3NAND,cus531mp3_nand,CUS531MP3-NAND,ttyS0,115200,,KRuImage,CUS531MP3-NAND,2097152))
-$(eval $(call SingleProfile,IoENAND,64k,CUS531_711NAND,cus531_711_nand,CUS531_711-NAND,ttyS0,115200,,KRuImage,CUS531_711-NAND,4194304))
+$(eval $(call SingleProfile,IoENAND,64k,CUS531_711NAND,cus531_711_nand,CUS531_711-NAND,ttyS0,115200,,KRuImage,CUS531_711-NAND,3145728))
 $(eval $(call SingleProfile,IoENAND,64k,CUS532K,cus532k_nand,CUS532K,ttyS0,115200,,KRuImage,CUS532K,2097152))
 $(eval $(call SingleProfile,AthLzma,64k,DB120,db120,DB120,ttyS0,115200,$$(db120_mtdlayout),RKuImage))
 $(eval $(call SingleProfile,AthLzma,64k,DRAGINO2,dragino2,DRAGINO2,ttyATH0,115200,$$(dragino2_mtdlayout),KRuImage,65536))
