@@ -356,6 +356,6 @@ case "$1" in
         multi_down) ubus call network reload; multi_radio_wifi_updown "$@";;
 	--help|help) usage;;
 	reconf) wifi_updown "reconf" "$2";;
-	''|up) ubus call network reload; wifi_updown "enable" "$2" "$3" "wifi_up";;
+	''|up) wifi_updown "enable" "$2" "$3" "wifi_up";;
 	*) usage; exit 1;;
 esac
