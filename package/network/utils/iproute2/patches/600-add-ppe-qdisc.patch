@@ -86,7 +86,7 @@ Index: iproute2-5.0.0/include/uapi/linux/pkt_sched.h
  
 +/* PPEPRIO section */
 +
-+#define TCA_PPEPRIO_MAX_BANDS 4
++#define TCA_PPEPRIO_MAX_BANDS 8
 +
 +enum {
 +        TCA_PPEPRIO_UNSPEC,
@@ -928,7 +928,7 @@ Index: iproute2-5.0.0/tc/q_ppe.c
 +
 +static void ppehtb_explain_class(void)
 +{
-+	fprintf(stderr, "Usage: ... ppehtb priority 0-3 [ quantum BYTES ] [ rate BPS ] [ burst BYTES ] [crate BPS ] [ cburst BYTES ]\n");
++	fprintf(stderr, "Usage: ... ppehtb priority 0-7 [ quantum BYTES ] [ rate BPS ] [ burst BYTES ] [crate BPS ] [ cburst BYTES ]\n");
 +	fprintf(stderr, "                 [ overhead BYTES ] \n");
 +}
 +
@@ -1117,7 +1117,7 @@ Index: iproute2-5.0.0/tc/q_ppe.c
 +		return -1;
 +	}
 +
-+	if (opt.priority > 3) {
++	if (opt.priority > 7) {
 +		fprintf(stderr, "\"priority\" should be an integer between 0 and 3.\n");
 +		return -1;
 +	}
