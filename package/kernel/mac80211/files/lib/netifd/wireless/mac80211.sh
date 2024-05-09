@@ -1789,10 +1789,10 @@ mac80211_vap_cleanup() {
 					rm -rf /var/run/hostapd-${4}.lock
 				fi
 
-				if [ -f "/var/run/wifi-$device.pid" ]; then
-					pid=$(cat /var/run/wifi-$device.pid)
+				if [ -f "/var/run/wifi-$phy.pid" ]; then
+					pid=$(cat /var/run/wifi-$phy.pid)
 					kill -15 $pid
-					rm -rf  /var/run/wifi-$device.pid
+					rm -rf  /var/run/wifi-$phy.pid
 					rm /var/run/hostapd/w*
 				fi
 			;;
@@ -2099,7 +2099,7 @@ drv_mac80211_setup() {
 			hostapd_cli -iglobal raw ADD bss_config=$dev_wlan:$hostapd_conf_file
 			touch /var/run/hostapd-$dev_wlan.lock
 		else
-			if [ -f "/var/run/wifi-$device.pid" ]; then
+			if [ -f "/var/run/wifi-$phy.pid" ]; then
 				return
 			fi
 			touch /var/run/hostapd-$device-updated-cfg
@@ -2112,7 +2112,7 @@ drv_mac80211_setup() {
 					append  config_files /var/run/hostapd-phy${phy#phy}_${__band}.conf
 				done
 				#MLO vaps, single instance of hostapd is started
-				/usr/sbin/hostapd -B -P /var/run/wifi-"$device".pid $config_files
+				/usr/sbin/hostapd -B -P /var/run/wifi-"$phy".pid $config_files
 				ret="$?"
 
 				if [ "$band" = "5g" ]; then
@@ -2146,7 +2146,7 @@ drv_mac80211_setup() {
 							hostapd_state="$(hostapd_cli -i $interf_dfs status 2> /dev/null | grep state | cut -d'=' -f 2)"
 						fi
 						if [ "$hostapd_state" = "ENABLED" ]; then
-							wireless_add_process "$(cat /var/run/wifi-"$device".pid)" "/usr/sbin/hostapd" 1
+							wireless_add_process "$(cat /var/run/wifi-"$phy".pid)" "/usr/sbin/hostapd" 1
 							[ "$ret" != 0 ] && {
 							wireless_setup_failed HOSTAPD_START_FAILED
 							return
@@ -2157,7 +2157,7 @@ drv_mac80211_setup() {
 
 					done
 				else
-					wireless_add_process "$(cat /var/run/wifi-"$device".pid)" "/usr/sbin/hostapd" 1
+					wireless_add_process "$(cat /var/run/wifi-"$phy".pid)" "/usr/sbin/hostapd" 1
 					[ "$ret" != 0 ] && {
 						wireless_setup_failed HOSTAPD_START_FAILED
 						return
