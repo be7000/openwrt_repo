@@ -693,28 +693,24 @@ EOF
 
 mac80211_wds_support_check() {
 	local phy="$1"
+	wds_support=1
 
 	local platform=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $1}')
 	case "$platform" in
 		"IPQ8074" | "IPQ6018" | "IPQ5018")
-			frame_mode=$(cat /sys/module/ath11k/parameters/frame_mode)
+			wds_support=$(cat /sys/module/ath11k/parameters/frame_mode)
 			;;
 		"IPQ9574")
 			local freq="$(get_freq "$phy" "$channel" "$band")"
 			local board_type=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $3}' | awk -F- '{print $3}')
 
 			if [ $board_type == "C6" ] && [ $freq -gt 2000 ] && [ $freq -lt 3000 ]; then
-				frame_mode=$(cat /sys/module/ath11k/parameters/frame_mode)
-			else
-				frame_mode=$(cat /sys/module/ath12k/parameters/frame_mode)
+				wds_support=$(cat /sys/module/ath11k/parameters/frame_mode)
 			fi
-			;;
-		 "IPQ5332")
-			frame_mode=$(cat /sys/module/ath12k/parameters/frame_mode)
 			;;
 	esac
 
-	echo "$frame_mode"
+	echo "$wds_support"
 }
 
 mac80211_hostapd_setup_bss() {
@@ -744,10 +740,10 @@ mac80211_hostapd_setup_bss() {
 	set_default start_disabled 0
 
 	if [ "$wds" -gt 0 ]; then
-		frame_mode=$(mac80211_wds_support_check "$phy")
+		wds_support=$(mac80211_wds_support_check "$phy")
 
-		if [ $frame_mode -ne 1 ]; then
-			echo WDS is supported only in native wifi mode. Kindly update the config > /dev/ttyMSM0
+		if [ $wds_support -ne 1 ]; then
+			echo WDS is supported only in native wifi mode for ath11k driver. Kindly update the config > /dev/ttyMSM0
 			return
 		fi
 		append hostapd_cfg "wds_sta=1" "$N"
@@ -1175,9 +1171,9 @@ mac80211_prepare_vif() {
 			local wdsflag=
 			[ "$enable" = 0 ] || staidx="$(($staidx + 1))"
 			if [ "$wds" -gt 0 ]; then
-				frame_mode=$(mac80211_wds_support_check "$phy")
-				if [ $frame_mode -ne 1 ]; then
-					echo WDS is supported only in native wifi mode. Kindly update the config > /dev/ttyMSM0
+				wds_support=$(mac80211_wds_support_check "$phy")
+				if [ $wds_support -ne 1 ]; then
+					echo WDS is supported only in native wifi mode for ath11k driver. Kindly update the config > /dev/ttyMSM0
 					return
 				fi
 				wdsflag="4addr on"
