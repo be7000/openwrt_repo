@@ -8,6 +8,7 @@ PKG_ASLR_PIE_REGULAR ?= 0
 PKG_SSP ?= 1
 PKG_FORTIFY_SOURCE ?= 1
 PKG_RELRO ?= 1
+TARGET_CFLAGS +=  -Wno-error=implicit-function-declaration -Wno-error=int-conversion
 
 ifdef CONFIG_PKG_CHECK_FORMAT_SECURITY
   ifeq ($(strip $(PKG_CHECK_FORMAT_SECURITY)),1)
