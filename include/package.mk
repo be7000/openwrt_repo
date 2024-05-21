@@ -299,7 +299,12 @@ define Build/DefaultTargets
   endef
 endef
 
+define Build/openwrt-patches
+  $(eval -include $(wildcard $(call FindPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk))
+endef
+
 define BuildPackage
+  $(Build/openwrt-patches)
   $(eval $(Package/Default))
   $(eval $(Package/$(1)))
 
