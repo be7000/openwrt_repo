@@ -28,7 +28,7 @@ define Package/perf
   SECTION:=devel
   CATEGORY:=Development
   DEPENDS:= +libelf +libdw +PACKAGE_libunwind:libunwind +libpthread +librt +objdump @!IN_SDK @KERNEL_PERF_EVENTS \
-	    +PACKAGE_libbfd:libbfd +PACKAGE_libopcodes:libopcodes +libtraceevent
+	    +PACKAGE_libbfd:libbfd +PACKAGE_libopcodes:libopcodes +libtraceevent +libstdcpp
   TITLE:=Linux performance monitoring tool
   VERSION:=$(LINUX_VERSION)-$(PKG_RELEASE)
   URL:=http://www.kernel.org
@@ -50,6 +50,8 @@ MAKE_FLAGS = \
 	NO_LZMA=1 \
 	NO_BACKTRACE=1 \
 	NO_LIBNUMA=1 \
+	NO_LIBTRACEEVENT=1 \
+	NO_JEVENTS=1 \
 	NO_GTK2=1 \
 	NO_LIBAUDIT=1 \
 	NO_LIBCRYPTO=1 \
