@@ -47,7 +47,7 @@ INITRDNUM=1
 HASH=sha1
 CONFIG_ID="1";
 COMPRESS="none";
-CONFIG="config@1"
+CONFIG="config${REFERENCE_CHAR}1"
 LOADABLES=
 DTOVERLAY=
 DTADDR=
@@ -96,27 +96,6 @@ fi
 	DTADDR="$FDTADDR"
 }
 
-# Conditionally create fdt information
-if [ -n "${DTB}" ]; then
-	FDT_NODE="
-		fdt${REFERENCE_CHAR}$FDTNUM {
-			description = \"${ARCH_UPPER} OpenWrt ${DEVICE} device tree blob\";
-			${COMPATIBLE_PROP}
-			data = /incbin/(\"${DTB}\");
-			type = \"flat_dt\";
-			${DTADDR:+load = <${DTADDR}>;}
-			arch = \"${ARCH}\";
-			compression = \"none\";
-			hash${REFERENCE_CHAR}1 {
-				algo = \"crc32\";
-			};
-			hash${REFERENCE_CHAR}2 {
-				algo = \"${HASH}\";
-			};
-		};
-"
-	FDT_PROP="fdt = \"fdt${REFERENCE_CHAR}$FDTNUM\";"
-fi
 
 if [ -n "${INITRD}" ]; then
 	INITRD_NODE="
@@ -203,7 +182,7 @@ Generate_Config() {
 	CONFIG_CONCATENATED_OUTPUT="$CONFIG_CONCATENATED_OUTPUT
 		config${REFERENCE_CHAR}$CONFIG_ID {
 			description = \"OpenWrt\";
-			kernel = \"kernel@1\";
+			kernel = \"kernel${REFERENCE_CHAR}1\";
 			${FDT_PROP}
 			${LOADABLES:+loadables = ${LOADABLES};}
 			${COMPATIBLE_PROP}
@@ -240,10 +219,10 @@ if [ -n "${DTB}" ]; then
 			${DTADDR:+load = <${DTADDR}>;}
 			arch = \"${ARCH}\";
 			$COMPRESSION_DATA_FIELD
-			hash@1 {
+			hash${REFERENCE_CHAR}1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash${REFERENCE_CHAR}2 {
 				algo = \"${HASH}\";
 			};
 		};
