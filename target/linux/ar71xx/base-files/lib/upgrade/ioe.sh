@@ -243,6 +243,8 @@ platform_do_upgrade_ioe() {
         if [ -n "$nand" ] || [ "$name" = "cus532k" ]; then
 		mtd_fw=$(cat /proc/mtd |grep $fw |cut -f1 -d ":")
 		mtd_dev="/dev/$mtd_fw"
+		mtd_rootfs_data=$(cat /proc/mtd |grep $rootfs_data |cut -f1 -d ":")
+		mtd_dev_rootfs_data="/dev/$mtd_rootfs_data"
 
 		ubidetach -d $ubi_vol $ubi_ctrl_dev
 		mtd erase $mtd_dev
@@ -252,10 +254,10 @@ platform_do_upgrade_ioe() {
 		sleep 2
 		mtd_ubi_rootfs_data="$(cat /proc/mtd |grep $rootfs_data |cut -f1 -d ":" | awk ' // {sub(/mtd/, "", $0);print("/dev/mtdblock"$0)}')"
 		echo $mtd_ubi_rootfs_data
+		mtd erase $mtd_dev_rootfs_data
 		mount -t jffs2 $mtd_ubi_rootfs_data /mnt
 		echo $CONF_TAR
-		[ -d /mnt/upper ] || mkdir /mnt/upper
-		tar xzf $CONF_TAR -C /mnt/upper
+		cp $CONF_TAR /mnt
 		sync
 		umount /mnt
 	else
