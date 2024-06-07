@@ -1382,6 +1382,13 @@ wpa_supplicant_add_network() {
 	local sae owe
 	local sae_str owe_str
 
+	# back to json up level, the vif string is stored in here
+	json_select ..
+	# get the vif string to local varible vif
+	json_get_vars vif
+	# jump back to origin json position
+	json_select config
+
 	[ -z "$vif" ] && hostapd_get_vif_name
 	config_load wireless
 
