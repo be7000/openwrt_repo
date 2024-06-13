@@ -340,7 +340,7 @@ while (!$ok and !-f "$target/$filename") {
 	my $mirror = shift @clo_mirrors;
 	$mirror or last;
 
-	download($mirror);
+	download($mirror, $url_filename, @mirrors);
 	-f "$target/$filename" and $ok = 1;
 }
 
