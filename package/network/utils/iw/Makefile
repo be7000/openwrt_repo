@@ -14,6 +14,11 @@ PKG_RELEASE:=1
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@KERNEL/software/network/iw
 PKG_HASH:=f167bbe947dd53bb9ebc0c1dcef5db6ad73ac1d6084f2c6f9376c5c360cc4d4e
+EXTERNAL_MAKEFILE:=$(TOPDIR)/openwrt-patches/package/kernel/mac80211/
+
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	include $(EXTERNAL_MAKEFILE)/iw.mk
+endif
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=GPL-2.0
