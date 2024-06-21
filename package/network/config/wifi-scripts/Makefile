@@ -14,6 +14,12 @@ PKG_LICENSE:=GPL-2.0
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 
+EXTERNAL_MAKEFILE:=$(TOPDIR)/openwrt-patches/package/kernel/mac80211
+
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	include $(EXTERNAL_MAKEFILE)/backports.mk
+endif
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/wifi-scripts
@@ -40,6 +46,9 @@ endef
 define Package/wifi-scripts/install
 	$(INSTALL_DIR) $(1)
 	$(CP) ./files/* $(1)/
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	$(copy_scripts)
+endif
 endef
 
 $(eval $(call BuildPackage,wifi-scripts))
