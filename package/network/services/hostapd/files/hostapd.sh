@@ -389,6 +389,12 @@ hostapd_common_add_bss_config() {
 	config_add_int dpp
 	config_add_string dpp_csign dpp_connector dpp_netaccesskey dpp_ppkey dpp_connector_sign
 
+	config_add_int rsn_override_mfp
+	config_add_string rsn_override_key_mgmt rsn_override_pairwise
+
+	config_add_int rsn_override_mfp_2
+	config_add_string rsn_override_key_mgmt_2 rsn_override_pairwise_2
+
 }
 
 hostapd_set_vlan_file() {
@@ -575,7 +581,9 @@ hostapd_set_bss_options() {
 		ppsk airtime_bss_weight airtime_bss_limit airtime_sta_weight \
 		multicast_to_unicast_all proxy_arp per_sta_vif \
 		eap_server eap_user_file ca_cert server_cert private_key private_key_passwd server_id \
-		vendor_elements fils ocv dpp
+		vendor_elements fils ocv dpp \
+		rsn_override_key_mgmt rsn_override_pairwise rsn_override_mfp \
+		rsn_override_key_mgmt_2 rsn_override_pairwise_2 rsn_override_mfp_2
 
 	json_get_values sae_groups sae_groups
 	json_get_values owe_groups owe_groups
@@ -664,6 +672,31 @@ hostapd_set_bss_options() {
 			set_default sae_pwe 2
 		;;
 	esac
+
+	#currently rsn override used for sae encryption only
+	[ -n "$rsn_override_key_mgmt" ] && {
+		set_default ieee80211w 1
+		set_default sae_pwe 2
+		set_default rsn_override_mfp 1
+		set_default rsn_override_pairwise CCMP
+
+		append bss_conf "rsn_override_key_mgmt=$rsn_override_key_mgmt" "$N"
+		append bss_conf "rsn_override_pairwise=$rsn_override_pairwise" "$N"
+		append bss_conf "rsn_override_mfp=$rsn_override_mfp" "$N"
+	}
+
+	#currently rsn override 2 used for sae-ext-key and ft-sae-ext-key
+	[ -n "$rsn_override_key_mgmt_2" ] && {
+		set_default ieee80211w 1
+		set_default sae_pwe 2
+		set_default rsn_override_mfp_2 2
+		set_default rsn_override_pairwise_2 GCMP
+
+		append bss_conf "rsn_override_key_mgmt_2=$rsn_override_key_mgmt_2" "$N"
+		append bss_conf "rsn_override_pairwise_2=$rsn_override_pairwise_2" "$N"
+		append bss_conf "rsn_override_mfp_2=$rsn_override_mfp_2" "$N"
+	}
+
 	[ -n "$sae_require_mfp" ] && append bss_conf "sae_require_mfp=$sae_require_mfp" "$N"
 	[ -n "$sae_pwe" ] && append bss_conf "sae_pwe=$sae_pwe" "$N"
 	[ -n "$sae_groups" ] && append bss_conf "sae_groups=$sae_groups" "$N"
