@@ -104,7 +104,7 @@ static void bmemcpys64(void *av, const void *bv, size_t frombits, size_t nbits)
 static void handle_dump(struct ubus_request *req __attribute__((unused)),
 		int type __attribute__((unused)), struct blob_attr *msg)
 {
-	struct blob_attr *tb[DUMP_ATTR_INTERFACE];
+	struct blob_attr *tb[DUMP_ATTR_MAX];
 	blobmsg_parse(dump_attrs, DUMP_ATTR_MAX, tb, blob_data(msg), blob_len(msg));
 
 	if (!tb[DUMP_ATTR_INTERFACE])
@@ -165,6 +165,7 @@ enum {
 	OPT_DMR,
 	OPT_PD,
 	OPT_PDLEN,
+	OPT_DRAFT03,
 	OPT_MAX
 };
 
@@ -183,6 +184,7 @@ static char *const token[] = {
 	[OPT_DMR] = "dmr",
 	[OPT_PD] = "pd",
 	[OPT_PDLEN] = "pdlen",
+	[OPT_DRAFT03] = "draft03",
 	[OPT_MAX] = NULL
 };
 
@@ -227,6 +229,7 @@ int main(int argc, char *argv[])
 		int offset = -1;
 		int psidlen = -1;
 		int psid = -1;
+		int draft03 = 0;
 		uint16_t psid16 = 0;
 		const char *dmr = NULL;
 		const char *br = NULL;
@@ -267,6 +270,8 @@ int main(int argc, char *argv[])
 				dmr = value;
 			} else if (idx == OPT_BR) {
 				br = value;
+			} else if (idx == OPT_DRAFT03 && (intval = strtoul(value, NULL, 0)) <= 65535 && !errno) {
+				draft03=intval;
 			} else {
 				if (idx == -1 || idx >= OPT_MAX)
 					fprintf(stderr, "Skipped invalid option: %s\n", value);
@@ -357,7 +362,12 @@ int main(int argc, char *argv[])
 			size_t totsize = (ealen + prefix6len);
 			memcpy(&ipv6addr.s6_addr[v4offset], &ipv4addr, 4);
 			memcpy(&ipv6addr.s6_addr[v4offset + 4], &psid16, 2);
-			bmemcpy(&ipv6addr, &pd, (totsize >= pdlen) ? pdlen : totsize);
+			bmemcpy(&ipv6addr, &pd, (totsize >= (size_t)pdlen) ? (size_t)pdlen : totsize);
+
+			if (draft03) {
+				memmove(&ipv6addr.s6_addr[9], &ipv6addr.s6_addr[10], 6);
+				ipv6addr.s6_addr[15] = 0;
+			}
 		}
 
 		++rulecnt;
