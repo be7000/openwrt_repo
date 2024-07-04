@@ -24,6 +24,7 @@ endif
 ifeq ($(IS_TTY),1)
   ifneq ($(strip $(NO_COLOR)),1)
     _Y:=\\033[33m
+    _G:=\\033[32m
     _R:=\\033[31m
     _N:=\\033[m
   endif
@@ -42,6 +43,14 @@ ifeq ($(findstring s,$(OPENWRT_VERBOSE)),)
 		printf "$(_Y)%s$(_N)\n" "$(1)" >&8 || \
 		printf "$(_Y)%s$(_N)\n" "$(1)"; \
 	} 2>/dev/null
+  endef
+
+  define SUCCESS_MESSAGE
+	printf "$(_G)%s$(_N)\n" "$(1)" >&8
+  endef
+
+  define ERROR_MESSAGE
+	printf "$(_R)%s$(_N)\n" "$(1)" >&8
   endef
 
   ifeq ($(QUIET),1)
@@ -69,4 +78,6 @@ else
   define MESSAGE
     printf "%s\n" "$(1)"
   endef
+  ERROR_MESSAGE=$(MESSAGE)
+  SUCCESS_MESSAGE=$(MESSAGE)
 endif

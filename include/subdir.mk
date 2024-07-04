@@ -35,6 +35,12 @@ subdir_make_opts = \
 		BUILD_VARIANT="$(4)" \
 		ALL_VARIANTS="$(5)"
 
+subdir_make_opts_V_e = \
+	$(if $(SUBDIR_MAKE_DEBUG),-d) -r -C $(1)/$(bd) $(target) \
+		BUILD_SUBDIR="$(1)" \
+		BUILD_VARIANT="$(filter-out __default,$(variant))" \
+		ALL_VARIANTS="$(5)"
+
 # 1: subdir
 # 2: target
 # 3: build type
@@ -68,6 +74,7 @@ define subdir
       $(foreach btype,$(buildtypes-$(bd)),
         $(call warn_eval,$(1)/$(bd),t,T,$(1)/$(bd)/$(btype)/$(target): $(if $(NO_DEPS)$(QUILT),,$($(1)/$(bd)/$(btype)/$(target)) $(call $(1)//$(btype)/$(target),$(1)/$(bd)/$(btype))))
 		  $(call log_make,$(1)/$(bd),$(target),$(btype),$(filter-out __default,$(variant)),$($(1)/$(bd)/variants)) \
+			  $(if $(findstring e,$(OPENWRT_VERBOSE)),&& $(call SUCCESS_MESSAGE, make $(subdir_make_opts_V_e) finished) || { $(call ERROR_MESSAGE, make $(subdir_make_opts_V_e) failed); fail; }) \
 			|| $(call ERROR,$(2),   ERROR: $(1)/$(bd) [$(btype)] failed to build.,$(findstring $(bd),$($(1)/builddirs-ignore-$(btype)-$(target))))
         $(if $(call diralias,$(bd)),$(call warn_eval,$(1)/$(bd),l,T,$(1)/$(call diralias,$(bd))/$(btype)/$(target): $(1)/$(bd)/$(btype)/$(target)))
       )
@@ -76,7 +83,8 @@ define subdir
 			$(if $(BUILD_LOG),@mkdir -p $(BUILD_LOG_DIR)/$(1)/$(bd)/$(filter-out __default,$(variant)))
 			$(if $($(1)/autoremove),$(call rebuild_check,$(1)/$(bd),$(target),,$(filter-out __default,$(variant)),$($(1)/$(bd)/variants)))
 			$(call log_make,$(1)/$(bd),$(target),,$(filter-out __default,$(variant)),$($(1)/$(bd)/variants)) \
-				|| $(call ERROR,$(1),   ERROR: $(1)/$(bd) failed to build$(if $(filter-out __default,$(variant)), (build variant: $(variant))).,$(findstring $(bd),$($(1)/builddirs-ignore-$(target)))) 
+			  $(if $(findstring e,$(OPENWRT_VERBOSE)),&& $(call SUCCESS_MESSAGE, make $(subdir_make_opts_V_e) finished) || { $(call ERROR_MESSAGE, make $(subdir_make_opts_V_e) failed); fail; }) \
+				|| $(call ERROR,$(1),   ERROR: $(1)/$(bd) failed to build$(if $(filter-out __default,$(variant)), (build variant: $(variant))).,$(findstring $(bd),$($(1)/builddirs-ignore-$(target))))
         )
       $(if $(PREREQ_ONLY)$(DUMP_TARGET_DB),,
         # aliases
