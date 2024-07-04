@@ -30,7 +30,7 @@ proto_map_setup() {
 	json_get_vars maptype type legacymap mtu ttl tunlink zone fmr mode encaplimit
 	json_get_vars rule ipaddr ip4prefixlen ip6prefix ip6prefixlen peeraddr ealen psidlen psid offset
 
-	[ "$zone" = "-" ] && zone=""
+	[ -z "$zone" ] && zone="wan"
 
 	# Compatibility with older config: use $type if $maptype is missing
 	[ -z "$maptype" ] && maptype="$type"
@@ -162,21 +162,23 @@ proto_map_setup() {
 	        json_close_object
               done
 	    done
-	    for portset in $(eval "echo \$RULE_${k}_PORTSETS"); do
-	      json_add_object ""
-	        json_add_string type rule
-		json_add_string family inet
-		json_add_string set_mark 0x100
-		json_add_string dest_ip $(eval "echo \$RULE_${k}_IPV4ADDR")
-		json_add_string proto tcpudp
-		json_add_string src "lan"
-		json_add_string device "$ifname"
-		json_add_string dest_port "$portset"
-		json_add_string target MARK
-              json_close_object
-	    done
-	    ip rule add to $(eval "echo \$RULE_${k}_IPV4ADDR") iif $ifname fwmark 0x100/0x100 table local
-	    ip rule add to $(eval "echo \$RULE_${k}_IPV4ADDR") iif $ifname table main
+	    if [ "$type" = "map-e" ]; then
+		    for portset in $(eval "echo \$RULE_${k}_PORTSETS"); do
+			    json_add_object ""
+			    json_add_string type rule
+			    json_add_string family inet
+			    json_add_string set_mark 0x100
+			    json_add_string dest_ip $(eval "echo \$RULE_${k}_IPV4ADDR")
+			    json_add_string proto tcpudp
+			    json_add_string src "lan"
+			    json_add_string device "$ifname"
+			    json_add_string dest_port "$portset"
+			    json_add_string target MARK
+			    json_close_object
+		    done
+		    ip rule add to $(eval "echo \$RULE_${k}_IPV4ADDR") iif $ifname fwmark 0x100/0x100 table local
+		    ip rule add to $(eval "echo \$RULE_${k}_IPV4ADDR") iif $ifname table main
+	    fi
 	  fi
 	fi
 
@@ -250,7 +252,7 @@ proto_map_init_config() {
 	available=1
 
 	proto_config_add_string "maptype"
-	proto_config_add_string "rule"
+	config_add_array 'rule'
 	proto_config_add_string "ipaddr"
 	proto_config_add_int "ip4prefixlen"
 	proto_config_add_string "ip6prefix"

@@ -209,6 +209,8 @@ int main(int argc, char *argv[])
 	}
 
 	int rulecnt = 0;
+	int bmr_cnt = 0;
+	int bmr_prefix6len = 0;
 	for (int i = 2; i < argc; ++i) {
 		bool lw4o6 = false;
 		bool fmr = false;
@@ -352,9 +354,10 @@ int main(int argc, char *argv[])
 			continue;
 		} else if (pdlen >= 0) {
 			size_t v4offset = (legacy) ? 9 : 10;
+			size_t totsize = (ealen + prefix6len);
 			memcpy(&ipv6addr.s6_addr[v4offset], &ipv4addr, 4);
 			memcpy(&ipv6addr.s6_addr[v4offset + 4], &psid16, 2);
-			bmemcpy(&ipv6addr, &pd, pdlen);
+			bmemcpy(&ipv6addr, &pd, (totsize >= pdlen) ? pdlen : totsize);
 		}
 
 		++rulecnt;
@@ -384,7 +387,10 @@ int main(int argc, char *argv[])
 			printf("RULE_%d_PD6LEN=%d\n", rulecnt, pdlen);
 			printf("RULE_%d_PD6IFACE=%s\n", rulecnt, iface);
 			printf("RULE_%d_IPV6ADDR=%s\n", rulecnt, ipv6addrbuf);
-			printf("RULE_BMR=%d\n", rulecnt);
+			if (prefix6len > bmr_prefix6len) {
+				bmr_prefix6len = prefix6len;
+				bmr_cnt = rulecnt;
+			}
 		}
 
 		if (ipv4addr.s_addr) {
@@ -414,6 +420,8 @@ int main(int argc, char *argv[])
 		if (br)
 			printf("RULE_%d_BR=%s\n", rulecnt, br);
 	}
+	if (bmr_cnt > 0)
+		printf("RULE_BMR=%d\n", bmr_cnt);
 
 	printf("RULE_COUNT=%d\n", rulecnt);
 	return status;
