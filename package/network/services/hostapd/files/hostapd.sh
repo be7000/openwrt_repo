@@ -79,6 +79,9 @@ hostapd_append_wpa_key_mgmt() {
 		ft-sae-ext-key)
 			append wpa_key_mgmt "FT-SAE-EXT-KEY"
 		;;
+		dpp)
+			append wpa_key_mgmt "DPP"
+		;;
 	esac
 
 	[ "$fils" -gt 0 ] && {
