@@ -1676,9 +1676,9 @@ wpa_supplicant_add_network() {
 			;;
 	esac
 
-	[ "$mode" = "mesh" ] && {
+	if [ "$mode" = "mesh" ] && [ "$ppe_vp_type" -eq 3 ]; then
 		ppe_vp_type=1
-	}
+	fi
 
 	if [ "$key_mgmt" = "WPS" ]; then
 		echo "wps_cred_processing=1" >> "$_config"
