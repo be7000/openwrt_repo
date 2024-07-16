@@ -10,6 +10,8 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=mac80211
 
+EXTERNAL_MAKEFILE:=$(TOPDIR)/openwrt-patches/package/kernel/mac80211
+
 PKG_VERSION:=6.6.15
 PKG_RELEASE:=2
 PKG_LICENSE:=GPL-2.0-only
@@ -18,10 +20,16 @@ PKG_LICENSE_FILES:=COPYING
 PKG_SOURCE_URL:=http://mirror2.openwrt.org/sources/
 PKG_HASH:=3bbc461121134fda9089c084a5eed577d05e7837a157edf9a3797937172a3ece
 
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	include $(EXTERNAL_MAKEFILE)/backports.mk
+endif
+
 PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(if $(BUILD_VARIANT),$(PKG_NAME)-$(BUILD_VARIANT)/)backports-$(PKG_VERSION)
 PKG_BUILD_PARALLEL:=1
 
+MKHASH ?= $(STAGING_DIR_HOST)/bin/mkhash
+PKG_BUILD_ID:=$(shell date | $(MKHASH) md5)
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 
 PKG_DRIVERS = \
@@ -33,6 +41,7 @@ PKG_DRIVERS = \
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_kmod-mac80211 \
 	CONFIG_PACKAGE_CFG80211_TESTMODE \
+	CONFIG_PACKAGE_MAC80211_MESSAGE_TRACING \
 	CONFIG_PACKAGE_MAC80211_DEBUGFS \
 	CONFIG_PACKAGE_MAC80211_MESH \
 	CONFIG_PACKAGE_MAC80211_TRACING \
@@ -60,6 +69,7 @@ mac80211_variant_check=$(if $(ALL_VARIANTS),$(filter $(BUILD_VARIANT),$(if $(1),
 
 config-y:= \
 	WLAN \
+	NL80211_TESTMODE \
 	CFG80211_CERTIFICATION_ONUS \
 	MAC80211_RC_MINSTREL \
 	MAC80211_RC_MINSTREL_HT \
@@ -129,7 +139,10 @@ define KernelPackage/mac80211
   $(call KernelPackage/mac80211/Default)
   TITLE:=Linux 802.11 Wireless Networking Stack
   # +kmod-crypto-cmac is a runtime only dependency of net/mac80211/aes_cmac.c
-  DEPENDS+= +kmod-cfg80211 +kmod-crypto-cmac +kmod-crypto-ccm +kmod-crypto-gcm +hostapd-common
+  DEPENDS+= +kmod-cfg80211 +kmod-crypto-cmac +kmod-crypto-ccm +kmod-crypto-gcm +hostapd-common \
+	+kmod-qca-nss-ppe \
+	+kmod-qca-nss-ppe-vp \
+	+kmod-qca-nss-ppe-ds
   KCONFIG:=\
 	CONFIG_AVERAGE=y
   FILES:= $(PKG_BUILD_DIR)/net/mac80211/mac80211.ko
@@ -139,6 +152,30 @@ endef
 
 define KernelPackage/mac80211/config
   if PACKAGE_kmod-mac80211
+
+        if PACKAGE_kmod-qca-nss-ppe-vp
+	   config PACKAGE_MAC80211_PPE_SUPPORT
+		   bool "Enable PPE support for IPQ platform"
+		   default y
+		   help
+		     This option enables support for PPE in QCA boards
+        endif
+
+        if PACKAGE_kmod-qca-nss-ppe-ds
+	   config PACKAGE_MAC80211_DS_SUPPORT
+		   bool "Enable DS support for IPQ platform"
+		   default y
+		   help
+		     This option enables support for ds netdev in QCA boards.
+        endif
+
+        if PACKAGE_kmod-qca-nss-sfe
+	   config PACKAGE_MAC80211_SFE_SUPPORT
+		   bool "Enable sfe support for IPQ platform"
+		   default y
+		   help
+		     This option enables support for qca sfe in QCA boards
+        endif
 
 	config PACKAGE_MAC80211_DEBUGFS
 		bool "Export mac80211 internals in DebugFS"
@@ -261,6 +298,14 @@ ifdef CONFIG_PACKAGE_MAC80211_TRACING
 	IWLWIFI_DEVICE_TRACING
 endif
 
+config-$(CONFIG_PACKAGE_MAC80211_PPE_SUPPORT) += MAC80211_PPE_SUPPORT
+config-$(CONFIG_PACKAGE_MAC80211_DS_SUPPORT) += MAC80211_BONDED_SUPPORT ATH12K_PPE_DS_SUPPORT ATH12K_BONDED_DS_SUPPORT
+config-$(CONFIG_PACKAGE_MAC80211_SFE_SUPPORT) += MAC80211_SFE_SUPPORT
+config-$(CONFIG_PACKAGE_MAC80211_MESSAGE_TRACING) += MAC80211_MESSAGE_TRACING ATH10K_TRACING ATH11K_TRACING ATH12K_TRACING
+config-$(CONFIG_PACKAGE_MAC80211_DEBUG_MENU) += MAC80211_DEBUG_MENU
+config-$(CONFIG_PACKAGE_MAC80211_VERBOSE_DEBUG) += MAC80211_VERBOSE_DEBUG
+config-$(CONFIG_PACKAGE_MAC80211_PS_DEBUG) += MAC80211_PS_DEBUG
+
 config-$(call config_package,mac80211-hwsim) += MAC80211_HWSIM
 config-$(call config_package,mt7601u) += MT7601U
 config-y += WL_MEDIATEK
@@ -283,7 +328,7 @@ endif
 
 MAKE_OPTS:= \
 	$(subst -C $(LINUX_DIR),-C "$(PKG_BUILD_DIR)",$(KERNEL_MAKEOPTS)) \
-	EXTRA_CFLAGS="-I$(PKG_BUILD_DIR)/include $(IREMAP_CFLAGS) $(C_DEFINES)" \
+	EXTRA_CFLAGS="-I$(PKG_BUILD_DIR)/include $(IREMAP_CFLAGS) $(C_DEFINES) -I$(STAGING_DIR)/usr/include/qca-nss-drv -I$(STAGING_DIR)/usr/include/qca-nss-ppe -I$(STAGING_DIR)/usr/include/qca-nss-clients -I$(TOPDIR)/qca/src/qca-wifi/telemetry_agent/inc/ -Wall -Werror -Wno-incompatible-pointer-types -Wno-discarded-qualifiers -Wno-int-conversion" \
 	KLIB_BUILD="$(LINUX_DIR)" \
 	MODPROBE=true \
 	KLIB=$(TARGET_MODULES_DIR) \
@@ -304,7 +349,11 @@ define Build/Prepare
 	rm -rf $(PKG_BUILD_DIR)
 	mkdir -p $(PKG_BUILD_DIR)
 	$(PKG_UNPACK)
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	$(Build/Patch_Old)
+else
 	$(Build/Patch)
+endif
 	rm -rf \
 		$(PKG_BUILD_DIR)/include/linux/ssb \
 		$(PKG_BUILD_DIR)/include/linux/bcma \
@@ -340,15 +389,18 @@ ifeq ($(strip $(CONFIG_EXTERNAL_KERNEL_TREE)),"")
   endif
 endif
 
+EXTERNAL_PATCH_DIR:=$(TOPDIR)/openwrt-patches/package/kernel/mac80211/patches
+
 define Build/Patch
 	$(if $(QUILT),rm -rf $(PKG_BUILD_DIR)/patches; mkdir -p $(PKG_BUILD_DIR)/patches)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/build,build/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/subsys,subsys/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath,ath/)
-	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
-	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
-	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
+#	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
+#	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
+#	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath11k,ath11k/)
+	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath12k,ath12k/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rt2x00,rt2x00/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mt7601u,mt7601u/)
 	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mwl,mwl/)
@@ -361,10 +413,11 @@ define Quilt/Refresh/Package
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/build,build/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/subsys,subsys/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath,ath/)
-	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
-	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
-	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
+#	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath5k,ath5k/)
+#	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath9k,ath9k/)
+#	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath10k,ath10k/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath11k,ath11k/)
+	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/ath12k,ath12k/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/rt2x00,rt2x00/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mt7601u,mt7601u/)
 	$(call Quilt/RefreshDir,$(PKG_BUILD_DIR),$(PATCH_DIR)/mwl,mwl/)
@@ -391,6 +444,12 @@ define Build/InstallDev
 	rm -f $(1)/usr/include/mac80211-backport/linux/module.h
 endef
 
+
+define KernelPackage/ath/install
+	$(INSTALL_DIR) $(STAGING_DIR)/usr/include/
+	$(CP) $(PKG_BUILD_DIR)/include/ath/ath_sawf.h $(STAGING_DIR)/usr/include/
+	$(CP) $(PKG_BUILD_DIR)/include/ath/ath_fse.h $(STAGING_DIR)/usr/include/
+endef
 
 $(eval $(foreach drv,$(PKG_DRIVERS),$(call KernelPackage,$(drv))))
 $(eval $(call KernelPackage,cfg80211))

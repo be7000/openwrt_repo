@@ -13,6 +13,13 @@ PKG_SOURCE_DATE:=2024-03-09
 PKG_SOURCE_VERSION:=695277a5b3da08b9a8a4e7117b933deb8b4950a7
 PKG_MIRROR_HASH:=57b8e64d24707e37e0df3359cee15dd5184b824b8622568833a5b8a0cae163ae
 
+EXTERNAL_MAKEFILE:=$(TOPDIR)/openwrt-patches/package/network/services/hostapd
+
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	include $(EXTERNAL_MAKEFILE)/hostapd.mk
+endif
+PKG_SRC_DIR:=$(EXTERNAL_MAKEFILE)
+
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=BSD-3-Clause
 PKG_CPE_ID:=cpe:/a:w1.fi:hostapd
@@ -185,6 +192,16 @@ $(call Package/hostapd/Default,$(1))
 endef
 
 Package/hostapd-wolfssl/description = $(Package/hostapd/description)
+
+define Package/hostapd-macsec
+$(call Package/hostapd/Default,$(1))
+  TITLE+= (macsec)
+  VARIANT:=macsec
+  DEPENDS+=@TARGET_ipq95xx || TARGET_ipq53xx || TARGET_ipq54xx \
+	   +kmod-qca-nss-macsec $(OPENSSL_DEPENDS)
+endef
+
+Package/hostapd-macsec/description = $(Package/hostapd/description)
 
 define Package/hostapd-mbedtls
 $(call Package/hostapd/Default,$(1))
@@ -556,6 +573,11 @@ define Package/eapol-test-mbedtls
   PROVIDES:=eapol-test
 endef
 
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+  define Build/Prepare
+	$(CP_SRC_DIR)
+  endef
+endif
 
 ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(STAMP_CONFIGURED)))
   define Build/Configure/rebuild
@@ -566,6 +588,8 @@ ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(ST
 	touch $(subst .configured_,.config_,$(STAMP_CONFIGURED))
   endef
 endif
+
+EXTERNAL_PATCH_DIR:=$(TOPDIR)/openwrt-patches/package/network/services/hostapd/
 
 define Build/Configure
 	$(Build/Configure/rebuild)
@@ -589,6 +613,12 @@ TARGET_LDFLAGS += -lubox -lubus -lblobmsg_json -lucode -lm -lnl-tiny -ludebug
 
 ifdef CONFIG_WPA_ENABLE_WEP
     DRIVER_MAKEOPTS += CONFIG_WEP=y
+endif
+
+ifeq ($(LOCAL_VARIANT),macsec)
+	TARGET_LDFLAGS += -lcrypto -lssl -lfal -L$(STAGING_DIR)/usr/lib
+	TARGET_CPPFLAGS += \
+	-I$(STAGING_DIR)/usr/include/qca-nss-macsec
 endif
 
 define Build/RunMake
@@ -696,6 +726,7 @@ Package/hostapd/conffiles = $(Package/hostapd-full/conffiles)
 Package/hostapd-openssl/conffiles = $(Package/hostapd-full/conffiles)
 Package/hostapd-wolfssl/conffiles = $(Package/hostapd-full/conffiles)
 Package/hostapd-mbedtls/conffiles = $(Package/hostapd-full/conffiles)
+Package/hostapd-macsec/conffiles = $(Package/hostapd-full/conffiles)
 endif
 
 define Install/hostapd
@@ -711,11 +742,20 @@ endef
 
 define Package/hostapd-common/install
 	$(INSTALL_DIR) $(1)/etc/capabilities $(1)/etc/rc.button $(1)/etc/hotplug.d/ieee80211 $(1)/etc/init.d $(1)/lib/netifd  $(1)/usr/share/acl.d $(1)/usr/share/hostap
+ifeq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
 	$(INSTALL_BIN) ./files/dhcp-get-server.sh $(1)/lib/netifd/dhcp-get-server.sh
 	$(INSTALL_BIN) ./files/wpad.init $(1)/etc/init.d/wpad
 	$(INSTALL_BIN) ./files/wps-hotplug.sh $(1)/etc/rc.button/wps
 	$(INSTALL_DATA) ./files/wpad_acl.json $(1)/usr/share/acl.d
 	$(INSTALL_DATA) ./files/wpad.json $(1)/etc/capabilities
+endif
+ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
+	$(INSTALL_BIN) $(FILES_DIR)/files/dhcp-get-server.sh $(1)/lib/netifd/dhcp-get-server.sh
+	$(INSTALL_BIN) $(FILES_DIR)/files/wpad.init $(1)/etc/init.d/wpad
+	$(INSTALL_BIN) $(FILES_DIR)/files/wps-hotplug.sh $(1)/etc/rc.button/wps
+	$(INSTALL_DATA) $(FILES_DIR)/files/wpad_acl.json $(1)/usr/share/acl.d
+	$(INSTALL_DATA) $(FILES_DIR)/files/wpad.json $(1)/etc/capabilities
+endif
 endef
 
 define Package/hostapd/install
@@ -730,6 +770,7 @@ Package/hostapd-mini/install = $(Package/hostapd/install)
 Package/hostapd-openssl/install = $(Package/hostapd/install)
 Package/hostapd-wolfssl/install = $(Package/hostapd/install)
 Package/hostapd-mbedtls/install = $(Package/hostapd/install)
+Package/hostapd-macsec/install = $(Package/hostapd/install)
 
 ifneq ($(LOCAL_TYPE),supplicant)
   define Package/hostapd-utils/install
@@ -770,6 +811,7 @@ Package/wpa-supplicant-mbedtls/install = $(Package/wpa-supplicant/install)
 Package/wpa-supplicant-mesh-openssl/install = $(Package/wpa-supplicant/install)
 Package/wpa-supplicant-mesh-wolfssl/install = $(Package/wpa-supplicant/install)
 Package/wpa-supplicant-mesh-mbedtls/install = $(Package/wpa-supplicant/install)
+Package/wpa-supplicant-macsec/install = $(Package/wpa-supplicant/install)
 
 ifneq ($(LOCAL_TYPE),hostapd)
   define Package/wpa-cli/install
