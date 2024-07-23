@@ -18,6 +18,7 @@ PKG_NAME:=linux
 PKG_VERSION:=$(LINUX_VERSION)
 PKG_SOURCE:=$(LINUX_SOURCE)
 PKG_CPE_ID:=cpe:/o:linux:linux_kernel
+PKG_PATCH_DIR:=$(TOPDIR)/target/linux/feeds
 ifneq ($(call qstrip,$(CONFIG_KERNEL_GIT_CLONE_URI)),)
   PKG_SOURCE_PROTO:=git
   PKG_SOURCE_URL:=$(call qstrip,$(CONFIG_KERNEL_GIT_CLONE_URI))
@@ -39,8 +40,8 @@ endif
 HOST_BUILD_DIR:=$(KERNEL_BUILD_DIR)/linux-$(LINUX_VERSION)
 PKG_HASH:=$(LINUX_KERNEL_HASH)
 LINUX_DIR := $(HOST_BUILD_DIR)
-FILES_DIR := 
-PATCH_DIR := ./patches$(if $(wildcard ./patches-$(LINUX_VERSION)),-$(LINUX_VERSION))
+FILES_DIR := $(PKG_PATCH_DIR)/files$(if $(wildcard $(PKG_PATCH_DIR)/patches-$(KERNEL_PATCHVER)),-$(KERNEL_PATCHVER))
+PATCH_DIR := $(PKG_PATCH_DIR)/patches$(if $(wildcard $(PKG_PATCH_DIR)/patches-$(KERNEL_PATCHVER)),-$(KERNEL_PATCHVER))
 
 include $(INCLUDE_DIR)/toolchain-build.mk
 include $(INCLUDE_DIR)/kernel-defaults.mk
