@@ -618,6 +618,10 @@ TARGET_CPPFLAGS := \
 TARGET_LDFLAGS += -lubox -lubus
 TARGET_CFLAGS += -fPIC
 
+ifdef CONFIG_DEBUG
+	TARGET_CFLAGS += -g3
+endif
+
 ifdef CONFIG_PACKAGE_kmod-cfg80211
   TARGET_LDFLAGS += -lm -lnl-tiny
 endif
