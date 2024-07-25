@@ -394,6 +394,7 @@ hostapd_common_add_bss_config() {
 
 	config_add_int rsn_override_mfp_2
 	config_add_string rsn_override_key_mgmt_2 rsn_override_pairwise_2
+	config_add_int ssid_protection
 
 }
 
@@ -583,7 +584,8 @@ hostapd_set_bss_options() {
 		eap_server eap_user_file ca_cert server_cert private_key private_key_passwd server_id \
 		vendor_elements fils ocv dpp \
 		rsn_override_key_mgmt rsn_override_pairwise rsn_override_mfp \
-		rsn_override_key_mgmt_2 rsn_override_pairwise_2 rsn_override_mfp_2
+		rsn_override_key_mgmt_2 rsn_override_pairwise_2 rsn_override_mfp_2 \
+		ssid_protection
 
 	json_get_values sae_groups sae_groups
 	json_get_values owe_groups owe_groups
@@ -1219,6 +1221,8 @@ hostapd_set_bss_options() {
 		[ -n "$dpp_connector_sign" ] && append bss_conf "dpp_connector_sign=$dpp_connector_sign" "$N"
 	fi
 
+	[ -n "$ssid_protection" ] && append bss_conf "ssid_protection=$ssid_protection" "$N"
+
 	append "$var" "$bss_conf" "$N"
 	return 0
 }
@@ -1382,6 +1386,7 @@ wpa_supplicant_add_network() {
 		ieee80211w ieee80211r fils ocv \
 		multi_ap \
 		default_disabled dpp \
+		ssid_protection \
 		ppe_vp
 
 	case "$auth_type" in
@@ -1695,6 +1700,7 @@ wpa_supplicant_add_network() {
 		[ -n "$dpp_connector_sign" ] && append network_data "dpp_connector_sign=$dpp_connector_sign" "$N"
 
 	fi
+	[ -n "$ssid_protection" ] && append network_data "ssid_protection=$ssid_protection" "$N$T"
 
 	local ppe_vp_type=
 	case "$ppe_vp" in
