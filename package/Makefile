@@ -142,6 +142,12 @@ else
 		sed -i 's/, }}/}}/' index.json; \
 		gzip -9nc Packages > Packages.gz; \
 	); done
+ifdef CONFIG_FOSSID_SCAN
+	@echo Generating FOSSID report for this build
+	[[ -f "$(TOPDIR)/scripts/fossid.sh" ]] && \
+	$(TOPDIR)/scripts/fossid.sh --scan_complete "$(BOARD)" "$(SUBTARGET)" "$(BUILD_DIR)" || \
+	echo "$(TOPDIR)/scripts/fossid.sh is missing"
+endif
 ifdef CONFIG_SIGNED_PACKAGES
 	@echo Signing package index...
 	@for d in $(PACKAGE_SUBDIRS); do ( \
