@@ -17,7 +17,7 @@ ifdef PKG_SOURCE_VERSION
 endif
 
 ifndef SKIP_MIRROR_DOWNLOAD
-  SKIP_MIRROR_DOWNLOAD = false
+SKIP_MIRROR_DOWNLOAD = false
 endif
 
 DOWNLOAD_RDEP=$(STAMP_PREPARED) $(HOST_STAMP_PREPARED)
@@ -143,12 +143,11 @@ hash_var = $(if $(filter-out x,$(1)),MD5SUM,HASH)
 endif
 
 define git_mirror_download
-       GIT_NAME=$$$$(echo $(URL) | sed -e s:.*/::g -e s/.git$$$$//g); \
-       [ -n "${CONFIG_GIT_MIRROR}" ] && \
-       git clone $(if $(BRANCH),-b $(BRANCH)) $(CONFIG_GIT_MIRROR)$$$$GIT_NAME $(SUBDIR) --recursive && \
-       (cd $(SUBDIR) && git remote -v && git checkout $(VERSION))
+	GIT_NAME=$$$$(echo $(URL) | sed -e s:.*/::g -e s/.git$$$$//g); \
+	[ -n "${CONFIG_GIT_MIRROR}" ] && \
+	git clone $(if $(BRANCH),-b $(BRANCH)) $(CONFIG_GIT_MIRROR)$$$$GIT_NAME $(SUBDIR) --recursive && \
+	(cd $(SUBDIR) && git remote -v && git checkout $(VERSION))
 endef
-
 
 define DownloadMethod/unknown
 	echo "ERROR: No download method available"; false
@@ -227,7 +226,11 @@ define DownloadMethod/github_archive
 endef
 
 # Only intends to be called as a submethod from other DownloadMethod
-
+#
+# We first clone, checkout and then we generate a tar using the
+# git archive command to apply any rules of .gitattributes
+# To keep consistency with github generated tar archive, we default
+# the short hash to 8 (default is 7). (for git log related usage)
 define DownloadMethod/rawgit
 	echo "Checking out files from the git repository..."; \
 	mkdir -p $(TMP_DIR)/dl && \
@@ -240,7 +243,15 @@ define DownloadMethod/rawgit
 	git submodule update --init --recursive))) && \
 	echo "Packing checkout..." && \
 	export TAR_TIMESTAMP=`cd $(SUBDIR) && git log -1 --format='@%ct'` && \
-	rm -rf $(SUBDIR)/.git && \
+	echo "Generating formal git archive (apply .gitattributes rules)" && \
+	(cd $(SUBDIR) && git config core.abbrev 8 && \
+	git archive --format=tar HEAD --output=../$(SUBDIR).tar.git) && \
+	$(if $(filter skip,$(SUBMODULES)),true,$(TAR) --ignore-failed-read -C $(SUBDIR) -f $(SUBDIR).tar.git -r .git .gitmodules 2>/dev/null) && \
+	rm -rf $(SUBDIR) && mkdir $(SUBDIR) && \
+	$(TAR) -C $(SUBDIR) -xf $(SUBDIR).tar.git && \
+	(cd $(SUBDIR) && $(if $(filter skip,$(SUBMODULES)),true,git submodule update --init --recursive -- $(SUBMODULES) && \
+	rm -rf .git .gitmodules)) && \
+	echo "Packing checkout..." && \
 	$(call dl_tar_pack,$(TMP_DIR)/dl/$(FILE),$(SUBDIR)) && \
 	mv $(TMP_DIR)/dl/$(FILE) $(DL_DIR)/ && \
 	rm -rf $(SUBDIR);
@@ -308,6 +319,7 @@ define Download/Defaults
   FILE:=
   URL_FILE:=
   PROTO:=
+  BRANCH:=
   HASH=$$(MD5SUM)
   MD5SUM:=x
   SUBDIR:=
@@ -323,18 +335,26 @@ define Download/default
   FILE:=$(PKG_SOURCE)
   URL:=$(PKG_SOURCE_URL)
   URL_FILE:=$(PKG_SOURCE_URL_FILE)
+  BRANCH:=$(PKG_SOURCE_BRANCH)
   SUBDIR:=$(PKG_SOURCE_SUBDIR)
   PROTO:=$(PKG_SOURCE_PROTO)
   SUBMODULES:=$(PKG_SOURCE_SUBMODULES)
   $(if $(PKG_SOURCE_MIRROR),MIRROR:=$(filter 1,$(PKG_MIRROR)))
   $(if $(PKG_MIRROR_MD5SUM),MIRROR_MD5SUM:=$(PKG_MIRROR_MD5SUM))
-  $(if $(PKG_MIRROR_HASH),MIRROR_HASH:=skip)
+  $(if $(PKG_MIRROR_HASH),MIRROR_HASH:=$(PKG_MIRROR_HASH))
   SOURCE_VERSION:=$(PKG_SOURCE_VERSION)
   $(if $(PKG_MD5SUM),MD5SUM:=$(PKG_MD5SUM))
   $(if $(PKG_HASH),HASH:=$(PKG_HASH))
 endef
 
+FindPackage?=$(strip $(shell find $(TOPDIR)/openwrt-patches -name $(1) 2>/dev/null))
+
+define Download/openwrt-patches
+  $(eval -include $(wildcard $(call FindPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk))
+endef
+
 define Download
+  $(Download/openwrt-patches)
   $(eval $(Download/Defaults))
   $(eval $(Download/$(1)))
   $(foreach FIELD,URL FILE $(Validate/$(call dl_method,$(URL),$(PROTO))),

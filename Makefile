@@ -40,6 +40,9 @@ else
   include tools/Makefile
   include toolchain/Makefile
 
+# Include the test suite Makefile if it exists
+-include tests/Makefile
+
 $(toolchain/stamp-compile): $(tools/stamp-compile) $(if $(CONFIG_BUILDBOT),toolchain_rebuild_check)
 $(target/stamp-compile): $(toolchain/stamp-compile) $(tools/stamp-compile) $(BUILD_DIR)/.prepared
 $(package/stamp-compile): $(target/stamp-compile) $(package/stamp-cleanup)
@@ -52,7 +55,14 @@ printdb:
 
 prepare: $(target/stamp-compile)
 
-_clean: FORCE
+clean_kernel:
+ifdef CONFIG_EXTERNAL_KERNEL_TREE
+	make target/linux/clean
+else
+	@true
+endif
+
+_clean: FORCE clean_kernel
 	rm -rf $(BUILD_DIR) $(STAGING_DIR) $(BIN_DIR) $(OUTPUT_DIR)/packages/$(ARCH_PACKAGES) $(TOPDIR)/staging_dir/packages
 
 clean: _clean
