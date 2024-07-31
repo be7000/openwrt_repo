@@ -263,7 +263,7 @@ endif
 
 # update all feeds, re-create index files, install symlinks
 package/symlinks:
-	./scripts/feeds update -a
+	./scripts/feeds update -a -b
 	./scripts/feeds install -a -f
 
 # re-create index files, install symlinks
