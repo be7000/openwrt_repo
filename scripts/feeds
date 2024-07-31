@@ -776,12 +776,13 @@ sub uninstall {
 	return 0;
 }
 
-sub update_feed($$$$)
+sub update_feed($$$$$)
 {
 	my $type=shift;
 	my $name=shift;
 	my $src=shift;
 	my $force_update=shift;
+	my $fallback=shift;
 	my $force_relocate=update_location( $name, "@$src" );
 	my $rv=0;
 
@@ -803,6 +804,10 @@ sub update_feed($$$$)
 				warn "failed, ignore.\n";
 				next;
 			}
+			if ($fallback) {
+				warn "Failed to  fetch '$name' from '$feedsrc', trying next \n";
+				next;
+			}
 			last;
 		}
 		$failed = 0;
@@ -822,7 +827,7 @@ sub update {
 	$ENV{SCAN_COOKIE} = $$;
 	$ENV{OPENWRT_VERBOSE} = 's';
 
-	getopts('ahif', \%opts);
+	getopts('ahifb', \%opts);
 	%argv_feeds = map { $_ => 1 } @ARGV;
 
 	if ($opts{h}) {
@@ -839,7 +844,7 @@ sub update {
 		my ($type, $name, $src) = @$feed;
 		next unless $#ARGV == -1 or $opts{a} or $argv_feeds{$name};
 		if (not $opts{i}) {
-			update_feed($type, $name, $src, $opts{f}) == 0 or $failed=1;
+			update_feed($type, $name, $src, $opts{f}, $opts{b}) == 0 or $failed=1;
 		}
 		push @index_feeds, $name;
 	}
@@ -906,6 +911,7 @@ Commands:
 	    -a :           Update all feeds listed within feeds.conf. Otherwise the specified feeds will be updated.
 	    -i :           Recreate the index only. No feed update from repository is performed.
 	    -f :           Force updating feeds even if there are changed, uncommitted files.
+	    -b :           Support fetching from mirrors
 
 	clean:             Remove downloaded/generated files.
 
