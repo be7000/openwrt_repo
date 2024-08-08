@@ -722,6 +722,7 @@ define Build/InstallDev
 	$(CP) $(PKG_BUILD_DIR)/src/utils/os.h $(1)/usr/include
 	$(CP) $(PKG_BUILD_DIR)/src/utils/common.h $(1)/usr/include
 	$(CP) $(PKG_BUILD_DIR)/src/utils/wpa_debug.h $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/src/common/qca-vendor.h $(1)/usr/include
 	$(CP) $(PKG_BUILD_DIR)/src/drivers/nl80211_copy.h $(1)/usr/include/
 ifneq ($(CONFIG_PACKAGE_hostapd-utils),)
 ifneq ($(LOCAL_VARIANT),macsec)
