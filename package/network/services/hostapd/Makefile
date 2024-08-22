@@ -9,20 +9,13 @@ PKG_RELEASE:=2
 
 PKG_SOURCE_URL:=https://w1.fi/hostap.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2024-03-09
-PKG_SOURCE_VERSION:=695277a5b3da08b9a8a4e7117b933deb8b4950a7
-PKG_MIRROR_HASH:=57b8e64d24707e37e0df3359cee15dd5184b824b8622568833a5b8a0cae163ae
-
-EXTERNAL_MAKEFILE:=$(TOPDIR)/openwrt-patches/package/network/services/hostapd
-
-ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
-	include $(EXTERNAL_MAKEFILE)/hostapd.mk
-endif
-PKG_SRC_DIR:=$(EXTERNAL_MAKEFILE)
-
+PKG_SOURCE_DATE:=2024-06-05
+PKG_SOURCE_VERSION:=1b96745f1de8806e2c500ad781aa09b88fdae7b9
+PKG_MIRROR_HASH:=d5ff4046dc8000a1c38e6920bf60a610b621ebb094525d3a076a8bd6c0792d54
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=BSD-3-Clause
 PKG_CPE_ID:=cpe:/a:w1.fi:hostapd
+PKG_SOURCE_SUBMODULES:=skip
 
 PKG_BUILD_PARALLEL:=1
 PKG_ASLR_PIE_REGULAR:=1
@@ -184,6 +177,16 @@ endef
 
 Package/hostapd-openssl/description = $(Package/hostapd/description)
 
+define Package/hostapd-macsec
+$(call Package/hostapd/Default,$(1))
+  TITLE+= (macsec)
+  VARIANT:=macsec
+endef
+
+define Package/hostapd-macsec/description
+This package is Hostapd Authenticator for macsec support.
+endef
+
 define Package/hostapd-wolfssl
 $(call Package/hostapd/Default,$(1))
   TITLE+= (wolfSSL full)
@@ -192,16 +195,6 @@ $(call Package/hostapd/Default,$(1))
 endef
 
 Package/hostapd-wolfssl/description = $(Package/hostapd/description)
-
-define Package/hostapd-macsec
-$(call Package/hostapd/Default,$(1))
-  TITLE+= (macsec)
-  VARIANT:=macsec
-  DEPENDS+=@TARGET_ipq95xx || TARGET_ipq53xx || TARGET_ipq54xx \
-	   +kmod-qca-nss-macsec $(OPENSSL_DEPENDS)
-endef
-
-Package/hostapd-macsec/description = $(Package/hostapd/description)
 
 define Package/hostapd-mbedtls
 $(call Package/hostapd/Default,$(1))
@@ -455,6 +448,16 @@ define Package/wpa-supplicant/config
 	source "$(SOURCE)/Config.in"
 endef
 
+define Package/wpa-supplicant-macsec
+$(call Package/wpa-supplicant/Default,$(1))
+  TITLE:=WPA Supplicant (MACSEC)
+  VARIANT:=supplicant-macsec
+endef
+
+define Package/wpa-supplicant-macsec/Description
+  WPA Supplicant with MACSEC support.
+endef
+
 define Package/wpa-supplicant-p2p
 $(call Package/wpa-supplicant/Default,$(1))
   TITLE+= (Wi-Fi P2P support)
@@ -573,12 +576,6 @@ define Package/eapol-test-mbedtls
   PROVIDES:=eapol-test
 endef
 
-ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
-  define Build/Prepare
-	$(CP_SRC_DIR)
-  endef
-endif
-
 ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(STAMP_CONFIGURED)))
   define Build/Configure/rebuild
 	$(FIND) $(PKG_BUILD_DIR) -name \*.o -or -name \*.a | $(XARGS) rm -f
@@ -588,8 +585,6 @@ ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(ST
 	touch $(subst .configured_,.config_,$(STAMP_CONFIGURED))
   endef
 endif
-
-EXTERNAL_PATCH_DIR:=$(TOPDIR)/openwrt-patches/package/network/services/hostapd/
 
 define Build/Configure
 	$(Build/Configure/rebuild)
@@ -601,6 +596,12 @@ define Build/Configure
 	)
 endef
 
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/src/common/qca-vendor.h $(1)/usr/include
+	$(CP) $(PKG_BUILD_DIR)/src/drivers/nl80211_copy.h $(1)/usr/include/
+endef
+
 TARGET_CPPFLAGS := \
 	-I$(STAGING_DIR)/usr/include/libnl-tiny \
 	-I$(PKG_BUILD_DIR)/src/crypto \
@@ -610,6 +611,11 @@ TARGET_CPPFLAGS := \
 	$(if $(CONFIG_WPA_MSG_MIN_PRIORITY),-DCONFIG_MSG_MIN_PRIORITY=$(CONFIG_WPA_MSG_MIN_PRIORITY))
 
 TARGET_LDFLAGS += -lubox -lubus -lblobmsg_json -lucode -lm -lnl-tiny -ludebug
+
+ifdef CONFIG_DEBUG
+	TARGET_CFLAGS += -g3
+endif
+
 
 ifdef CONFIG_WPA_ENABLE_WEP
     DRIVER_MAKEOPTS += CONFIG_WEP=y
@@ -742,20 +748,11 @@ endef
 
 define Package/hostapd-common/install
 	$(INSTALL_DIR) $(1)/etc/capabilities $(1)/etc/rc.button $(1)/etc/hotplug.d/ieee80211 $(1)/etc/init.d $(1)/lib/netifd  $(1)/usr/share/acl.d $(1)/usr/share/hostap
-ifeq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
 	$(INSTALL_BIN) ./files/dhcp-get-server.sh $(1)/lib/netifd/dhcp-get-server.sh
 	$(INSTALL_BIN) ./files/wpad.init $(1)/etc/init.d/wpad
 	$(INSTALL_BIN) ./files/wps-hotplug.sh $(1)/etc/rc.button/wps
 	$(INSTALL_DATA) ./files/wpad_acl.json $(1)/usr/share/acl.d
 	$(INSTALL_DATA) ./files/wpad.json $(1)/etc/capabilities
-endif
-ifneq (,$(findstring QSDK_Open,$(CONFIG_TARGET_PROFILE)))
-	$(INSTALL_BIN) $(FILES_DIR)/files/dhcp-get-server.sh $(1)/lib/netifd/dhcp-get-server.sh
-	$(INSTALL_BIN) $(FILES_DIR)/files/wpad.init $(1)/etc/init.d/wpad
-	$(INSTALL_BIN) $(FILES_DIR)/files/wps-hotplug.sh $(1)/etc/rc.button/wps
-	$(INSTALL_DATA) $(FILES_DIR)/files/wpad_acl.json $(1)/usr/share/acl.d
-	$(INSTALL_DATA) $(FILES_DIR)/files/wpad.json $(1)/etc/capabilities
-endif
 endef
 
 define Package/hostapd/install
@@ -770,13 +767,19 @@ Package/hostapd-mini/install = $(Package/hostapd/install)
 Package/hostapd-openssl/install = $(Package/hostapd/install)
 Package/hostapd-wolfssl/install = $(Package/hostapd/install)
 Package/hostapd-mbedtls/install = $(Package/hostapd/install)
-Package/hostapd-macsec/install = $(Package/hostapd/install)
+
+define Package/hostapd-macsec/install
+	$(call Install/hostapd,$(1))
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hostapd/hostapd $(1)/usr/sbin/hostapd-macsec
+endef
 
 ifneq ($(LOCAL_TYPE),supplicant)
+ifneq ($(LOCAL_VARIANT),macsec)
   define Package/hostapd-utils/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hostapd/hostapd_cli $(1)/usr/sbin/
   endef
+endif
 endif
 
 define Package/wpad/install
@@ -811,13 +814,19 @@ Package/wpa-supplicant-mbedtls/install = $(Package/wpa-supplicant/install)
 Package/wpa-supplicant-mesh-openssl/install = $(Package/wpa-supplicant/install)
 Package/wpa-supplicant-mesh-wolfssl/install = $(Package/wpa-supplicant/install)
 Package/wpa-supplicant-mesh-mbedtls/install = $(Package/wpa-supplicant/install)
-Package/wpa-supplicant-macsec/install = $(Package/wpa-supplicant/install)
+
+define Package/wpa-supplicant-macsec/install
+	$(call Install/supplicant,$(1))
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wpa_supplicant/wpa_supplicant $(1)/usr/sbin/wpa_supplicant-macsec
+endef
 
 ifneq ($(LOCAL_TYPE),hostapd)
+ifneq ($(LOCAL_VARIANT),macsec)
   define Package/wpa-cli/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(CP) $(PKG_BUILD_DIR)/wpa_supplicant/wpa_cli $(1)/usr/sbin/
   endef
+endif
 endif
 
 ifeq ($(BUILD_VARIANT),supplicant-full-internal)
