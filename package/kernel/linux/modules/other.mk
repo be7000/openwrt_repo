@@ -590,6 +590,7 @@ define KernelPackage/mtdtests
   KCONFIG:=CONFIG_MTD_TESTS
   FILES:=\
 	$(LINUX_DIR)/drivers/mtd/tests/mtd_nandbiterrs.ko \
+	$(LINUX_DIR)/drivers/mtd/tests/mtd_test.ko@gt6.6.3 \
 	$(LINUX_DIR)/drivers/mtd/tests/mtd_nandecctest.ko \
 	$(LINUX_DIR)/drivers/mtd/tests/mtd_oobtest.ko \
 	$(LINUX_DIR)/drivers/mtd/tests/mtd_pagetest.ko \
