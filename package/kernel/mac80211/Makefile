@@ -187,6 +187,12 @@ define KernelPackage/mac80211/config
 		  This option enables support for qca sfe in QCA boards
      endif
 
+	config PACKAGE_MAC80211_ATHMEMDEBUG
+		bool "Enable memory debug support"
+		default n
+		help
+		  This option enables ATH memory debug support.
+
 	config PACKAGE_MAC80211_DEBUGFS
 		bool "Export mac80211 internals in DebugFS"
 		select KERNEL_DEBUG_FS
@@ -380,6 +386,7 @@ config-$(CONFIG_PACKAGE_MAC80211_STA_DEBUG) += MAC80211_STA_DEBUG
 config-$(CONFIG_PACKAGE_MAC80211_HT_DEBUG) += MAC80211_HT_DEBUG
 config-$(CONFIG_PACKAGE_MAC80211_IBSS_DEBUG) += MAC80211_IBSS_DEBUG
 config-$(CONFIG_PACKAGE_MAC80211_PS_DEBUG) += MAC80211_PS_DEBUG
+config-$(CONFIG_PACKAGE_MAC80211_ATHMEMDEBUG) += MAC80211_ATHMEMDEBUG
 
 
 config-$(call config_package,mac80211-hwsim) += MAC80211_HWSIM
