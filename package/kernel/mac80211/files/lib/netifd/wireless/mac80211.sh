@@ -2230,14 +2230,6 @@ drv_mac80211_setup() {
 	[ -n "$dropvap" ] && mac80211_vap_cleanup wpa_supplicant "$dropvap"
 	wireless_set_up
 
-	disable_qdisc_for_ds=$(cat /sys/module/ath12k/parameters/ppe_ds_enable)
-        if [ -n "$disable_qdisc_for_ds" ] && [ $disable_qdisc_for_ds == '1' ]; then
-                [ -f "/lib/ds_enable.sh" ] && {
-                        . /lib/ds_enable.sh
-                        disable_qdisc_on_eth
-                }
-        fi
-
 	config_get enable_smp_affinity mac80211 enable_smp_affinity 0
 
         if [ "$enable_smp_affinity" -eq 1 ]; then
