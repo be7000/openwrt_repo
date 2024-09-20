@@ -6,6 +6,7 @@
 
 init_wireless_driver "$@"
 MLD_VAP_DETAILS="/lib/netifd/wireless/wifi_mld_cfg.config"
+WIFI_STATE_FILE="/var/run/wifi_state"
 
 MP_CONFIG_INT="mesh_retry_timeout mesh_confirm_timeout mesh_holding_timeout mesh_max_peer_links
 	       mesh_max_retries mesh_ttl mesh_element_ttl mesh_hwmp_max_preq_retries
@@ -1916,6 +1917,14 @@ drv_mac80211_cleanup() {
 	hostapd_common_cleanup
 }
 
+drv_mac80211_radio_count() {
+        local config="$1"
+        local count="$2"
+
+        config_get disabled "$config" disabled
+        [ "$disabled" -eq 0 ] && radio_up_count=$((radio_up_count+1))
+}
+
 drv_mac80211_setup() {
 	local device=$1
 	# Note: In case of single wiphy, the device name would be radio#idx_band#bid
@@ -1959,6 +1968,8 @@ drv_mac80211_setup() {
 		wireless_set_retry 1
 		return 1
 	fi
+
+	[ -f $WIFI_STATE_FILE ] && echo 1 > $WIFI_STATE_FILE
 
 	if [ $(cat /sys/module/ath12k/parameters/ppe_rfs_support) == 'Y' ]; then
 		# Note: ppe_vp_accel and ppe_vp_rfs are mutually exclusive.
@@ -2138,17 +2149,23 @@ drv_mac80211_setup() {
 			dev_wlan="wlan${phy:0-1}"
 		fi
 
+		touch /var/run/hostapd-$device-updated-cfg
+		hostapd_cfg_updated=$(ls /var/run/hostapd-*-updated-cfg | wc -l)
+
 		if [ -z "$is_sphy_mband" ] || [ "$hostapd_add_bss" -eq 1 ]; then
 			[ -f "/var/run/hostapd-$dev_wlan.lock" ] && rm /var/run/hostapd-$dev_wlan.lock
 			# let hostapd manage interface $dev_wlan
 			hostapd_cli -iglobal raw ADD bss_config=$dev_wlan:$hostapd_conf_file
 			touch /var/run/hostapd-$dev_wlan.lock
+
+			config_foreach drv_mac80211_radio_count wifi-device
+			if [ "$hostapd_cfg_updated" = "$radio_up_count" ]; then
+				[ -f $WIFI_STATE_FILE ] && echo 2 > $WIFI_STATE_FILE
+			fi
 		else
 			if [ -f "/var/run/wifi-$phy.pid" ]; then
 				return
 			fi
-			touch /var/run/hostapd-$device-updated-cfg
-			hostapd_cfg_updated=$(ls /var/run/hostapd-*-updated-cfg | wc -l)
 		
 			if [ "$hostapd_cfg_updated" = "$radio_up_count" ]; then
 				bands_info=$(ls /var/run/hostapd*updated-cfg | grep -o band.)
@@ -2159,6 +2176,8 @@ drv_mac80211_setup() {
 				#MLO vaps, single instance of hostapd is started
 				/usr/sbin/hostapd -B -P /var/run/wifi-"$phy".pid $config_files
 				ret="$?"
+
+				[ -f $WIFI_STATE_FILE -a "$ret" -eq 0 ] && echo 2 > $WIFI_STATE_FILE
 
 				if [ "$band" = "5g" ]; then
 					interf_dfs="$(cat /var/run/hostapd-${phy}_band${device:11:1}.conf | grep interface | grep wlan | cut -d'=' -f 2 )"
@@ -2313,6 +2332,7 @@ drv_mac80211_teardown() {
 		echo "Bug: PHY is undefined for device '$1'"
 		return 1
 	}
+	[ -f $WIFI_STATE_FILE ] && echo 0 > $WIFI_STATE_FILE
 	device=$1
 	mac80211_interface_cleanup "$phy" "$1"
 	uci -q -P /var/state revert wireless.${device}

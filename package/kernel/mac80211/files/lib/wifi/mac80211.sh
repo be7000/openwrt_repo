@@ -3,6 +3,11 @@
 append DRIVERS "mac80211"
 
 MLD_VAP_DETAILS="/lib/netifd/wireless/wifi_mld_cfg.config"
+WIFI_STATE_FILE="/var/run/wifi_state"
+
+[ -f $WIFI_STATE_FILE ] || touch $WIFI_STATE_FILE
+state=$(cat $WIFI_STATE_FILE)
+[ -z "$state" -a -f $WIFI_STATE_FILE ] && echo 0 > $WIFI_STATE_FILE
 
 configure_service_param() {
 	enable_service=$2
