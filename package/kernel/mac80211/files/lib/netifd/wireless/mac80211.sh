@@ -1952,6 +1952,14 @@ drv_mac80211_setup() {
 		return 1
 	}
 
+	OLDAPLIST=$(uci -q -P /var/state get wireless.${device}.aplist)
+	if [ -n "$OLDAPLIST" ]; then
+		mac80211_vap_ceanup hostapd "${OLDAPLIST}"
+		uci -q -P /var/state revert wireless.${device}
+		wireless_set_retry 1
+		return 1
+	fi
+
 	if [ $(cat /sys/module/ath12k/parameters/ppe_rfs_support) == 'Y' ]; then
 		# Note: ppe_vp_accel and ppe_vp_rfs are mutually exclusive.
 		#       ppe_vp_accel enables PPE acceleration path and ppe_vp_rfs
@@ -2076,8 +2084,6 @@ drv_mac80211_setup() {
 
 	NEW_MD5=$(test -e "${hostapd_conf_file}" && md5sum ${hostapd_conf_file})
 	OLD_MD5=$(uci -q -P /var/state get wireless._${phy}.md5)
-
-	mac80211_vap_cleanup hostapd "${OLDAPLIST}"
 
 	NEWSTALIST=
 	NEWUMLIST=
