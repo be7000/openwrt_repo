@@ -259,8 +259,6 @@ hostapd_set_bss_options() {
 		append "$var" "ignore_broadcast_ssid=$hidden" "$N"
 	fi
 
-	append "$var" "send_probe_response=0" "$N"
-
 	# Examples:
 	# psk-mixed/tkip 	=> WPA1+2 PSK, TKIP
 	# wpa-psk2/tkip+aes	=> WPA2 PSK, CCMP+TKIP
