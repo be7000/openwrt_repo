@@ -16,6 +16,9 @@
 /files
 /target/linux/feeds
 /overlay
+/openwrt-patches
+/opensync
+/ipq-scripts
 /package/feeds
 /package/openwrt-packages
 /*.patch
