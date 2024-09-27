@@ -348,9 +348,11 @@ define Download/default
 endef
 
 FindPackage?=$(strip $(shell find $(TOPDIR)/openwrt-patches -name $(1) 2>/dev/null))
+FindOpensyncPackage?=$(strip $(shell find $(TOPDIR)/opensync -name $(1) 2>/dev/null))
 
 define Download/openwrt-patches
   $(eval -include $(wildcard $(call FindPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk))
+  $(if $(CONFIG_OPENSYNC_SUPPORTED),$(eval -include $(wildcard $(call FindOpensyncPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk)))
 endef
 
 define Download
