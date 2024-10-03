@@ -2169,9 +2169,10 @@ drv_mac80211_setup() {
 				if [ -f "/var/run/wifi-$phy.pid" ]; then
 					return
 				fi
-		
+				touch /var/run/hostapd-mld-$device-updated-cfg
+				hostapd_cfg_updated=$(ls /var/run/hostapd-mld-*-updated-cfg | wc -l)
 				if [ "$hostapd_cfg_updated" = "$radio_up_count" ]; then
-					bands_info=$(ls /var/run/hostapd*updated-cfg | grep -o band.)
+					bands_info=$(ls /var/run/hostapd-mld-*-updated-cfg | grep -o band.)
 					for __band in $bands_info
 					do
 						append  config_files /var/run/hostapd-phy${phy#phy}_${__band}.conf
