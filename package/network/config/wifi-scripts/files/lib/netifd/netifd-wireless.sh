@@ -82,6 +82,15 @@ _wdev_prepare_channel() {
 	esac
 }
 
+_wdev_handler_1() {
+	interface=$4
+	json_load "$1"
+	json_select config
+	_wdev_prepare_channel
+	json_select ..
+	eval "drv_$2_$3 \"$interface\""
+}
+
 _wdev_handler() {
 	json_load "$data"
 
