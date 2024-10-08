@@ -6,7 +6,7 @@
 
 usage() {
 	cat <<EOF
-Usage: $0 [config|up|down|reconf|reload|status|isup]
+Usage: $0 [config|up|down|reconf|reload|status|isup|mlo_add_link <phy> <band> <interface-name> <vap-mac-addr>]
 enables (default), disables or configures devices not yet configured.
 EOF
 	exit 1
@@ -362,6 +362,7 @@ case "$1" in
 	unload) wifi_unload "$2";;
 	recover) wifi_recover "$2";;
 	mlo) mlo "$@";;
+	mlo_add_link) mlo_add_link "$2" "$3" "$4" "$5";;
 	standby) standby_wifi_radio_updown "$@" ;;
         multi_up|\
         multi_down) [ "$DISABLE_NET_RELOAD" == "1" ] || multi_radio_wifi_updown "$@";;
