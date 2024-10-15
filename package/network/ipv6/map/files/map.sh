@@ -28,7 +28,8 @@ proto_map_setup() {
 	local maptype type legacymap mtu ttl tunlink zone encaplimit
 	local rule ipaddr ip4prefixlen ip6prefix ip6prefixlen peeraddr ealen psidlen psid offset mode fmr
 	json_get_vars maptype type legacymap mtu ttl tunlink zone fmr mode encaplimit draft03
-	json_get_vars rule ipaddr ip4prefixlen ip6prefix ip6prefixlen peeraddr ealen psidlen psid offset
+	json_get_vars ipaddr ip4prefixlen ip6prefix ip6prefixlen peeraddr ealen psidlen psid offset
+	json_get_values rule rule
 
 	[ -z "$zone" ] && zone="wan"
 
