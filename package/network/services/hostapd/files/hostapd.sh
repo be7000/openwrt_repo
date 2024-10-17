@@ -342,6 +342,7 @@ hostapd_common_add_bss_config() {
 
 	config_add_boolean sae_require_mfp
 	config_add_int sae_pwe
+	config_add_int rsn_overriding
 
 	config_add_string 'owe_transition_bssid:macaddr' 'owe_transition_ssid:string'
 	config_add_string owe_transition_ifname
@@ -721,7 +722,7 @@ hostapd_set_bss_options() {
 			# with WPS enabled, we got to be in unconfigured state.
 			wps_not_configured=1
 		;;
-		psk|sae|psk-sae)
+		psk|*sae*)
 			json_get_vars key wpa_psk_file
 			if [ "$auth_type" = "psk" ] && [ "$ppsk" -ne 0 ] ; then
 				json_get_vars auth_secret auth_port
@@ -1390,7 +1391,7 @@ wpa_supplicant_add_network() {
 		ppe_vp
 
 	case "$auth_type" in
-		sae|owe|eap192|eap-eap192)
+		sae*|ft-sae*|owe|eap192|eap-eap192)
 			set_default ieee80211w 2
 		;;
 		psk-sae)
@@ -1475,7 +1476,7 @@ wpa_supplicant_add_network() {
 		wps)
 			key_mgmt='WPS'
 		;;
-		psk|sae|psk-sae)
+		psk|*sae*)
 			local passphrase
 
 			if [ "$_w_mode" != "mesh" ]; then
@@ -1640,9 +1641,9 @@ wpa_supplicant_add_network() {
 		;;
 	esac
 
-	[ "$wpa_cipher" = GCMP ] && {
-		append network_data "pairwise=GCMP" "$N$T"
-		append network_data "group=GCMP" "$N$T"
+	[ -n "$wpa_cipher" ] && {
+		append network_data "pairwise=$wpa_cipher" "$N$T"
+		append network_data "group=$wpa_cipher" "$N$T"
 	}
 
 	[ "$mode" = mesh ] || {
@@ -1668,11 +1669,13 @@ wpa_supplicant_add_network() {
 	json_get_values bssid_blacklist bssid_blacklist
 	json_get_values bssid_whitelist bssid_whitelist
 	json_get_var sae_pwe sae_pwe
+	json_get_var rsn_overriding rsn_overriding
 
 	[ -n "$bssid_blacklist" ] && append network_data "bssid_blacklist=$bssid_blacklist" "$N$T"
 	[ -n "$bssid_whitelist" ] && append network_data "bssid_whitelist=$bssid_whitelist" "$N$T"
 
 	[ -n "$sae_pwe" ] && append saepwe "sae_pwe=$sae_pwe" "$N$T"
+	[ -n "$rsn_overriding" ] && append rsn_override "rsn_overriding=$rsn_overriding" "$N$T"
 
 	[ -n "$basic_rate" ] && {
 		local br rate_list=
@@ -1730,6 +1733,7 @@ $mesh_ctrl_interface
 $user_mpm
 $disable_csa_dfs
 $saepwe
+$rsn_override
 ppe_vp=$ppe_vp_type
 $freq_list
 network={
