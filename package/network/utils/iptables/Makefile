@@ -568,6 +568,11 @@ define Package/libxtables/config
 		This enable connlabel support in iptables.
 endef
 
+define Package/iptables-mod-skipaccel
+ $(call Package/iptables/Module, +kmod-ipt-skipaccel)
+ TITLE:=skipaccel extension
+endef
+
 TARGET_CPPFLAGS := \
 	-I$(PKG_BUILD_DIR)/include \
 	-I$(LINUX_DIR)/user_headers/include \
@@ -757,6 +762,7 @@ $(eval $(call BuildPlugin,iptables-mod-nflog,$(IPT_NFLOG-m)))
 $(eval $(call BuildPlugin,iptables-mod-trace,$(IPT_DEBUG-m)))
 $(eval $(call BuildPlugin,iptables-mod-nfqueue,$(IPT_NFQUEUE-m)))
 $(eval $(call BuildPlugin,iptables-mod-checksum,$(IPT_CHECKSUM-m)))
+$(eval $(call BuildPlugin,iptables-mod-skipaccel,$(IPT_SKIPACCEL-m)))
 $(eval $(call BuildPackage,ip6tables-nft))
 $(eval $(call BuildPackage,ip6tables-zz-legacy))
 $(eval $(call BuildPlugin,ip6tables-extra,$(IPT_IPV6_EXTRA-m)))
