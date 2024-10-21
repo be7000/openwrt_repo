@@ -309,6 +309,7 @@ endef
 
 define Build/openwrt-patches
   $(eval -include $(wildcard $(call FindPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk))
+  $(if $(CONFIG_OPENSYNC_SUPPORTED),$(eval -include $(wildcard $(call FindOpensyncPackage,$(basename $(notdir $(CURDIR))))/$(PKG_NAME).mk)))
 endef
 
 define BuildPackage
