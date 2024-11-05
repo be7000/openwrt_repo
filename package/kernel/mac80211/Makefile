@@ -138,7 +138,9 @@ define KernelPackage/mac80211
 	+kmod-qca-nss-ppe-vp \
 	+kmod-qca-nss-ppe-ds
   KCONFIG:=\
-	CONFIG_AVERAGE=y
+	CONFIG_AVERAGE=y \
+	CONFIG_QCOM_RPROC_DISABLE_MPD_SUPPORT=y
+
   FILES:= $(PKG_BUILD_DIR)/net/mac80211/mac80211.ko
   ABI_VERSION:=$(PKG_VERSION)-$(PKG_RELEASE)
   MENU:=1
