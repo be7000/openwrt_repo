@@ -39,7 +39,7 @@ prepare_key_wep() {
 }
 
 _wdev_prepare_channel() {
-	json_get_vars channel band hwmode
+	json_get_vars channel band hwmode cfreq2
 
 	auto_channel=0
 	enable_ht=0
@@ -220,6 +220,9 @@ wireless_vif_parse_encryption() {
 	auth_mode_open=1
 	auth_mode_shared=0
 	auth_type=none
+	wpa=0
+	wpa_cipher=
+	eapol_key_index_workaround=0
 
 	if [ "$hwmode" = "ad" ]; then
 		wpa_cipher="GCMP"
@@ -230,15 +233,11 @@ wireless_vif_parse_encryption() {
 	case "$encryption" in
 		*tkip+aes|*tkip+ccmp|*aes+tkip|*ccmp+tkip) wpa_cipher="CCMP TKIP";;
 		*ccmp256) wpa_cipher="CCMP-256";;
-		*aes|*ccmp) wpa_cipher="CCMP";;
-		*tkip) wpa_cipher="TKIP";;
-		*gcmp256) wpa_cipher="GCMP-256";;
-		*gcmp) wpa_cipher="GCMP";;
-		wpa3-192*) wpa_cipher="GCMP-256";;
+		*gcmp | *sae-ext-key) wpa_cipher="GCMP CCMP GCMP-256";;
+		*gcmp256 | wpa3-192*) wpa_cipher="GCMP-256";;
+		*aes|*ccmp| psk2 | wpa2 | sae* | owe | dpp) wpa_cipher="CCMP";;
+		*tkip | wpa | psk) wpa_cipher="TKIP";;
 	esac
-
-	# 802.11n requires CCMP for WPA
-	[ "$enable_ht:$wpa_cipher" = "1:TKIP" ] && wpa_cipher="CCMP TKIP"
 
 	# Examples:
 	# psk-mixed/tkip    => WPA1+2 PSK, TKIP
@@ -246,7 +245,7 @@ wireless_vif_parse_encryption() {
 	# wpa2/tkip+aes     => WPA2 RADIUS, CCMP+TKIP
 
 	case "$encryption" in
-		wpa2*|wpa3*|*psk2*|psk3*|sae*|owe*)
+		wpa2*|wpa3*|*psk2*|psk3*|*sae*|owe*|dpp)
 			wpa=2
 		;;
 		wpa*mixed*|*psk*mixed*)
@@ -260,6 +259,13 @@ wireless_vif_parse_encryption() {
 			wpa_cipher=
 		;;
 	esac
+	# Standlone TKIP is no longer allowed
+	# TKIP alone is now prohibited by WFA so the only
+	# combination left must be CCMP+TKIP (wpa=3)
+	[ "$wpa_cipher" = "TKIP" ] && {
+		wpa=3
+		wpa_cipher="CCMP TKIP"
+	}
 	wpa_pairwise="$wpa_cipher"
 
 	case "$encryption" in
@@ -278,17 +284,31 @@ wireless_vif_parse_encryption() {
 		psk3-mixed*|sae-mixed*)
 			auth_type=psk-sae
 		;;
+		sae-ext-key)
+			auth_type=sae-ext-key
+		;;
+		ft-sae-ext-key)
+			auth_type=ft-sae-ext-key
+		;;
 		psk3*|sae*)
 			auth_type=sae
 		;;
 		*psk*)
 			auth_type=psk
 		;;
-		*wpa*|*8021x*)
+		*wpa*)
 			auth_type=eap
+			eapol_key_index_workaround=1
+		;;
+		*8021x*)
+			auth_type=eap
+			eapol_version=2
+			eap_server=0
 		;;
 		*wep*)
 			auth_type=wep
+			wpa=0
+			wpa_pairwise=
 			case "$encryption" in
 				*shared*)
 					auth_mode_open=0
@@ -298,6 +318,9 @@ wireless_vif_parse_encryption() {
 					auth_mode_shared=1
 				;;
 			esac
+		;;
+		dpp)
+			auth_type=dpp;
 		;;
 	esac
 
@@ -315,7 +338,7 @@ _wireless_set_brsnoop_isolation() {
 	json_get_vars isolate proxy_arp
 
 	[ ${isolate:-0} -gt 0 -o -z "$network_bridge" ] && return
-	[ ${multicast_to_unicast:-1} -gt 0 -o ${proxy_arp:-0} -gt 0 ] && json_add_boolean isolate 1
+	[ ${multicast_to_unicast:-0} -gt 0 -o ${proxy_arp:-0} -gt 0 ] && json_add_boolean isolate 1
 }
 
 for_each_interface() {
@@ -382,7 +405,7 @@ for_each_station() {
 }
 
 _wdev_common_device_config() {
-	config_add_string channel hwmode band htmode noscan
+	config_add_string channel hwmode band htmode noscan cfreq2
 }
 
 _wdev_common_iface_config() {
