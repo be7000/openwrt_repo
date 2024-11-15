@@ -276,7 +276,10 @@ function iface_hostapd_notify(phy, ifname, iface, state)
 	case "COMPLETED":
 		msg.up = true;
 		msg.frequency = status.frequency;
+		msg.chan_width = status.chan_width;
 		msg.sec_chan_offset = status.sec_chan_offset;
+		msg.center_freq1 = status.center_freq1;
+		msg.center_freq2 = status.center_freq2;
 		break;
 	default:
 		return;
@@ -290,10 +293,13 @@ function iface_channel_switch(phy, ifname, iface, info)
 	let msg = {
 		phy: phy,
 		up: true,
+		frequency: info.frequency,
+		chan_width: info.chan_width,
+		sec_chan_offset: info.sec_chan_offset,
+		center_freq1: info.center_freq1,
+		center_freq2: info.center_freq2,
 		csa: true,
 		csa_count: info.csa_count ? info.csa_count - 1 : 0,
-		frequency: info.frequency,
-		sec_chan_offset: info.sec_chan_offset,
 	};
 	ubus.call("hostapd", "apsta_state", msg);
 }
