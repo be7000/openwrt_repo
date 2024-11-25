@@ -87,7 +87,8 @@ function iface_freq_info(iface, config, params)
 	if (freq < 4000)
 		width = 0;
 
-	return hostapd.freq_info(freq, sec_offset, width);
+	return hostapd.freq_info(freq, sec_offset, width, params.chan_width,
+				 params.center_freq1, params.center_freq2);
 }
 
 function iface_add(phy, config, phy_status)
@@ -744,7 +745,10 @@ let main_obj = {
 			phy: "",
 			up: true,
 			frequency: 0,
+			chan_width: 0,
 			sec_chan_offset: 0,
+			center_freq1: 0,
+			center_freq2: 0,
 			csa: true,
 			csa_count: 0,
 		},
