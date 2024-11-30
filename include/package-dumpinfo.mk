@@ -18,7 +18,7 @@ FindOpensyncPackage?=$(strip $(shell find $(TOPDIR)/opensync -name $(1) 2>/dev/n
 
 define Dumpinfo/Package
 $(eval -include $(wildcard $(call FindPackage, $(1))/$(1).mk))
-$(if $(CONFIG_OPENSYNC_SUPPORTED),$(eval -include $(wildcard $(call FindOpensyncPackage, $(1))/$(1).mk)))
+$(eval -include $(wildcard $(call FindOpensyncPackage, $(1))/$(1).mk))
 $(info $(SOURCE_INFO)Package: $(1)
 $(if $(MENU),Menu: $(MENU)
 )$(if $(SUBMENU),Submenu: $(SUBMENU)
