@@ -54,7 +54,14 @@ $(eval $(call KernelPackage,nf-conncount))
 define KernelPackage/nf-ipt
   SUBMENU:=$(NF_MENU)
   TITLE:=Iptables core
-  KCONFIG:=$(KCONFIG_NF_IPT)
+  KCONFIG:= \
+	CONFIG_NETFILTER=y \
+	CONFIG_NETFILTER_ADVANCED=y \
+	CONFIG_NF_CONNTRACK_ZONES=y \
+	CONFIG_NF_CONNTRACK_MARK=y \
+	CONFIG_NETFILTER_NETLINK_GLUE_CT=y \
+	CONFIG_NF_CT_NETLINK_HELPER=y \
+	$(KCONFIG_NF_IPT)
   FILES:=$(foreach mod,$(NF_IPT-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NF_IPT-m)))
 endef
@@ -1115,6 +1122,19 @@ endef
 
 $(eval $(call KernelPackage,ipt-rpfilter))
 
+define KernelPackage/ipt-skipaccel
+ TITLE:=skipaccel support
+ KCONFIG:= CONFIG_NETFILTER_XT_TARGET_SKIPACCEL
+ FILES:= $(LINUX_DIR)/net/netfilter/xt_skipaccel.ko
+ AUTOLOAD:= $(call AutoLoad,50,xt_skipaccel)
+ $(call AddDepends/ipt)
+endef
+
+define KernelPackage/ipt-skipaccel/description
+ Kernel modules for marking packet for acceleration skip
+endef
+
+$(eval $(call KernelPackage,ipt-skipaccel))
 
 define KernelPackage/nft-core
   SUBMENU:=$(NF_MENU)

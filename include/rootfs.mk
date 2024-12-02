@@ -43,6 +43,9 @@ opkg = \
 	--add-arch all:100 \
 	--add-arch $(if $(ARCH_PACKAGES),$(ARCH_PACKAGES),$(BOARD)):200
 
+opkg += $(if $(CONFIG_OPENSYNC_SUPPORTED),--force-overwrite)
+opkg += $(if $(CONFIG_OPENSYNC_SUPPORTED),--force-depends)
+
 apk = \
   IPKG_INSTROOT=$(1) \
   $(FAKEROOT) $(STAGING_DIR_HOST)/bin/apk \
