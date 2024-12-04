@@ -1354,24 +1354,24 @@ config KERNEL_SQUASHFS_XATTR
 #
 # compile optimization setting
 #
-choice
-	prompt "Compiler optimization level"
-	default KERNEL_CC_OPTIMIZE_FOR_SIZE if SMALL_FLASH
+#choice
+#	prompt "Compiler optimization level"
+#	default KERNEL_CC_OPTIMIZE_FOR_SIZE if SMALL_FLASH
 
-config KERNEL_CC_OPTIMIZE_FOR_PERFORMANCE
-	bool "Optimize for performance"
-	help
-	  This is the default optimization level for the kernel, building
-	  with the "-O2" compiler flag for best performance and most
-	  helpful compile-time warnings.
+#config KERNEL_CC_OPTIMIZE_FOR_PERFORMANCE
+#	bool "Optimize for performance"
+#	help
+#	  This is the default optimization level for the kernel, building
+#	  with the "-O2" compiler flag for best performance and most
+#	  helpful compile-time warnings.
 
-config KERNEL_CC_OPTIMIZE_FOR_SIZE
-	bool "Optimize for size"
-	help
-	  Enabling this option will pass "-Os" instead of "-O2" to
-	  your compiler resulting in a smaller kernel.
+#config KERNEL_CC_OPTIMIZE_FOR_SIZE
+#	bool "Optimize for size"
+#	help
+#	  Enabling this option will pass "-Os" instead of "-O2" to
+#	  your compiler resulting in a smaller kernel.
 
-endchoice
+#endchoice
 
 config KERNEL_AUDIT
 	bool "Auditing support"
